@@ -11,7 +11,7 @@ export default function PitWindowConfig() {
     maxDriverStintMin: 65,
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setPitRules({ ...pitRules, [name]: value });
   };
