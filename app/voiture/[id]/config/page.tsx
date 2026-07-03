@@ -8,17 +8,16 @@ export default function CarConfigPage() {
   const router = useRouter();
   const carId = params.id as string;
 
-  const [saved, setSaved] = useState(false);
-  
   const [config, setConfig] = useState({
-    capaMax: "80",
-    timeGreenStr: "2:15.000",
-    consoGreen: "3.20",
-    timeFcyStr: "3:00.000",
-    consoFcy: "1.80",
-    alertOrangePct: "35",
-    alertRedPct: "17",
-    pitLossTime: "65" // NOUVEAU : Temps perdu lors d'un arrêt (entrée, arrêt, sortie)
+    capaMax: 80,
+    consoGreen: 1.7,
+    timeGreenStr: "2:55.000",
+    consoFcy: 0.7,
+    timeFcyStr: "7:00.000",
+    alertOrangePct: 35,
+    alertRedPct: 17,
+    pitLossTime: 65,
+    maxStintTime: 65
   });
 
   useEffect(() => {
@@ -28,82 +27,65 @@ export default function CarConfigPage() {
     }
   }, [carId]);
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+    setConfig({ ...config, [name]: value });
+  };
+
+  const handleSave = () => {
     localStorage.setItem(`car_config_${carId}`, JSON.stringify(config));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    router.push(`/voiture/${carId}`);
   };
 
   return (
-    <div className="bg-[#0B0C10] min-h-screen text-white p-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-          <div>
-            <h1 className="text-3xl font-black text-[#66FCF1] flex items-center"><span className="mr-3">⚙️</span> CONFIGURATION TÉLÉMÉTRIE</h1>
-            <p className="text-gray-400 mt-1">Voiture : <span className="text-[#ffaa00] font-black text-xl">#{carId}</span></p>
+    <div className="min-h-screen bg-[#0B0C10] text-white p-8">
+      <div className="max-w-3xl mx-auto bg-[#1a1c23] p-8 rounded-lg border border-gray-800 shadow-xl">
+        <h1 className="text-3xl font-black text-[#66FCF1] mb-6">⚙️ Configuration Voiture #{carId}</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          
+          <div className="bg-[#1F2833] p-5 rounded border border-gray-700">
+            <h2 className="text-[#00ff66] font-bold uppercase mb-4 border-b border-gray-700 pb-2">⛽ Paramètres Carburant (Interpolation)</h2>
+            <label className="block mb-3 text-sm">Capacité Réservoir (L)
+              <input type="number" name="capaMax" value={config.capaMax} onChange={handleChange} className="w-full mt-1 bg-[#0B0C10] border border-gray-600 rounded p-2 text-white outline-none focus:border-[#00ff66]" />
+            </label>
+            <div className="flex gap-2 mb-3">
+              <label className="block text-sm flex-1">Conso Green (L/Tr)
+                <input type="number" step="0.1" name="consoGreen" value={config.consoGreen} onChange={handleChange} className="w-full mt-1 bg-[#0B0C10] border border-gray-600 rounded p-2 text-white outline-none focus:border-[#00ff66]" />
+              </label>
+              <label className="block text-sm flex-1">Chrono Green (Ref)
+                <input type="text" name="timeGreenStr" value={config.timeGreenStr} onChange={handleChange} className="w-full mt-1 bg-[#0B0C10] border border-gray-600 rounded p-2 text-[#00ff66] outline-none focus:border-[#00ff66]" />
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <label className="block text-sm flex-1">Conso FCY/Lent (L/Tr)
+                <input type="number" step="0.1" name="consoFcy" value={config.consoFcy} onChange={handleChange} className="w-full mt-1 bg-[#0B0C10] border border-gray-600 rounded p-2 text-white outline-none focus:border-[#ffaa00]" />
+              </label>
+              <label className="block text-sm flex-1">Chrono FCY/Lent (Ref)
+                <input type="text" name="timeFcyStr" value={config.timeFcyStr} onChange={handleChange} className="w-full mt-1 bg-[#0B0C10] border border-gray-600 rounded p-2 text-[#ffaa00] outline-none focus:border-[#ffaa00]" />
+              </label>
+            </div>
+            <p className="text-[10px] text-gray-500 mt-3 italic">Le système calculera la consommation de chaque tour proportionnellement au temps réalisé entre ces deux extrêmes.</p>
           </div>
-          <button onClick={() => router.push(`/voiture/${carId}`)} className="bg-[#1F2833] hover:bg-gray-700 text-white font-bold py-2 px-4 rounded border border-gray-600">⬅ Retour Télémétrie</button>
+
+          <div className="bg-[#1F2833] p-5 rounded border border-gray-700">
+            <h2 className="text-[#ffaa00] font-bold uppercase mb-4 border-b border-gray-700 pb-2">🚨 Limites & Alertes</h2>
+            <label className="block mb-3 text-sm">Alerte Fuel Orange (%)
+              <input type="number" name="alertOrangePct" value={config.alertOrangePct} onChange={handleChange} className="w-full mt-1 bg-[#0B0C10] border border-gray-600 rounded p-2 text-white outline-none focus:border-[#ffaa00]" />
+            </label>
+            <label className="block mb-3 text-sm">Alerte Fuel Rouge (%)
+              <input type="number" name="alertRedPct" value={config.alertRedPct} onChange={handleChange} className="w-full mt-1 bg-[#0B0C10] border border-gray-600 rounded p-2 text-white outline-none focus:border-red-500" />
+            </label>
+            <label className="block text-sm">Limite Stint Pilote (Minutes)
+              <input type="number" name="maxStintTime" value={config.maxStintTime} onChange={handleChange} className="w-full mt-1 bg-gray-900 border border-[#a855f7] rounded p-2 text-[#66FCF1] font-bold outline-none shadow-[0_0_10px_rgba(168,85,247,0.2)]" />
+            </label>
+          </div>
+
         </div>
 
-        <form onSubmit={handleSave} className="space-y-6">
-          
-          <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
-            <h2 className="text-[#ffaa00] font-bold tracking-wider mb-4 border-b border-gray-700 pb-2">⛽ CAPACITÉ & ARRÊTS AUX STANDS</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Réservoir Max (L)</label>
-                <input type="text" value={config.capaMax} onChange={e => setConfig({...config, capaMax: e.target.value})} className="w-full bg-[#0B0C10] border border-gray-600 rounded p-2 font-mono text-white text-xl" />
-              </div>
-              <div>
-                <label className="block text-xs text-purple-400 mb-1">Perte Pit Stop (sec)</label>
-                <input type="number" value={config.pitLossTime} onChange={e => setConfig({...config, pitLossTime: e.target.value})} className="w-full bg-[#0B0C10] border border-purple-600 rounded p-2 font-mono text-purple-400 text-xl" title="Temps total perdu en passant par la voie des stands par rapport à un tour normal" />
-              </div>
-              <div>
-                <label className="block text-xs text-orange-400 mb-1">Alerte PREPA (%)</label>
-                <input type="number" value={config.alertOrangePct} onChange={e => setConfig({...config, alertOrangePct: e.target.value})} className="w-full bg-[#0B0C10] border border-orange-600 rounded p-2 font-mono text-orange-400 text-xl" />
-              </div>
-              <div>
-                <label className="block text-xs text-red-500 mb-1">Alerte BOX (%)</label>
-                <input type="number" value={config.alertRedPct} onChange={e => setConfig({...config, alertRedPct: e.target.value})} className="w-full bg-[#0B0C10] border border-red-600 rounded p-2 font-mono text-red-500 text-xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
-            <h2 className="text-[#00ff66] font-bold tracking-wider mb-4 border-b border-gray-700 pb-2">🟢 RÉFÉRENCES DRAPEAU VERT</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Temps au Tour Cible (Format M:SS.mmm)</label>
-                <input type="text" value={config.timeGreenStr} onChange={e => setConfig({...config, timeGreenStr: e.target.value})} className="w-full bg-[#0B0C10] border border-gray-600 rounded p-2 font-mono text-white text-xl" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Consommation mesurée (L/Tour)</label>
-                <input type="text" value={config.consoGreen} onChange={e => setConfig({...config, consoGreen: e.target.value})} className="w-full bg-[#0B0C10] border border-gray-600 rounded p-2 font-mono text-white text-xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
-            <h2 className="text-[#ffaa00] font-bold tracking-wider mb-4 border-b border-gray-700 pb-2">🟡 RÉFÉRENCES FULL COURSE YELLOW</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Temps au Tour imposé (Format M:SS.mmm)</label>
-                <input type="text" value={config.timeFcyStr} onChange={e => setConfig({...config, timeFcyStr: e.target.value})} className="w-full bg-[#0B0C10] border border-gray-600 rounded p-2 font-mono text-white text-xl" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Consommation sous FCY (L/Tour)</label>
-                <input type="text" value={config.consoFcy} onChange={e => setConfig({...config, consoFcy: e.target.value})} className="w-full bg-[#0B0C10] border border-gray-600 rounded p-2 font-mono text-white text-xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4 pt-2">
-            <button type="submit" className="bg-[#45A29E] hover:bg-[#66FCF1] text-black font-black py-3 px-8 rounded shadow-lg transition">💾 ENREGISTRER LE PROFIL</button>
-            {saved && <span className="text-[#00ff66] font-bold animate-pulse">Enregistré.</span>}
-          </div>
-
-        </form>
+        <button onClick={handleSave} className="w-full bg-[#45A29E] hover:bg-[#66FCF1] text-black font-black py-4 rounded text-lg transition shadow-lg">
+          SAUVEGARDER ET RETOURNER AU PIT WALL
+        </button>
       </div>
     </div>
   );
