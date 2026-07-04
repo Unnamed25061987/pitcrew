@@ -12,30 +12,29 @@ export function useLiveTiming(type: string = 'JSON') {
 
     const fetchAllData = async () => {
       try {
-        // 1. Appel du Timing
+        // 1. DATA JSON TIMING
         const resTiming = await fetch('/api/timing', { cache: 'no-store' });
         if (resTiming.ok) {
           const data = await resTiming.json();
           if (isMounted && data) {
-            setCars(data.cars || []);
+            setCars(Array.isArray(data.cars) ? data.cars : []);
             setStatus(String(data.context?.session?.track_state || ''));
             setContext(data.context || null);
             setError(null);
             
-            // Si les messages sont dans le JSON directement, on les prend
             if (data.events) {
                setMessages(data.events.filter((e: any) => e.kind === 'RC_MESSAGE'));
             }
           }
         } else {
-           if (isMounted) setError(`Erreur serveur Timing: ${resTiming.status}`);
+           if (isMounted) setError(`Erreur Timing: ${resTiming.status}`);
         }
 
-        // 2. Appel du XML Messages
+        // 2. DATA MESSAGES XML
         const resMessages = await fetch('/api/messages', { cache: 'no-store' });
         if (resMessages.ok) {
            const xmlText = await resMessages.text();
-           // Si tu as une logique spécifique pour lire le XML, elle se fait ici.
+           // Ton application gère le XML ici si besoin
         }
 
       } catch (err: any) {
@@ -43,10 +42,10 @@ export function useLiveTiming(type: string = 'JSON') {
       }
     };
 
-    // Premier appel au chargement
+    // Premier appel
     fetchAllData();
     
-    // 🔒 VERROUILLAGE STRICT : 5000 ms (5 secondes)
+    // ⏱️ SÉCURITÉ ABSOLUE : 5 SECONDES 
     const intervalId = setInterval(fetchAllData, 5000);
 
     return () => {

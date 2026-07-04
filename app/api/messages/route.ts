@@ -4,21 +4,27 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Safari/605.1.15';
+    
+    const homeResponse = await fetch('https://live.ris-timing.be/funbe', {
+      headers: { 'User-Agent': userAgent }
+    });
+    const cookies = homeResponse.headers.get('set-cookie') || '';
+
     const timestamp = new Date().getTime(); 
-    // Adapte cette URL si elle est différente pour ton message.xml
     const url = `https://live.ris-timing.be/messages.xml?t=${timestamp}`;
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Cache-Control': 'no-cache'
+        'User-Agent': userAgent,
+        'Referer': 'https://live.ris-timing.be/funbe',
+        'Cookie': cookies
       }
     });
 
     if (!response.ok) throw new Error(`Status ${response.status}`);
-    
-    // On renvoie le texte XML brut, ton application sait le lire
     const xmlText = await response.text();
+    
     return new NextResponse(xmlText, {
       headers: { 'Content-Type': 'application/xml' }
     });
