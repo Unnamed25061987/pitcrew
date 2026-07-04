@@ -23,8 +23,8 @@ export default function GlobalHeader() {
 
     fetchMessages();
     
-    // 🔥 LE CŒUR DU RÉACTEUR : Actualisation chaque seconde (1000 ms)
-    const interval = setInterval(fetchMessages, 1000); 
+    // 🔥 LE CŒUR DU RÉACTEUR : Actualisation chaque seconde (5000 ms)
+    const interval = setInterval(fetchMessages, 5000); 
     
     return () => clearInterval(interval);
   }, []);
