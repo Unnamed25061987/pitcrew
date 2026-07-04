@@ -12,8 +12,9 @@ export function useLiveTiming(type: string = 'JSON') {
 
     const fetchAllData = async () => {
       try {
-        // 1. DATA JSON TIMING
+        // 🚀 REQUÊTE UNIQUE : On interroge notre relais furtif
         const resTiming = await fetch('/api/timing', { cache: 'no-store' });
+        
         if (resTiming.ok) {
           const data = await resTiming.json();
           if (isMounted && data) {
@@ -22,6 +23,7 @@ export function useLiveTiming(type: string = 'JSON') {
             setContext(data.context || null);
             setError(null);
             
+            // Les messages sont DÉJÀ dans le JSON principal ! Plus besoin du XML !
             if (data.events) {
                setMessages(data.events.filter((e: any) => e.kind === 'RC_MESSAGE'));
             }
@@ -29,14 +31,7 @@ export function useLiveTiming(type: string = 'JSON') {
         } else {
            if (isMounted) setError(`Erreur Timing: ${resTiming.status}`);
         }
-
-        // 2. DATA MESSAGES XML
-        const resMessages = await fetch('/api/messages', { cache: 'no-store' });
-        if (resMessages.ok) {
-           const xmlText = await resMessages.text();
-           // Ton application gère le XML ici si besoin
-        }
-
+        
       } catch (err: any) {
         if (isMounted) setError(err.message || 'Erreur réseau');
       }
