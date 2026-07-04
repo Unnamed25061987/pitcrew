@@ -10,11 +10,12 @@ interface Stint { id: number; driver: string; laps: number; tire: string; }
 interface AiMessage { role: 'user' | 'ai'; content: string; timestamp: string; }
 interface LapRecord { id: number; lapNumber: number; driverRIS: string; s1: string; s2: string; s3: string; lapTime: string; lapTimeMs: number; }
 
+// 🟢 CORRECTION ICI : On ajoute "Trs" pour que le graphique comprenne la traduction du Hook
 const parseGapToSeconds = (gapStr?: string): number => {
   if (!gapStr) return 0;
   const str = String(gapStr);
   if (str === "Leader") return 0;
-  if (str.includes("Laps") || str.includes("Lap")) return parseInt(str.replace(/[^0-9]/g, '')) * 135; 
+  if (str.includes("Laps") || str.includes("Lap") || str.includes("Trs")) return parseInt(str.replace(/[^0-9]/g, '')) * 135; 
   if (str.includes("s")) return parseFloat(str.replace(/[^0-9.-]/g, ''));
   return 0;
 };
