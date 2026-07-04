@@ -11,17 +11,21 @@ interface AiMessage { role: 'user' | 'ai'; content: string; timestamp: string; }
 interface LapRecord { id: number; lapNumber: number; driverRIS: string; s1: string; s2: string; s3: string; lapTime: string; lapTimeMs: number; }
 
 const parseGapToSeconds = (gapStr?: string): number => {
-  if (!gapStr || gapStr === "Leader") return 0;
-  if (gapStr.includes("Laps") || gapStr.includes("Lap")) return parseInt(gapStr.replace(/[^0-9]/g, '')) * 135; 
-  if (gapStr.includes("s")) return parseFloat(gapStr.replace(/[^0-9.-]/g, ''));
+  if (!gapStr) return 0;
+  const str = String(gapStr);
+  if (str === "Leader") return 0;
+  if (str.includes("Laps") || str.includes("Lap")) return parseInt(str.replace(/[^0-9]/g, '')) * 135; 
+  if (str.includes("s")) return parseFloat(str.replace(/[^0-9.-]/g, ''));
   return 0;
 };
 
 const parseLapToMs = (lapStr?: string): number => {
-  if (!lapStr || lapStr === '-' || lapStr.includes('PIT') || lapStr.includes('IN')) return Infinity;
-  const parts = lapStr.split(':');
+  if (!lapStr) return Infinity;
+  const str = String(lapStr);
+  if (str === '-' || str.includes('PIT') || str.includes('IN')) return Infinity;
+  const parts = str.split(':');
   if (parts.length === 2) return (parseInt(parts[0]) * 60 + parseFloat(parts[1])) * 1000;
-  return parseFloat(lapStr) * 1000 || Infinity;
+  return parseFloat(str) * 1000 || Infinity;
 };
 
 const formatMsToLapTime = (ms: number) => {
@@ -44,13 +48,12 @@ export default function VoitureDetailPage() {
   const carId = params.id as string;
   const { cars, status } = useLiveTiming('JSON');
   
-  // NOUVEAUX REGLAGES PAR DEFAUT (Conso dynamique basée sur tes références)
   const [config, setConfig] = useState({ 
     capaMax: 80, 
     consoGreen: 1.7, 
     timeGreenStr: "2:55.000", 
     consoFcy: 0.7, 
-    timeFcyStr: "7:00.000", // Nouvelle valeur de référence pour le FCY
+    timeFcyStr: "7:00.000",
     alertOrangePct: 35, 
     alertRedPct: 17, 
     pitLossTime: 65, 
@@ -74,7 +77,8 @@ export default function VoitureDetailPage() {
   const carStateRef = useRef<string>('RUN'); 
   const currentSectorsRef = useRef({ s1: '-', s2: '-', s3: '-' });
 
-  const liveCarData = cars.find(c => String(c.num) === String(carId));
+  const safeCars = Array.isArray(cars) ? cars : [];
+  const liveCarData = safeCars.find(c => String(c?.num) === String(carId));
 
   useEffect(() => {
     const savedConfig = localStorage.getItem(`car_config_${carId}`);
@@ -118,19 +122,19 @@ export default function VoitureDetailPage() {
 
   useEffect(() => {
     const rawState = (liveCarData as any)?.lap?.car_state || (liveCarData as any)?.car_state || (liveCarData as any)?.state || 'RUN';
-    carStateRef.current = String(rawState).toUpperCase();
+    carStateRef.current = String(rawState || 'RUN').toUpperCase();
   }, [liveCarData]);
 
   useEffect(() => {
     if (!liveCarData) return;
-    if (liveCarData.s1 && liveCarData.s1 !== '-') currentSectorsRef.current.s1 = liveCarData.s1;
-    if (liveCarData.s2 && liveCarData.s2 !== '-') currentSectorsRef.current.s2 = liveCarData.s2;
-    if (liveCarData.s3 && liveCarData.s3 !== '-') currentSectorsRef.current.s3 = liveCarData.s3;
+    if (liveCarData.s1 && liveCarData.s1 !== '-') currentSectorsRef.current.s1 = String(liveCarData.s1);
+    if (liveCarData.s2 && liveCarData.s2 !== '-') currentSectorsRef.current.s2 = String(liveCarData.s2);
+    if (liveCarData.s3 && liveCarData.s3 !== '-') currentSectorsRef.current.s3 = String(liveCarData.s3);
   }, [liveCarData?.s1, liveCarData?.s2, liveCarData?.s3]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const state = carStateRef.current;
+      const state = String(carStateRef.current || '');
       const isRun = state === 'RUN' || state === 'TRACK' || (!state.includes('IN') && !state.includes('FUEL') && state !== 'PIT');
       const isIn = state === 'IN' || state === 'PITIN' || state === 'PIT';
       const isFuel = state === 'FUEL' || state === 'REFUEL';
@@ -150,9 +154,9 @@ export default function VoitureDetailPage() {
 
   useEffect(() => {
     if (liveCarData?.driver) {
-      const risName = liveCarData.driver.trim().toLowerCase();
+      const risName = String(liveCarData.driver || '').trim().toLowerCase();
       setPilotes(prevPilotes => prevPilotes.map(p => {
-        const isMatch = p.nomRIS && p.nomRIS.trim().toLowerCase() === risName;
+        const isMatch = p.nomRIS && String(p.nomRIS || '').trim().toLowerCase() === risName;
         if (isMatch) {
           if (p.statut !== 'AU_VOLANT') return { ...p, statut: 'AU_VOLANT', stintActuel: 0 };
           return { ...p, statut: 'AU_VOLANT' };
@@ -162,7 +166,6 @@ export default function VoitureDetailPage() {
     }
   }, [liveCarData?.driver]);
 
-  // 🎯 MOTEUR D'INTERPOLATION DE CARBURANT
   useEffect(() => {
     if (liveCarData && liveCarData.laps > 0) {
       if (lastLapRef.current === null) {
@@ -170,7 +173,6 @@ export default function VoitureDetailPage() {
       } else if (liveCarData.laps > lastLapRef.current) {
         const lapsDone = liveCarData.laps - lastLapRef.current;
         
-        // Calcul Dynamique du Carburant consommé sur ce tour
         const lapTimeMs = parseLapToMs(liveCarData.lastLap);
         const greenMs = parseLapToMs(config.timeGreenStr) || 175000;
         const fcyMs = parseLapToMs(config.timeFcyStr) || 420000;
@@ -179,17 +181,16 @@ export default function VoitureDetailPage() {
 
         if (lapTimeMs > 0 && lapTimeMs !== Infinity) {
           if (lapTimeMs <= greenMs) {
-            lapConso = config.consoGreen; // Tour à fond
+            lapConso = config.consoGreen; 
           } else if (lapTimeMs >= fcyMs) {
-            lapConso = config.consoFcy; // Tour très lent (FCY pur ou arrêt pit)
+            lapConso = config.consoFcy; 
           } else {
-            // Règle de 3 linéaire (Interpolation)
             const ratio = (lapTimeMs - greenMs) / (fcyMs - greenMs);
             lapConso = config.consoGreen - (ratio * (config.consoGreen - config.consoFcy));
           }
         } else {
-          // Securité si le chrono bug : on utilise le statut global
-          const isFcy = status.includes('FCY') || status.includes('SAFETY') || status.includes('YELLOW');
+          const safeStatus = String(status || '').toUpperCase();
+          const isFcy = safeStatus.includes('FCY') || safeStatus.includes('SAFETY') || safeStatus.includes('YELLOW');
           lapConso = isFcy ? config.consoFcy : config.consoGreen;
         }
 
@@ -199,11 +200,11 @@ export default function VoitureDetailPage() {
         const newLap: LapRecord = {
           id: Date.now(),
           lapNumber: lastLapRef.current,
-          driverRIS: currentDriverRIS,
+          driverRIS: String(currentDriverRIS),
           s1: currentSectorsRef.current.s1,
           s2: currentSectorsRef.current.s2,
           s3: currentSectorsRef.current.s3,
-          lapTime: liveCarData.lastLap || '-',
+          lapTime: String(liveCarData.lastLap || '-'),
           lapTimeMs: lapTimeMs
         };
 
@@ -226,7 +227,7 @@ export default function VoitureDetailPage() {
 
   const driverPace = useMemo(() => {
     if (!activePilote || !activePilote.nomRIS) return null;
-    const driverLaps = lapHistory.filter(l => l.driverRIS.toLowerCase() === activePilote.nomRIS.toLowerCase() && l.lapTimeMs !== Infinity);
+    const driverLaps = lapHistory.filter(l => String(l.driverRIS || '').toLowerCase() === String(activePilote.nomRIS || '').toLowerCase() && l.lapTimeMs !== Infinity);
     if (driverLaps.length < 3) return null; 
     
     const current3Laps = driverLaps.slice(0, 3);
@@ -258,9 +259,9 @@ export default function VoitureDetailPage() {
   if (isFuelWarning) { fuelColorText = 'text-orange-500'; fuelBorderColor = 'border-orange-500'; fuelTitleColor = 'text-orange-500'; } 
   else if (isFuelCritical) { fuelColorText = 'text-red-500 animate-pulse'; fuelBorderColor = 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]'; fuelTitleColor = 'text-red-500 animate-pulse'; }
 
-  const carIndex = cars.findIndex(c => String(c.num) === String(carId));
+  const carIndex = safeCars.findIndex(c => String(c?.num) === String(carId));
   let battleGroup: any[] = [];
-  if (carIndex !== -1) battleGroup = cars.slice(Math.max(0, carIndex - 2), Math.min(cars.length - 1, carIndex + 2) + 1);
+  if (carIndex !== -1) battleGroup = safeCars.slice(Math.max(0, carIndex - 2), Math.min(safeCars.length - 1, carIndex + 2) + 1);
 
   useEffect(() => {
     if (!liveCarData || battleGroup.length === 0) return;
@@ -276,12 +277,12 @@ export default function VoitureDetailPage() {
         const updated = [...prev]; updated[existingIdx] = { ...updated[existingIdx], ...newData }; return updated;
       } else return [...prev, newData].slice(-15);
     });
-  }, [cars, liveCarData?.laps, carId]);
+  }, [safeCars, liveCarData?.laps, carId]);
 
   const predictorGroup = useMemo(() => {
     if (!liveCarData) return [];
     const estimatedExitGap = parseGapToSeconds(liveCarData.gap) + config.pitLossTime;
-    const carsWithGaps = cars.map(c => ({ ...c, gapSec: parseGapToSeconds(c.gap), isGhost: false })); 
+    const carsWithGaps = safeCars.map(c => ({ ...c, gapSec: parseGapToSeconds(c.gap), isGhost: false })); 
     const ghostCar = {
       isGhost: true, num: "GHOST", pos: "-", team: "📍 NOTRE SORTIE STAND", driver: "Simulation", 
       gapSec: estimatedExitGap, gap: `+${estimatedExitGap.toFixed(1)}s`, lastLap: "-", s1: "-", s2: "-", s3: "-"
@@ -289,7 +290,7 @@ export default function VoitureDetailPage() {
     const carsWithGhost = [...carsWithGaps, ghostCar].sort((a: any, b: any) => a.gapSec - b.gapSec);
     const ghostIndex = carsWithGhost.findIndex(c => c.isGhost);
     return carsWithGhost.slice(Math.max(0, ghostIndex - 2), Math.min(carsWithGhost.length - 1, ghostIndex + 2) + 1);
-  }, [cars, liveCarData, config.pitLossTime]);
+  }, [safeCars, liveCarData, config.pitLossTime]);
 
   const addPilote = () => setPilotes([...pilotes, { id: Date.now(), nom: `Pilote ${pilotes.length + 1}`, nomRIS: '', statut: pilotes.length === 0 ? 'AU_VOLANT' : 'REPOS', stintActuel: 0, totalRoulé: 0, totalMax: 120 }]);
   const updatePilote = (id: number, field: string, value: any) => setPilotes(pilotes.map(p => p.id === id ? { ...p, [field]: value } : p));
@@ -299,7 +300,7 @@ export default function VoitureDetailPage() {
   const removeStint = (id: number) => setStints(stints.filter(s => s.id !== id));
 
   const greenSeconds = useMemo(() => {
-    const parts = config.timeGreenStr.split(':');
+    const parts = String(config.timeGreenStr || '').split(':');
     return parts.length < 2 ? 135 : (parseInt(parts[0]) * 60) + parseFloat(parts[1]);
   }, [config.timeGreenStr]);
 
@@ -338,8 +339,8 @@ export default function VoitureDetailPage() {
   }, [lapHistory]);
 
   const getDriverName = (risName: string) => {
-    const matched = pilotes.find(p => p.nomRIS?.toLowerCase() === risName.toLowerCase());
-    return matched ? matched.nom : risName;
+    const matched = pilotes.find(p => String(p.nomRIS || '').toLowerCase() === String(risName || '').toLowerCase());
+    return matched ? matched.nom : String(risName || '');
   };
 
   const handleAskAi = async (e: React.FormEvent) => {
@@ -353,12 +354,15 @@ export default function VoitureDetailPage() {
     setTimeout(() => {
       let mockResponse = "Analyse en cours...";
       const toursRestants = Math.floor(currentFuel / config.consoGreen);
-      if (userQuery.toLowerCase().includes('essence') || userQuery.toLowerCase().includes('fuel') || userQuery.toLowerCase().includes('pit')) {
-        mockResponse = `Au rythme actuel sous ${status}, il te reste ${currentFuel.toFixed(1)}L (${toursRestants} tours). Le pilote ${activePilote?.nom || ''} a roulé ${Math.floor((activePilote?.stintActuel || 0) / 60)} minutes.`;
-      } else if (userQuery.toLowerCase().includes('pilote') || userQuery.toLowerCase().includes('stint')) {
+      const safeQuery = String(userQuery || '').toLowerCase();
+      const safeStatus = String(status || '');
+      
+      if (safeQuery.includes('essence') || safeQuery.includes('fuel') || safeQuery.includes('pit')) {
+        mockResponse = `Au rythme actuel sous ${safeStatus}, il te reste ${currentFuel.toFixed(1)}L (${toursRestants} tours). Le pilote ${activePilote?.nom || ''} a roulé ${Math.floor((activePilote?.stintActuel || 0) / 60)} minutes.`;
+      } else if (safeQuery.includes('pilote') || safeQuery.includes('stint')) {
         mockResponse = `${activePilote?.nom || 'Le pilote'} a roulé ${Math.floor((activePilote?.stintActuel || 0) / 60)} minutes sur un max de ${config.maxStintTime}. Il lui reste ${(activePilote?.totalMax || 120) - Math.floor((activePilote?.totalRoulé || 0) / 60)} minutes au total.`;
       } else {
-        mockResponse = `Bien reçu. La piste est sous ${status}. Avec ${toursRestants} tours restants avant panne sèche, je garde un œil sur la fenêtre stratégique.`;
+        mockResponse = `Bien reçu. La piste est sous ${safeStatus}. Avec ${toursRestants} tours restants avant panne sèche, je garde un œil sur la fenêtre stratégique.`;
       }
       setAiMessages(prev => [...prev, { role: 'ai', content: mockResponse, timestamp: new Date().toLocaleTimeString() }]);
       setIsAiTyping(false);
@@ -383,7 +387,7 @@ export default function VoitureDetailPage() {
           <span className="text-5xl font-black text-[#66FCF1]">#{carId}</span>
           <div>
             <h1 className="text-2xl font-bold text-white">{liveCarData?.team || 'Écurie Connectée'}</h1>
-            <p className="text-sm text-gray-400 font-mono">P{liveCarData?.pos || '?'} | Piste : <span className="text-[#00ff66]">{status}</span></p>
+            <p className="text-sm text-gray-400 font-mono">P{liveCarData?.pos || '?'} | Piste : <span className="text-[#00ff66]">{status || 'Inconnu'}</span></p>
             <p className="text-xs text-gray-500 font-mono mt-1">Pilote RIS détecté : <span className="text-[#ffaa00] font-bold">{liveCarData?.driver || 'Inconnu'}</span> | Statut : <span className="text-white font-black">{carStateRef.current}</span></p>
           </div>
         </div>
@@ -442,7 +446,7 @@ export default function VoitureDetailPage() {
               <div key={pilote.id} className={`p-2 rounded border transition-colors ${pilote.statut === 'AU_VOLANT' ? 'bg-[#153035] border-[#45A29E]' : 'bg-[#0B0C10] border-gray-800'}`}>
                 <div className="flex gap-2 mb-2 items-center">
                   <input type="text" placeholder="Nom Complet" value={pilote.nom} onChange={e => updatePilote(pilote.id, 'nom', e.target.value)} className="bg-transparent font-bold text-sm text-white outline-none border-b border-gray-700 w-1/2" />
-                  {liveCarData?.driver && (!pilote.nomRIS || pilote.nomRIS.toLowerCase() !== liveCarData.driver.toLowerCase()) ? (
+                  {liveCarData?.driver && (!pilote.nomRIS || String(pilote.nomRIS || '').toLowerCase() !== String(liveCarData.driver || '').toLowerCase()) ? (
                     <div className="w-1/2 flex gap-1 items-center">
                       <input type="text" placeholder="Lien RIS" value={pilote.nomRIS || ''} onChange={e => updatePilote(pilote.id, 'nomRIS', e.target.value)} className="bg-transparent font-mono text-xs text-[#ffaa00] outline-none border-b border-gray-700 w-full" />
                       <button onClick={() => { updatePilote(pilote.id, 'nomRIS', liveCarData.driver); setPiloteAuVolant(pilote.id); }} className="text-[9px] bg-[#45A29E] hover:bg-[#66FCF1] text-black font-black px-1.5 py-0.5 rounded transition-colors shadow shadow-[#45A29E]/50 animate-pulse">LIER</button>
@@ -494,7 +498,7 @@ export default function VoitureDetailPage() {
               <Tooltip contentStyle={{ backgroundColor: '#1a1c23', borderColor: '#45A29E', color: '#fff', borderRadius: '8px' }} itemStyle={{ fontWeight: 'bold' }} />
               <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}/>
               <ReferenceLine y={0} stroke="#66FCF1" strokeWidth={2} strokeDasharray="4 4" />
-              {battleGroup.filter(c => String(c.num) !== String(carId)).map((c, index) => (
+              {battleGroup.filter(c => String(c?.num) !== String(carId)).map((c, index) => (
                 <Line key={c.num} type="monotone" dataKey={`car_${c.num}`} name={`#${c.num} ${c.team}`} stroke={chartColors[index % chartColors.length]} strokeWidth={3} dot={{ r: 3, fill: '#0B0C10' }} activeDot={{ r: 6 }} isAnimationActive={false} />
               ))}
             </LineChart>
@@ -513,7 +517,7 @@ export default function VoitureDetailPage() {
             </thead>
             <tbody className="divide-y divide-gray-800 text-sm">
               {battleGroup.map(c => {
-                const isUs = String(c.num) === String(carId);
+                const isUs = String(c?.num) === String(carId);
                 return (
                   <tr key={c.num} className={isUs ? 'bg-[#153035] font-bold border-l-4 border-[#66FCF1]' : 'hover:bg-[#1F2833]'}>
                     <td className="p-2 text-gray-400">P{c.pos}</td>
