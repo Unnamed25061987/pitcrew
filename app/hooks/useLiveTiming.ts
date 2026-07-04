@@ -108,7 +108,7 @@ export function useLiveTiming(format = 'JSON') {
 
     fetchData();
     // Actualisation très rapide pour suivre les secteurs !
-    const intervalId = setInterval(fetchData, 2000);
+    const intervalId = setInterval(fetchData, 10000);
     return () => clearInterval(intervalId);
   }, [format]);
 
