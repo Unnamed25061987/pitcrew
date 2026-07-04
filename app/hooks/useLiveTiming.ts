@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export function useLiveTiming(type: string = 'JSON') {
   const [cars, setCars] = useState<any[]>([]);
-  const [status, setStatus] = useState<string>(''); // Chaîne vide par défaut pour éviter le crash
+  const [status, setStatus] = useState<string>('');
   const [context, setContext] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -12,34 +12,42 @@ export function useLiveTiming(type: string = 'JSON') {
 
     const fetchAllData = async () => {
       try {
-        const timestamp = new Date().getTime(); 
-        const targetUrl = `https://live.ris-timing.be/api/live-timing?uuid=00000000-0000-0000-0000-000000000005&t=${timestamp}`;
-        
-        // 🚀 PROXY ALLORIGINS (Très résistant aux pare-feux)
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-
-        const response = await fetch(proxyUrl, { cache: 'no-store' });
-        
-        if (response.ok) {
-          const data = await response.json();
+        // 1. Appel du Timing
+        const resTiming = await fetch('/api/timing', { cache: 'no-store' });
+        if (resTiming.ok) {
+          const data = await resTiming.json();
           if (isMounted && data) {
             setCars(data.cars || []);
-            // SECURITE ANTI-CRASH : On force en String
-            setStatus(String(data.context?.session?.track_state || '')); 
+            setStatus(String(data.context?.session?.track_state || ''));
             setContext(data.context || null);
             setError(null);
+            
+            // Si les messages sont dans le JSON directement, on les prend
             if (data.events) {
                setMessages(data.events.filter((e: any) => e.kind === 'RC_MESSAGE'));
             }
           }
+        } else {
+           if (isMounted) setError(`Erreur serveur Timing: ${resTiming.status}`);
         }
+
+        // 2. Appel du XML Messages
+        const resMessages = await fetch('/api/messages', { cache: 'no-store' });
+        if (resMessages.ok) {
+           const xmlText = await resMessages.text();
+           // Si tu as une logique spécifique pour lire le XML, elle se fait ici.
+        }
+
       } catch (err: any) {
         if (isMounted) setError(err.message || 'Erreur réseau');
       }
     };
 
+    // Premier appel au chargement
     fetchAllData();
-    const intervalId = setInterval(fetchAllData, 5000); // 5 SECONDES MAX
+    
+    // 🔒 VERROUILLAGE STRICT : 5000 ms (5 secondes)
+    const intervalId = setInterval(fetchAllData, 5000);
 
     return () => {
       isMounted = false;
