@@ -12,22 +12,15 @@ export function useLiveTiming(type: string = 'JSON') {
 
     const fetchAllData = async () => {
       try {
-        const timestamp = new Date().getTime(); 
-        
-        // 🚀 URL DIRECTE DE RIS (Zéro Proxy)
-        const targetUrl = `https://live.ris-timing.be/api/live-timing?uuid=00000000-0000-0000-0000-000000000005&t=${timestamp}`;
+        // 🚀 C'EST ICI LA MAGIE : On interroge TON hébergement web
+        const targetUrl = `https://TON-VRAI-SITE.com/ris.php`;
 
-        const response = await fetch(targetUrl, { 
-          cache: 'no-store',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
+        const response = await fetch(targetUrl, { cache: 'no-store' });
         
         if (response.ok) {
           const data = await response.json();
-          if (isMounted && data) {
-            setCars(data.cars || []);
+          if (isMounted && data && data.cars) {
+            setCars(data.cars);
             setStatus(data.context?.session?.track_state || '');
             setContext(data.context || null);
             setError(null);
@@ -36,7 +29,7 @@ export function useLiveTiming(type: string = 'JSON') {
             }
           }
         } else {
-            if (isMounted) setError(`Erreur RIS : ${response.status}`);
+            if (isMounted) setError(`Erreur pont PHP : ${response.status}`);
         }
       } catch (err: any) {
         if (isMounted) setError(err.message || 'Erreur réseau');
@@ -44,7 +37,7 @@ export function useLiveTiming(type: string = 'JSON') {
     };
 
     fetchAllData();
-    // ⏱️ 5 SECONDES (Sécurité anti-ban)
+    // ⏱️ 5 SECONDES : Parfait pour l'endurance
     const intervalId = setInterval(fetchAllData, 5000);
 
     return () => {
