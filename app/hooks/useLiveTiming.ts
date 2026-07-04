@@ -5,6 +5,8 @@ export function useLiveTiming(type: string = 'JSON') {
   const [status, setStatus] = useState<string>('');
   const [context, setContext] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
+  // 🟢 ON RESTAURE LA VARIABLE ERROR ICI POUR LE LEADERBOARD
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -13,12 +15,10 @@ export function useLiveTiming(type: string = 'JSON') {
       try {
         const timestamp = new Date().getTime(); 
         
-        // La cible
+        // La cible brute
         const targetUrl = `https://live.ris-timing.be/api/live-timing?uuid=00000000-0000-0000-0000-000000000005&t=${timestamp}`;
         
-        // LE SECRET : On passe par un Proxy CORS public.
-        // La requête part avec la connexion locale de ton PC (non bannie), 
-        // et le proxy s'occupe de faire sauter les sécurités du navigateur.
+        // Le Proxy CORS 
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
         const response = await fetch(proxyUrl, { cache: 'no-store' });
@@ -30,21 +30,23 @@ export function useLiveTiming(type: string = 'JSON') {
             setCars(data.cars || []);
             setStatus(data.context?.session?.track_state || '');
             setContext(data.context || null);
+            setError(null); // Tout va bien, pas d'erreur
             
-            // On extrait directement les messages de la direction de course du JSON !
             if (data.events) {
                setMessages(data.events.filter((e: any) => e.kind === 'RC_MESSAGE'));
             }
           }
+        } else {
+            if (isMounted) setError(`Erreur serveur Proxy ou RIS : ${response.status}`);
         }
-      } catch (error) {
-        // Mode silencieux : on ignore l'erreur en cas de micro-coupure wifi
+      } catch (err: any) {
+        if (isMounted) setError(err.message || 'Erreur réseau de lecture');
       }
     };
 
     fetchAllData();
     
-    // CADENCE DE SÉCURITÉ STRICTE : 5000 millisecondes (5 secondes)
+    // CADENCE DE SÉCURITÉ STRICTE : 5000 millisecondes
     const intervalId = setInterval(fetchAllData, 5000);
 
     return () => {
@@ -53,5 +55,6 @@ export function useLiveTiming(type: string = 'JSON') {
     };
   }, [type]);
 
-  return { cars, status, context, messages };
+  // 🟢 ON RENVOIE BIEN L'ERREUR POUR QUE LE RESTE DE L'APP FONCTIONNE
+  return { cars, status, context, messages, error };
 }
