@@ -13,7 +13,7 @@ export function useLiveTiming(type: string = 'JSON') {
     const fetchAllData = async () => {
       try {
         // 🚀 C'EST ICI LA MAGIE : On interroge TON hébergement web
-        const targetUrl = `https://TON-VRAI-SITE.com/ris.php`;
+        const targetUrl = `https://statsfoot.com/ris.php`;
 
         const response = await fetch(targetUrl, { cache: 'no-store' });
         
