@@ -10,11 +10,11 @@ interface Stint { id: number; driver: string; laps: number; tire: string; }
 interface AiMessage { role: 'user' | 'ai'; content: string; timestamp: string; }
 interface LapRecord { id: number; lapNumber: number; driverRIS: string; s1: string; s2: string; s3: string; lapTime: string; lapTimeMs: number; }
 
-// 🟢 CORRECTION ICI : On ajoute "Trs" pour que le graphique comprenne la traduction du Hook
 const parseGapToSeconds = (gapStr?: string): number => {
   if (!gapStr) return 0;
   const str = String(gapStr);
   if (str === "Leader") return 0;
+  // Correction Trs incluse
   if (str.includes("Laps") || str.includes("Lap") || str.includes("Trs")) return parseInt(str.replace(/[^0-9]/g, '')) * 135; 
   if (str.includes("s")) return parseFloat(str.replace(/[^0-9.-]/g, ''));
   return 0;
@@ -507,6 +507,7 @@ export default function VoitureDetailPage() {
         </div>
       </div>
 
+      {/* 🚀 LE RETOUR DU MODULE AWS F1 STRATEGY 🚀 */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
         <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
           <h3 className="text-[#ffaa00] font-black text-sm tracking-wider mb-4 uppercase">⚔️ LA BATAILLE DIRECTE</h3>
@@ -532,30 +533,91 @@ export default function VoitureDetailPage() {
           </table>
         </div>
 
-        <div className="bg-[#1a1c23] p-5 rounded-lg border border-[#45A29E] shadow-[0_0_15px_rgba(69,162,158,0.2)]">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-[#66FCF1] font-black text-sm tracking-wider uppercase">🔮 PRÉDICTION SORTIE DES STANDS</h3>
-            <span className="text-[10px] bg-[#0B0C10] px-2 py-1 rounded text-gray-400 border border-gray-700">Pit Loss: {config.pitLossTime}s</span>
+        <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-5 rounded-lg border border-[#45A29E] shadow-[0_0_20px_rgba(69,162,158,0.2)] relative overflow-hidden">
+          {/* Grille de fond AWS */}
+          <div className="absolute inset-0 opacity-5 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#45A29E_10px,#45A29E_20px)] pointer-events-none" />
+          
+          <div className="flex justify-between items-center mb-6 relative z-10">
+            <h3 className="text-[#66FCF1] font-black text-sm tracking-wider uppercase flex items-center gap-2">
+              <span className="text-xl">🔮</span> AWS PIT STRATEGY
+            </h3>
+            <span className="text-[10px] bg-[#0B0C10] px-2 py-1 rounded font-mono text-[#ffaa00] border border-[#ffaa00]/30 shadow-[0_0_5px_rgba(255,170,0,0.2)]">
+              Pit Loss: {config.pitLossTime}s
+            </span>
           </div>
-          <table className="w-full text-left border-collapse text-xs font-mono">
-            <thead>
-              <tr className="bg-[#0B0C10] text-gray-400 uppercase tracking-wider border-b border-gray-800">
-                <th className="p-2">Statut</th><th className="p-2">N°</th><th className="p-2 font-sans">Équipe</th><th className="p-2">Écart Virtuel</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800 text-sm">
-              {predictorGroup.map((c: any) => (
-                <tr key={c.num} className={c.isGhost ? 'bg-purple-900/40 font-bold border-l-4 border-purple-500 animate-pulse' : 'hover:bg-[#1F2833]'}>
-                  <td className="p-2">{c.isGhost ? 'SORTIE' : `P${c.pos}`}</td>
-                  <td className="p-2 text-[#ffaa00]">{c.num}</td>
-                  <td className={`p-2 font-sans text-xs truncate max-w-[120px] ${c.isGhost ? 'text-purple-400' : 'text-white'}`}>{c.team}</td>
-                  <td className="p-2 text-gray-300">{c.gap}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+          <style>{`
+            @keyframes aws-wave-svg {
+                0%, 100% { opacity: 0.1; transform: translateY(-2px); color: #1F2833; filter: drop-shadow(0 0 0px transparent); }
+                50% { opacity: 1; transform: translateY(3px); color: #66FCF1; filter: drop-shadow(0 0 6px #66FCF1); }
+            }
+            .aws-svg-chevron { animation: aws-wave-svg 1.2s infinite; margin: -3px auto; display: block; }
+          `}</style>
+
+          <div className="flex flex-col gap-1 font-mono relative z-10">
+            {predictorGroup.map((c: any, index: number) => {
+              const isUs = c.isGhost;
+              const ghostCar = predictorGroup.find((p:any) => p.isGhost);
+              const deltaGhost = ghostCar ? (c.gapSec - ghostCar.gapSec).toFixed(1) : "0.0";
+              
+              return (
+                <React.Fragment key={c.num}>
+                  <div className={`flex items-center justify-between p-3 rounded-lg border backdrop-blur-sm transition-all ${
+                    isUs 
+                      ? 'bg-gradient-to-r from-purple-900/80 to-[#0B0C10] border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)] scale-105 my-3 z-20' 
+                      : 'bg-[#1F2833]/80 border-gray-700/50 hover:border-gray-500 z-10'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 text-center font-black text-lg ${isUs ? 'text-purple-400 animate-pulse' : 'text-[#ffaa00]'}`}>
+                        {isUs ? '🎯' : `P${c.pos}`}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className={`font-bold text-sm ${isUs ? 'text-white tracking-widest' : 'text-gray-200'}`}>
+                          {isUs ? 'PIT EXIT MERGE' : `#${c.num} ${c.team}`}
+                        </span>
+                        {!isUs && <span className="text-[10px] text-gray-500">Track Gap: {c.gap}</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end min-w-[80px]">
+                      {isUs ? (
+                        <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-500/50 uppercase font-black tracking-widest">
+                          VIRTUAL
+                        </span>
+                      ) : (
+                        <>
+                          <span className={`text-sm font-black ${Number(deltaGhost) < 0 ? 'text-[#00ff66]' : 'text-[#ff3333]'}`}>
+                            {Number(deltaGhost) < 0 ? `-${Math.abs(Number(deltaGhost)).toFixed(1)}s` : `+${Math.abs(Number(deltaGhost)).toFixed(1)}s`}
+                          </span>
+                          <span className="text-[9px] text-gray-500 uppercase tracking-wider">
+                            {Number(deltaGhost) < 0 ? 'Ahead' : 'Behind'}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Vague de flèches animées entre les voitures */}
+                  {index < predictorGroup.length - 1 && (
+                    <div className="flex flex-col items-center justify-center h-8 relative z-0">
+                      <svg className="aws-svg-chevron" style={{ animationDelay: '0.0s' }} width="18" height="12" viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 2L12 10L22 2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <svg className="aws-svg-chevron" style={{ animationDelay: '0.2s' }} width="18" height="12" viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 2L12 10L22 2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <svg className="aws-svg-chevron" style={{ animationDelay: '0.4s' }} width="18" height="12" viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 2L12 10L22 2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
         </div>
       </div>
+      {/* 🚀 FIN DU MODULE AWS 🚀 */}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
         <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
