@@ -14,7 +14,6 @@ const parseGapToSeconds = (gapStr?: string): number => {
   if (!gapStr) return 0;
   const str = String(gapStr);
   if (str === "Leader") return 0;
-  // Correction Trs incluse
   if (str.includes("Laps") || str.includes("Lap") || str.includes("Trs")) return parseInt(str.replace(/[^0-9]/g, '')) * 135; 
   if (str.includes("s")) return parseFloat(str.replace(/[^0-9.-]/g, ''));
   return 0;
@@ -30,6 +29,7 @@ const parseLapToMs = (lapStr?: string): number => {
 };
 
 const formatMsToLapTime = (ms: number) => {
+  if (ms === Infinity || isNaN(ms)) return "-:--.---";
   const minutes = Math.floor(ms / 60000);
   const seconds = ((ms % 60000) / 1000).toFixed(3);
   return `${minutes}:${seconds.padStart(6, '0')}`;
@@ -80,6 +80,7 @@ export default function VoitureDetailPage() {
 
   const safeCars = Array.isArray(cars) ? cars : [];
   const liveCarData = safeCars.find(c => String(c?.num) === String(carId));
+  const carIndex = safeCars.findIndex(c => String(c?.num) === String(carId));
 
   useEffect(() => {
     const savedConfig = localStorage.getItem(`car_config_${carId}`);
@@ -256,11 +257,65 @@ export default function VoitureDetailPage() {
     return { avgStr: formatMsToLapTime(avgCurrentMs), trend, deltaStr };
   }, [lapHistory, activePilote]);
 
-  let fuelColorText = 'text-white'; let fuelBorderColor = 'border-gray-800'; let fuelTitleColor = 'text-[#00ff66]';
-  if (isFuelWarning) { fuelColorText = 'text-orange-500'; fuelBorderColor = 'border-orange-500'; fuelTitleColor = 'text-orange-500'; } 
-  else if (isFuelCritical) { fuelColorText = 'text-red-500 animate-pulse'; fuelBorderColor = 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]'; fuelTitleColor = 'text-red-500 animate-pulse'; }
+  // 🚀 CALCULATEUR DE PRÉDICTION DE DÉPASSEMENT (AWS F1) 🚀
+  const overtakePredictions = useMemo(() => {
+    if (!liveCarData || carIndex === -1 || safeCars.length === 0) return [];
+    
+    const predictions = [];
+    const ourPaceMs = parseLapToMs(liveCarData.lastLap);
+    const ourGapSec = parseGapToSeconds(liveCarData.gap);
 
-  const carIndex = safeCars.findIndex(c => String(c?.num) === String(carId));
+    if (ourPaceMs === Infinity) return [];
+
+    // Analyse de la voiture DEVANT NOUS (ATTACK)
+    if (carIndex > 0) {
+      const carAhead = safeCars[carIndex - 1];
+      const theirPaceMs = parseLapToMs(carAhead.lastLap);
+      const gapToThemMs = (ourGapSec - parseGapToSeconds(carAhead.gap)) * 1000;
+
+      if (theirPaceMs !== Infinity && ourPaceMs < theirPaceMs && gapToThemMs > 0) {
+        const paceAdvantageMs = theirPaceMs - ourPaceMs;
+        const lapsToCatch = gapToThemMs / paceAdvantageMs;
+        
+        if (lapsToCatch > 0 && lapsToCatch < 30) {
+          predictions.push({
+            type: 'ATTACK',
+            targetCar: carAhead.num,
+            targetTeam: carAhead.team,
+            paceAdvantageSec: (paceAdvantageMs / 1000).toFixed(2),
+            lapsRemaining: Math.ceil(lapsToCatch),
+            predictedLap: (liveCarData.laps || 0) + Math.ceil(lapsToCatch)
+          });
+        }
+      }
+    }
+
+    // Analyse de la voiture DERRIÈRE NOUS (DEFEND)
+    if (carIndex < safeCars.length - 1) {
+      const carBehind = safeCars[carIndex + 1];
+      const theirPaceMs = parseLapToMs(carBehind.lastLap);
+      const gapToUsMs = (parseGapToSeconds(carBehind.gap) - ourGapSec) * 1000;
+
+      if (theirPaceMs !== Infinity && theirPaceMs < ourPaceMs && gapToUsMs > 0) {
+        const paceAdvantageMs = ourPaceMs - theirPaceMs;
+        const lapsToCatch = gapToUsMs / paceAdvantageMs;
+        
+        if (lapsToCatch > 0 && lapsToCatch < 30) {
+          predictions.push({
+            type: 'DEFEND',
+            targetCar: carBehind.num,
+            targetTeam: carBehind.team,
+            paceAdvantageSec: (paceAdvantageMs / 1000).toFixed(2),
+            lapsRemaining: Math.ceil(lapsToCatch),
+            predictedLap: (liveCarData.laps || 0) + Math.ceil(lapsToCatch)
+          });
+        }
+      }
+    }
+
+    return predictions;
+  }, [safeCars, liveCarData, carIndex]);
+
   let battleGroup: any[] = [];
   if (carIndex !== -1) battleGroup = safeCars.slice(Math.max(0, carIndex - 2), Math.min(safeCars.length - 1, carIndex + 2) + 1);
 
@@ -279,19 +334,6 @@ export default function VoitureDetailPage() {
       } else return [...prev, newData].slice(-15);
     });
   }, [safeCars, liveCarData?.laps, carId]);
-
-  const predictorGroup = useMemo(() => {
-    if (!liveCarData) return [];
-    const estimatedExitGap = parseGapToSeconds(liveCarData.gap) + config.pitLossTime;
-    const carsWithGaps = safeCars.map(c => ({ ...c, gapSec: parseGapToSeconds(c.gap), isGhost: false })); 
-    const ghostCar = {
-      isGhost: true, num: "GHOST", pos: "-", team: "📍 NOTRE SORTIE STAND", driver: "Simulation", 
-      gapSec: estimatedExitGap, gap: `+${estimatedExitGap.toFixed(1)}s`, lastLap: "-", s1: "-", s2: "-", s3: "-"
-    };
-    const carsWithGhost = [...carsWithGaps, ghostCar].sort((a: any, b: any) => a.gapSec - b.gapSec);
-    const ghostIndex = carsWithGhost.findIndex(c => c.isGhost);
-    return carsWithGhost.slice(Math.max(0, ghostIndex - 2), Math.min(carsWithGhost.length - 1, ghostIndex + 2) + 1);
-  }, [safeCars, liveCarData, config.pitLossTime]);
 
   const addPilote = () => setPilotes([...pilotes, { id: Date.now(), nom: `Pilote ${pilotes.length + 1}`, nomRIS: '', statut: pilotes.length === 0 ? 'AU_VOLANT' : 'REPOS', stintActuel: 0, totalRoulé: 0, totalMax: 120 }]);
   const updatePilote = (id: number, field: string, value: any) => setPilotes(pilotes.map(p => p.id === id ? { ...p, [field]: value } : p));
@@ -369,6 +411,10 @@ export default function VoitureDetailPage() {
       setIsAiTyping(false);
     }, 1500);
   };
+
+  let fuelColorText = 'text-white'; let fuelBorderColor = 'border-gray-800'; let fuelTitleColor = 'text-[#00ff66]';
+  if (isFuelWarning) { fuelColorText = 'text-orange-500'; fuelBorderColor = 'border-orange-500'; fuelTitleColor = 'text-orange-500'; } 
+  else if (isFuelCritical) { fuelColorText = 'text-red-500 animate-pulse'; fuelBorderColor = 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]'; fuelTitleColor = 'text-red-500 animate-pulse'; }
 
   const chartColors = ['#00ff66', '#ffaa00', '#ff3333', '#a855f7'];
 
@@ -507,7 +553,7 @@ export default function VoitureDetailPage() {
         </div>
       </div>
 
-      {/* 🚀 LE RETOUR DU MODULE AWS F1 STRATEGY 🚀 */}
+      {/* 🚀 LE RETOUR DU VRAI MODULE AWS OVERTAKE PREDICTION 🚀 */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
         <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
           <h3 className="text-[#ffaa00] font-black text-sm tracking-wider mb-4 uppercase">⚔️ LA BATAILLE DIRECTE</h3>
@@ -533,91 +579,91 @@ export default function VoitureDetailPage() {
           </table>
         </div>
 
-        <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-5 rounded-lg border border-[#45A29E] shadow-[0_0_20px_rgba(69,162,158,0.2)] relative overflow-hidden">
-          {/* Grille de fond AWS */}
-          <div className="absolute inset-0 opacity-5 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#45A29E_10px,#45A29E_20px)] pointer-events-none" />
+        <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-5 rounded-lg border border-[#ff3333] shadow-[0_0_20px_rgba(255,51,51,0.2)] relative overflow-hidden">
+          {/* Grille de fond AWS pour le module de dépassement */}
+          <div className="absolute inset-0 opacity-5 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ff3333_10px,#ff3333_20px)] pointer-events-none" />
           
           <div className="flex justify-between items-center mb-6 relative z-10">
-            <h3 className="text-[#66FCF1] font-black text-sm tracking-wider uppercase flex items-center gap-2">
-              <span className="text-xl">🔮</span> AWS PIT STRATEGY
+            <h3 className="text-[#ff3333] font-black text-sm tracking-wider uppercase flex items-center gap-2">
+              <span className="text-xl">🎯</span> AWS BATTLE FORECAST
             </h3>
-            <span className="text-[10px] bg-[#0B0C10] px-2 py-1 rounded font-mono text-[#ffaa00] border border-[#ffaa00]/30 shadow-[0_0_5px_rgba(255,170,0,0.2)]">
-              Pit Loss: {config.pitLossTime}s
+            <span className="text-[10px] bg-[#0B0C10] px-2 py-1 rounded font-mono text-gray-400 border border-gray-700">
+              STRIKING DISTANCE PREDICTION
             </span>
           </div>
 
           <style>{`
-            @keyframes aws-wave-svg {
-                0%, 100% { opacity: 0.1; transform: translateY(-2px); color: #1F2833; filter: drop-shadow(0 0 0px transparent); }
-                50% { opacity: 1; transform: translateY(3px); color: #66FCF1; filter: drop-shadow(0 0 6px #66FCF1); }
+            @keyframes aws-wave-attack {
+                0%, 100% { opacity: 0.2; transform: translateX(-2px); filter: drop-shadow(0 0 0px transparent); }
+                50% { opacity: 1; transform: translateX(3px); filter: drop-shadow(0 0 6px #00ff66); }
             }
-            .aws-svg-chevron { animation: aws-wave-svg 1.2s infinite; margin: -3px auto; display: block; }
+            @keyframes aws-wave-defend {
+                0%, 100% { opacity: 0.2; transform: translateX(2px); filter: drop-shadow(0 0 0px transparent); }
+                50% { opacity: 1; transform: translateX(-3px); filter: drop-shadow(0 0 6px #ff3333); }
+            }
+            .aws-chevron-attack { animation: aws-wave-attack 1s infinite; margin-right: -2px; display: inline-block; color: #00ff66; }
+            .aws-chevron-defend { animation: aws-wave-defend 1s infinite; margin-left: -2px; display: inline-block; color: #ff3333; }
           `}</style>
 
-          <div className="flex flex-col gap-1 font-mono relative z-10">
-            {predictorGroup.map((c: any, index: number) => {
-              const isUs = c.isGhost;
-              const ghostCar = predictorGroup.find((p:any) => p.isGhost);
-              const deltaGhost = ghostCar ? (c.gapSec - ghostCar.gapSec).toFixed(1) : "0.0";
-              
-              return (
-                <React.Fragment key={c.num}>
-                  <div className={`flex items-center justify-between p-3 rounded-lg border backdrop-blur-sm transition-all ${
-                    isUs 
-                      ? 'bg-gradient-to-r from-purple-900/80 to-[#0B0C10] border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)] scale-105 my-3 z-20' 
-                      : 'bg-[#1F2833]/80 border-gray-700/50 hover:border-gray-500 z-10'
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 text-center font-black text-lg ${isUs ? 'text-purple-400 animate-pulse' : 'text-[#ffaa00]'}`}>
-                        {isUs ? '🎯' : `P${c.pos}`}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className={`font-bold text-sm ${isUs ? 'text-white tracking-widest' : 'text-gray-200'}`}>
-                          {isUs ? 'PIT EXIT MERGE' : `#${c.num} ${c.team}`}
-                        </span>
-                        {!isUs && <span className="text-[10px] text-gray-500">Track Gap: {c.gap}</span>}
-                      </div>
+          <div className="flex flex-col gap-4 font-mono relative z-10">
+            {overtakePredictions.length === 0 ? (
+              <div className="text-center text-gray-500 py-8 font-sans italic">
+                Analyse du rythme en cours... Aucun dépassement imminent détecté.
+              </div>
+            ) : (
+              overtakePredictions.map((pred, i) => (
+                <div key={i} className={`flex flex-col p-4 rounded-lg border backdrop-blur-sm shadow-lg relative ${
+                  pred.type === 'ATTACK' 
+                    ? 'bg-gradient-to-r from-[#003311]/80 to-[#0B0C10] border-[#00ff66]/50' 
+                    : 'bg-gradient-to-r from-[#440000]/80 to-[#0B0C10] border-[#ff3333]/50'
+                }`}>
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`font-black tracking-widest ${pred.type === 'ATTACK' ? 'text-[#00ff66]' : 'text-[#ff3333]'}`}>
+                        {pred.type === 'ATTACK' ? 'CATCHING' : 'DEFENDING'}
+                      </span>
+                      <span className="text-white font-bold">#{pred.targetCar} {pred.targetTeam}</span>
                     </div>
+                    <span className="text-[10px] bg-black/50 px-2 py-1 rounded text-gray-300 border border-gray-700">
+                      Pace Delta: <strong className={pred.type === 'ATTACK' ? 'text-[#00ff66]' : 'text-[#ff3333]'}>{pred.paceAdvantageSec}s/lap</strong>
+                    </span>
+                  </div>
 
-                    <div className="flex flex-col items-end min-w-[80px]">
-                      {isUs ? (
-                        <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-500/50 uppercase font-black tracking-widest">
-                          VIRTUAL
-                        </span>
+                  <div className="flex justify-between items-end">
+                    <div className="flex gap-1">
+                      {/* Vague dynamique de flèches */}
+                      {pred.type === 'ATTACK' ? (
+                        <>
+                          <svg className="aws-chevron-attack" style={{ animationDelay: '0.0s' }} width="16" height="24" viewBox="0 0 14 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 2L12 12L2 22"/></svg>
+                          <svg className="aws-chevron-attack" style={{ animationDelay: '0.2s' }} width="16" height="24" viewBox="0 0 14 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 2L12 12L2 22"/></svg>
+                          <svg className="aws-chevron-attack" style={{ animationDelay: '0.4s' }} width="16" height="24" viewBox="0 0 14 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 2L12 12L2 22"/></svg>
+                        </>
                       ) : (
                         <>
-                          <span className={`text-sm font-black ${Number(deltaGhost) < 0 ? 'text-[#00ff66]' : 'text-[#ff3333]'}`}>
-                            {Number(deltaGhost) < 0 ? `-${Math.abs(Number(deltaGhost)).toFixed(1)}s` : `+${Math.abs(Number(deltaGhost)).toFixed(1)}s`}
-                          </span>
-                          <span className="text-[9px] text-gray-500 uppercase tracking-wider">
-                            {Number(deltaGhost) < 0 ? 'Ahead' : 'Behind'}
-                          </span>
+                          <svg className="aws-chevron-defend" style={{ animationDelay: '0.4s' }} width="16" height="24" viewBox="0 0 14 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 12L12 22"/></svg>
+                          <svg className="aws-chevron-defend" style={{ animationDelay: '0.2s' }} width="16" height="24" viewBox="0 0 14 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 12L12 22"/></svg>
+                          <svg className="aws-chevron-defend" style={{ animationDelay: '0.0s' }} width="16" height="24" viewBox="0 0 14 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 12L12 22"/></svg>
                         </>
                       )}
                     </div>
-                  </div>
 
-                  {/* Vague de flèches animées entre les voitures */}
-                  {index < predictorGroup.length - 1 && (
-                    <div className="flex flex-col items-center justify-center h-8 relative z-0">
-                      <svg className="aws-svg-chevron" style={{ animationDelay: '0.0s' }} width="18" height="12" viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M2 2L12 10L22 2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <svg className="aws-svg-chevron" style={{ animationDelay: '0.2s' }} width="18" height="12" viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M2 2L12 10L22 2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <svg className="aws-svg-chevron" style={{ animationDelay: '0.4s' }} width="18" height="12" viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M2 2L12 10L22 2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">STRIKING DISTANCE IN</span>
+                      <span className="text-3xl font-black text-white leading-none shadow-sm">
+                        {pred.lapsRemaining} <span className="text-lg text-gray-400">Laps</span>
+                      </span>
+                      <span className={`text-xs font-bold mt-1 ${pred.type === 'ATTACK' ? 'text-[#00ff66]' : 'text-[#ff3333]'}`}>
+                        Predicted Lap: {pred.predictedLap}
+                      </span>
                     </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
-      {/* 🚀 FIN DU MODULE AWS 🚀 */}
+      {/* 🚀 FIN DU MODULE AWS OVERTAKE 🚀 */}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
         <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
