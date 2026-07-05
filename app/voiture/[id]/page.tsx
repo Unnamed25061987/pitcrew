@@ -12,18 +12,6 @@ interface LapRecord { id: number; lapNumber: number; driverRIS: string; s1: stri
 interface PitStopRecord { id: number; lap: number; timeIn: string; durationSec: number; }
 interface RcMessage { time: string; msg: string; }
 
-const parseGapToSeconds = (gapStr?: string): number => {
-  if (!gapStr) return 0;
-  const str = String(gapStr);
-  if (str === "Leader" || str === "-") return 0;
-  if (str.includes("Trs") || str.includes("Lap") || str.includes("Laps")) {
-    const match = str.match(/[0-9.]+/);
-    return match ? parseFloat(match[0]) * 135 : 0;
-  }
-  const match = str.match(/[0-9.]+/);
-  return match ? parseFloat(match[0]) : 0;
-};
-
 const parseLapToMs = (lapStr?: string): number => {
   if (!lapStr) return Infinity;
   const str = String(lapStr);
@@ -48,13 +36,19 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
+// 🚀 EXTRACTION PURE DU JSON 🚀
+const getAbsoluteGapMs = (car: any) => {
+  if (!car || !car.gaps || !car.gaps.toLeader) return Infinity;
+  if (car.gaps.toLeader.laps > 0) return (car.gaps.toLeader.laps * 135000);
+  return car.gaps.toLeader.ms || 0;
+};
+
 export default function VoitureDetailPage() {
   const params = useParams();
   const router = useRouter();
   const carId = params.id as string;
-  const { cars } = useLiveTiming('JSON');
+  const { cars, context, messages: liveMessages } = useLiveTiming('JSON'); 
   
-  // 🚀 AJOUT DE L'API GLOBALE POUR STATUS ET MESSAGES RC 🚀
   const [globalStatus, setGlobalStatus] = useState("WAITING");
   
   const [config, setConfig] = useState({ 
@@ -72,7 +66,11 @@ export default function VoitureDetailPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
+  
+  // 🚀 VARIABLES MANQUANTES RÉINTÉGRÉES 🚀
   const [gapHistory, setGapHistory] = useState<any[]>([]);
+  const chartColors = ['#00ff66', '#ffaa00', '#ff3333', '#a855f7'];
+
   const [pitMode, setPitMode] = useState<'DT' | 'REFUEL' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
   const [customPitTime, setCustomPitTime] = useState<number>(65);
   
@@ -88,10 +86,11 @@ export default function VoitureDetailPage() {
   const competitorsPaceRef = useRef<Record<string, Record<number, number>>>({});
 
   const safeCars = Array.isArray(cars) ? cars : [];
-  const liveCarData = safeCars.find(c => String(c?.num) === String(carId));
-  const carIndex = safeCars.findIndex(c => String(c?.num) === String(carId));
+  const liveCarData = safeCars.find(c => String(c?.car_number || c?.num) === String(carId));
+  
+  const sortedCars = [...safeCars].sort((a, b) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999));
+  const carIndex = sortedCars.findIndex(c => String(c?.car_number || c?.num) === String(carId));
 
-  // 🚀 FETCH RACE CONTROL MESSAGES & GLOBAL STATUS 🚀
   useEffect(() => {
     const fetchRC = async () => {
       try {
@@ -99,7 +98,6 @@ export default function VoitureDetailPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.trackStatus) setGlobalStatus(data.trackStatus);
-          
           if (data.message) {
             setRcHistory(prev => {
               if (prev.length === 0 || prev[0].msg !== data.message) {
@@ -115,6 +113,25 @@ export default function VoitureDetailPage() {
     const int = setInterval(fetchRC, 5000);
     return () => clearInterval(int);
   }, []);
+
+  useEffect(() => {
+    if (globalStatus === "WAITING" && context?.session?.track_state) {
+      setGlobalStatus(context.session.track_state);
+    }
+  }, [globalStatus, context]);
+
+  useEffect(() => {
+    if (liveMessages && liveMessages.length > 0) {
+      const rcEvents = liveMessages.filter((e:any) => e.kind === "RC_MESSAGE");
+      if (rcEvents.length > 0) {
+        const msg = rcEvents[rcEvents.length - 1].message;
+        setRcHistory(prev => {
+          if (prev.length === 0 || prev[0].msg !== msg) return [{ time: new Date().toLocaleTimeString(), msg }, ...prev].slice(0, 30);
+          return prev;
+        });
+      }
+    }
+  }, [liveMessages]);
 
   useEffect(() => {
     const savedConfig = localStorage.getItem(`car_config_${carId}`);
@@ -145,25 +162,26 @@ export default function VoitureDetailPage() {
   }, [pilotes, stints, aiMessages, lapHistory, pitStopsHistory, currentFuel, isLoaded, carId]);
 
   useEffect(() => {
-    const rawState = (liveCarData as any)?.lap?.car_state || (liveCarData as any)?.car_state || (liveCarData as any)?.state || 'RUN';
-    carStateRef.current = String(rawState || 'RUN').toUpperCase();
+    const rawState = liveCarData?.lap?.car_state || 'RUN';
+    carStateRef.current = String(rawState).toUpperCase();
   }, [liveCarData]);
 
   useEffect(() => {
-    if (!liveCarData) return;
-    if (liveCarData.s1 && liveCarData.s1 !== '-') currentSectorsRef.current.s1 = String(liveCarData.s1);
-    if (liveCarData.s2 && liveCarData.s2 !== '-') currentSectorsRef.current.s2 = String(liveCarData.s2);
-    if (liveCarData.s3 && liveCarData.s3 !== '-') currentSectorsRef.current.s3 = String(liveCarData.s3);
-  }, [liveCarData?.s1, liveCarData?.s2, liveCarData?.s3]);
+    if (!liveCarData?.lap) return;
+    if (liveCarData.lap.s1_ms) currentSectorsRef.current.s1 = (liveCarData.lap.s1_ms / 1000).toFixed(3);
+    if (liveCarData.lap.s2_ms) currentSectorsRef.current.s2 = (liveCarData.lap.s2_ms / 1000).toFixed(3);
+    if (liveCarData.lap.s3_ms) currentSectorsRef.current.s3 = (liveCarData.lap.s3_ms / 1000).toFixed(3);
+  }, [liveCarData]);
 
   useEffect(() => {
     if (!safeCars) return;
     safeCars.forEach(c => {
-      const ms = parseLapToMs(c.lastLap);
-      const lapNum = parseInt(c.laps);
-      if (ms !== Infinity && ms > 0 && lapNum > 0) {
-        if (!competitorsPaceRef.current[c.num]) competitorsPaceRef.current[c.num] = {};
-        competitorsPaceRef.current[c.num][lapNum] = ms;
+      const ms = c.lap?.lap_time_ms;
+      const lapNum = c.lap?.lap_number;
+      if (ms && lapNum) {
+        const carKey = String(c.car_number || c.num);
+        if (!competitorsPaceRef.current[carKey]) competitorsPaceRef.current[carKey] = {};
+        competitorsPaceRef.current[carKey][lapNum] = ms;
       }
     });
   }, [safeCars]);
@@ -172,7 +190,7 @@ export default function VoitureDetailPage() {
     const interval = setInterval(() => {
       const state = String(carStateRef.current || '');
       const isRun = state === 'RUN' || state === 'TRACK' || (!state.includes('IN') && !state.includes('FUEL') && state !== 'PIT');
-      const isIn = state === 'IN' || state === 'PITIN' || state === 'PIT';
+      const isIn = state === 'IN' || state === 'PITIN' || state === 'PIT' || state === 'FUEL';
       const isFuel = state === 'FUEL' || state === 'REFUEL';
 
       setPilotes(prev => prev.map(p => {
@@ -184,6 +202,7 @@ export default function VoitureDetailPage() {
       }));
       if (isFuel) setCurrentFuel(prev => prev < config.capaMax ? config.capaMax : prev);
 
+      // --- CHRONO PIT STOP ---
       if (isIn && !prevPitStateRef.current) {
         pitEntryTimeRef.current = Date.now();
         setCurrentPitTimer(0);
@@ -215,17 +234,17 @@ export default function VoitureDetailPage() {
   }, [liveCarData?.driver]);
 
   useEffect(() => {
-    if (liveCarData && liveCarData.laps > 0) {
+    if (liveCarData?.lap && liveCarData.lap.lap_number > 0) {
       if (lastLapRef.current === null) {
-        lastLapRef.current = liveCarData.laps;
-      } else if (liveCarData.laps > lastLapRef.current) {
-        const lapsDone = liveCarData.laps - lastLapRef.current;
-        const lapTimeMs = parseLapToMs(liveCarData.lastLap);
+        lastLapRef.current = liveCarData.lap.lap_number;
+      } else if (liveCarData.lap.lap_number > lastLapRef.current) {
+        const lapsDone = liveCarData.lap.lap_number - lastLapRef.current;
+        const lapTimeMs = liveCarData.lap.lap_time_ms;
         const greenMs = parseLapToMs(config.timeGreenStr) || 175000;
         const fcyMs = parseLapToMs(config.timeFcyStr) || 420000;
         
         let lapConso = config.consoGreen;
-        if (lapTimeMs > 0 && lapTimeMs !== Infinity) {
+        if (lapTimeMs && lapTimeMs > 0) {
           if (lapTimeMs <= greenMs) lapConso = config.consoGreen; 
           else if (lapTimeMs >= fcyMs) lapConso = config.consoFcy; 
           else {
@@ -242,15 +261,15 @@ export default function VoitureDetailPage() {
         const newLap: LapRecord = {
           id: Date.now(), lapNumber: lastLapRef.current, driverRIS: String(liveCarData.driver || 'Inconnu'),
           s1: currentSectorsRef.current.s1, s2: currentSectorsRef.current.s2, s3: currentSectorsRef.current.s3,
-          lapTime: String(liveCarData.lastLap || '-'), lapTimeMs: lapTimeMs
+          lapTime: formatMsToLapTime(lapTimeMs), lapTimeMs: lapTimeMs || Infinity
         };
 
         setLapHistory(prev => [newLap, ...prev].slice(0, 1000));
-        lastLapRef.current = liveCarData.laps;
+        lastLapRef.current = liveCarData.lap.lap_number;
         currentSectorsRef.current = { s1: '-', s2: '-', s3: '-' };
       }
     }
-  }, [liveCarData?.laps, globalStatus, config.consoGreen, config.consoFcy, config.timeGreenStr, config.timeFcyStr, liveCarData?.lastLap, liveCarData?.driver]);
+  }, [liveCarData?.lap?.lap_number, globalStatus, config.consoGreen, config.consoFcy, config.timeGreenStr, config.timeFcyStr, liveCarData?.lap?.lap_time_ms, liveCarData?.driver]);
 
   const fuelPct = config.capaMax > 0 ? (currentFuel / config.capaMax) * 100 : 0;
   const isFuelWarning = fuelPct <= config.alertOrangePct && fuelPct > config.alertRedPct;
@@ -283,26 +302,33 @@ export default function VoitureDetailPage() {
   }, [lapHistory, activePilote]);
 
   let battleGroup: any[] = [];
-  if (carIndex !== -1) battleGroup = safeCars.slice(Math.max(0, carIndex - 2), Math.min(safeCars.length - 1, carIndex + 2) + 1);
+  if (carIndex !== -1) battleGroup = sortedCars.slice(Math.max(0, carIndex - 2), Math.min(sortedCars.length - 1, carIndex + 2) + 1);
 
+  // 🚀 MISE À JOUR CORRECTE DU GAP HISTORY 🚀
   useEffect(() => {
     if (!liveCarData || battleGroup.length === 0) return;
-    const currentLap = liveCarData.laps;
+    const currentLap = liveCarData.lap?.lap_number || 0;
+    
     setGapHistory(prev => {
       const existingIdx = prev.findIndex(item => item.lap === currentLap);
       const newData: any = { lap: currentLap };
-      const ourGapSec = parseGapToSeconds(liveCarData.gap);
+      const ourGapSec = getAbsoluteGapMs(liveCarData) / 1000;
+      
       battleGroup.forEach(c => {
-        if (String(c.num) !== String(carId)) newData[`car_${c.num}`] = parseFloat((ourGapSec - parseGapToSeconds(c.gap)).toFixed(2));
+        if (String(c.car_number || c.num) !== String(carId)) {
+          const competitorGapSec = getAbsoluteGapMs(c) / 1000;
+          newData[`car_${c.car_number || c.num}`] = parseFloat((ourGapSec - competitorGapSec).toFixed(2));
+        }
       });
+      
       if (existingIdx >= 0) {
         const updated = [...prev]; updated[existingIdx] = { ...updated[existingIdx], ...newData }; return updated;
       } else return [...prev, newData].slice(-15);
     });
-  }, [safeCars, liveCarData?.laps, carId]);
+  }, [sortedCars, liveCarData, carId]);
 
   const overtakePredictions = useMemo(() => {
-    if (!liveCarData || carIndex === -1 || safeCars.length === 0) return { attack: null, defend: null };
+    if (!liveCarData || carIndex === -1 || sortedCars.length === 0) return { attack: null, defend: null };
 
     const getAveragePace = (carNum: string) => {
       const history = competitorsPaceRef.current[carNum] || {};
@@ -314,13 +340,19 @@ export default function VoitureDetailPage() {
       return { ms: Infinity, method: "NO PACE DATA" };
     };
 
-    const ourPaceData = getAveragePace(carId);
-    const ourGapSec = parseGapToSeconds(liveCarData.gap);
+    const ourPaceData = getAveragePace(String(carId));
 
     const getPrediction = (targetCar: any, isAhead: boolean) => {
-      const targetPaceData = getAveragePace(targetCar.num);
-      const targetGapSec = parseGapToSeconds(targetCar.gap);
-      const currentAbsoluteGap = Math.abs(ourGapSec - targetGapSec) || 0.1;
+      const targetPaceData = getAveragePace(String(targetCar.car_number || targetCar.num));
+      
+      let currentAbsoluteGapMs = Infinity;
+      if (isAhead && liveCarData.ints?.toAhead) {
+        if (liveCarData.ints.toAhead.laps > 0) currentAbsoluteGapMs = liveCarData.ints.toAhead.laps * 135000;
+        else currentAbsoluteGapMs = liveCarData.ints.toAhead.ms;
+      } else if (!isAhead && targetCar.ints?.toAhead) {
+        if (targetCar.ints.toAhead.laps > 0) currentAbsoluteGapMs = targetCar.ints.toAhead.laps * 135000;
+        else currentAbsoluteGapMs = targetCar.ints.toAhead.ms;
+      }
 
       let paceAdvantageSec = 0;
       let valid = false;
@@ -330,14 +362,6 @@ export default function VoitureDetailPage() {
         paceAdvantageSec = (targetPaceData.ms - ourPaceData.ms) / 1000;
         valid = true;
         calcMethod = (ourPaceData.method.includes("2-LAP") && targetPaceData.method.includes("2-LAP")) ? "2-LAP PACE AVG" : "1-LAP PACE";
-      } else {
-        const ourS1 = parseFloat(liveCarData.s1); const theirS1 = parseFloat(targetCar.s1);
-        const ourS2 = parseFloat(liveCarData.s2); const theirS2 = parseFloat(targetCar.s2);
-        if (!isNaN(ourS1) && !isNaN(theirS1)) {
-          if (!isNaN(ourS2) && !isNaN(theirS2)) { paceAdvantageSec = (theirS1 + theirS2) - (ourS1 + ourS2); calcMethod = "S1+S2 DELTA"; } 
-          else { paceAdvantageSec = theirS1 - ourS1; calcMethod = "S1 DELTA"; }
-          valid = true;
-        }
       }
 
       let trend: 'GOOD' | 'BAD' | 'STABLE' = 'STABLE';
@@ -346,29 +370,32 @@ export default function VoitureDetailPage() {
 
       if (valid) {
         if (isAhead) {
-          if (paceAdvantageSec > 0.5) { trend = 'GOOD'; statusText = 'CATCHING'; lapsToCatch = currentAbsoluteGap / paceAdvantageSec; } 
+          if (paceAdvantageSec > 0.5) { trend = 'GOOD'; statusText = 'CATCHING'; lapsToCatch = (currentAbsoluteGapMs / 1000) / paceAdvantageSec; } 
           else if (paceAdvantageSec < -0.5) { trend = 'BAD'; statusText = 'LOSING GROUND'; }
         } else {
           if (paceAdvantageSec > 0.5) { trend = 'GOOD'; statusText = 'PULLING AWAY'; } 
-          else if (paceAdvantageSec < -0.5) { trend = 'BAD'; statusText = 'BEING CAUGHT'; lapsToCatch = currentAbsoluteGap / Math.abs(paceAdvantageSec); }
+          else if (paceAdvantageSec < -0.5) { trend = 'BAD'; statusText = 'BEING CAUGHT'; lapsToCatch = (currentAbsoluteGapMs / 1000) / Math.abs(paceAdvantageSec); }
         }
       }
 
       return {
-        type: isAhead ? 'ATTACK' : 'DEFEND', targetCar: targetCar.num, targetTeam: targetCar.team,
+        type: isAhead ? 'ATTACK' : 'DEFEND', 
+        targetCar: targetCar.car_number || targetCar.num, 
+        targetTeam: targetCar.team,
         paceAdvantageSec: valid ? Math.abs(paceAdvantageSec).toFixed(2) : "0.00",
-        trend, statusText, calcMethod, gapSec: currentAbsoluteGap.toFixed(1),
+        trend, statusText, calcMethod, 
+        gapSec: currentAbsoluteGapMs !== Infinity ? (currentAbsoluteGapMs / 1000).toFixed(3) : "-",
         lapsRemaining: lapsToCatch !== Infinity && lapsToCatch < 999 && valid ? Math.ceil(lapsToCatch) : '-',
-        predictedLap: lapsToCatch !== Infinity && lapsToCatch < 999 && valid ? (liveCarData.laps || 0) + Math.ceil(lapsToCatch) : '-'
+        predictedLap: lapsToCatch !== Infinity && lapsToCatch < 999 && valid ? ((liveCarData.lap?.lap_number || 0) + Math.ceil(lapsToCatch)) : '-'
       };
     };
 
     const result: any = { attack: null, defend: null };
-    if (carIndex > 0) result.attack = getPrediction(safeCars[carIndex - 1], true);
-    if (carIndex < safeCars.length - 1) result.defend = getPrediction(safeCars[carIndex + 1], false);
+    if (carIndex > 0) result.attack = getPrediction(sortedCars[carIndex - 1], true);
+    if (carIndex < sortedCars.length - 1) result.defend = getPrediction(sortedCars[carIndex + 1], false);
 
     return result;
-  }, [safeCars, liveCarData, carIndex]);
+  }, [sortedCars, liveCarData, carIndex]);
 
   const currentPitLoss = useMemo(() => {
     if (pitMode === 'DT') return config.pitBaseTime; 
@@ -380,16 +407,22 @@ export default function VoitureDetailPage() {
 
   const predictorGroup = useMemo(() => {
     if (!liveCarData) return [];
-    const estimatedExitGap = parseGapToSeconds(liveCarData.gap) + currentPitLoss;
-    const carsWithGaps = safeCars.map(c => ({ ...c, gapSec: parseGapToSeconds(c.gap), isGhost: false })); 
+    const ourAbsoluteMs = getAbsoluteGapMs(liveCarData);
+    const estimatedExitMs = ourAbsoluteMs + (currentPitLoss * 1000);
+    
+    const carsWithGaps = sortedCars.map(c => ({ 
+      ...c, absoluteMs: getAbsoluteGapMs(c), isGhost: false 
+    })); 
+    
     const ghostCar = {
-      isGhost: true, num: "GHOST", pos: "-", team: "📍 NOTRE SORTIE STAND", driver: "Simulation", 
-      gapSec: estimatedExitGap, gap: `+${estimatedExitGap.toFixed(1)}s`, lastLap: "-", s1: "-", s2: "-", s3: "-"
+      isGhost: true, num: "GHOST", position: "-", team: "📍 NOTRE SORTIE STAND", driver: "Simulation", 
+      absoluteMs: estimatedExitMs, gap: `+${(estimatedExitMs/1000).toFixed(1)}s`
     };
-    const carsWithGhost = [...carsWithGaps, ghostCar].sort((a: any, b: any) => a.gapSec - b.gapSec);
+    
+    const carsWithGhost = [...carsWithGaps, ghostCar].sort((a: any, b: any) => a.absoluteMs - b.absoluteMs);
     const ghostIndex = carsWithGhost.findIndex(c => c.isGhost);
     return carsWithGhost.slice(Math.max(0, ghostIndex - 2), Math.min(carsWithGhost.length - 1, ghostIndex + 2) + 1);
-  }, [safeCars, liveCarData, currentPitLoss]);
+  }, [sortedCars, liveCarData, currentPitLoss]);
 
   const addPilote = () => setPilotes([...pilotes, { id: Date.now(), nom: `Pilote ${pilotes.length + 1}`, nomRIS: '', statut: pilotes.length === 0 ? 'AU_VOLANT' : 'REPOS', stintActuel: 0, totalRoulé: 0, totalMax: 120 }]);
   const updatePilote = (id: number, field: string, value: any) => setPilotes(pilotes.map(p => p.id === id ? { ...p, [field]: value } : p));
@@ -404,7 +437,7 @@ export default function VoitureDetailPage() {
   }, [config.timeGreenStr]);
 
   const calculatedStints = useMemo(() => {
-    let elapsedSec = 0; let currentLap = liveCarData?.laps || 0;
+    let elapsedSec = 0; let currentLap = liveCarData?.lap?.lap_number || 0;
     const defaultFullPitLoss = config.pitBaseTime + config.pitRefuelTime + config.pitDriverTime;
     return stints.map((stint) => {
       const startSec = elapsedSec;
@@ -417,7 +450,7 @@ export default function VoitureDetailPage() {
       const formatTime = (ts: number) => { const h = Math.floor(ts / 3600); const m = Math.floor((ts % 3600) / 60); return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; };
       return { ...stint, startTimeStr: formatTime(startSec), endTimeStr: formatTime(endSec), startLap, endLap };
     });
-  }, [stints, greenSeconds, config, liveCarData?.laps]);
+  }, [stints, greenSeconds, config, liveCarData?.lap?.lap_number]);
 
   const uniqueDriversRIS = useMemo(() => {
     const drivers = new Set<string>();
@@ -464,8 +497,6 @@ export default function VoitureDetailPage() {
   if (isFuelWarning) { fuelColorText = 'text-orange-500'; fuelBorderColor = 'border-orange-500'; fuelTitleColor = 'text-orange-500'; } 
   else if (isFuelCritical) { fuelColorText = 'text-red-500 animate-pulse'; fuelBorderColor = 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]'; fuelTitleColor = 'text-red-500 animate-pulse'; }
 
-  const chartColors = ['#00ff66', '#ffaa00', '#ff3333', '#a855f7'];
-
   const RenderAwsBox = ({ data }: { data: any }) => {
     if (!data) return (
       <div className="flex-1 flex items-center justify-center p-6 rounded-lg bg-[#0B0C10]/50 border border-gray-800 font-sans italic text-gray-600">
@@ -489,7 +520,7 @@ export default function VoitureDetailPage() {
             </div>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-[9px] bg-black/50 px-2 py-0.5 rounded text-gray-400 border border-gray-700">Gap: <strong className="text-white">{data.gapSec}s</strong></span>
+            <span className="text-[9px] bg-black/50 px-2 py-0.5 rounded text-gray-400 border border-gray-700">Int: <strong className="text-white">{data.gapSec}s</strong></span>
             <span className="text-[8px] text-gray-500 mt-1 uppercase">Via {data.calcMethod}</span>
           </div>
         </div>
@@ -533,7 +564,7 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
-    // 🚀 ROOT WRAPPER : padding gauche fixé à 100px ! 🚀
+    // 🚀 PADDING SÉCURISÉ POUR L'OVERLAY (pl-[100px]) 🚀
     <div className="min-h-screen bg-[#0B0C10] w-full pl-[100px] pt-[56px] relative overflow-x-hidden">
       
       {/* 🚀 CSS D'ANIMATION AWS 🚀 */}
@@ -568,7 +599,7 @@ export default function VoitureDetailPage() {
             <span className="text-5xl font-black text-[#66FCF1]">#{carId}</span>
             <div>
               <h1 className="text-2xl font-bold text-white">{liveCarData?.team || 'Écurie Connectée'}</h1>
-              <p className="text-sm text-gray-400 font-mono">P{liveCarData?.pos || '?'} | Piste : <span className="text-[#00ff66]">{globalStatus}</span></p>
+              <p className="text-sm text-gray-400 font-mono">P{liveCarData?.position || '?'} | Piste : <span className="text-[#00ff66]">{globalStatus}</span></p>
               <p className="text-xs text-gray-500 font-mono mt-1">Pilote RIS détecté : <span className="text-[#ffaa00] font-bold">{liveCarData?.driver || 'Inconnu'}</span> | Statut : <span className="text-white font-black">{carStateRef.current}</span></p>
             </div>
           </div>
@@ -682,13 +713,13 @@ export default function VoitureDetailPage() {
           <div className="bg-[#1F2833] p-4 rounded-lg border border-gray-700 shadow-xl flex flex-col">
             <h3 className="text-[#66FCF1] font-bold text-sm tracking-wider mb-2 uppercase border-b border-gray-700 pb-2">⏱️ Télémétrie Piste</h3>
             <div className="grid grid-cols-2 gap-2 mb-2 flex-1">
-              <div className="bg-[#0B0C10] p-4 rounded text-center border border-gray-800 flex flex-col justify-center"><p className="text-gray-500 text-[10px] uppercase font-bold">Dernier</p><p className="text-2xl font-mono font-bold text-white mt-1">{liveCarData?.lastLap || '-:--'}</p></div>
-              <div className="bg-[#0B0C10] p-4 rounded text-center border border-gray-800 flex flex-col justify-center"><p className="text-gray-500 text-[10px] uppercase font-bold">Meilleur</p><p className="text-2xl font-mono font-bold text-purple-400 mt-1">{liveCarData?.bestLap || '-:--'}</p></div>
+              <div className="bg-[#0B0C10] p-4 rounded text-center border border-gray-800 flex flex-col justify-center"><p className="text-gray-500 text-[10px] uppercase font-bold">Dernier</p><p className="text-2xl font-mono font-bold text-white mt-1">{liveCarData?.lap?.lap_time_ms ? formatMsToLapTime(liveCarData.lap.lap_time_ms) : '-:--'}</p></div>
+              <div className="bg-[#0B0C10] p-4 rounded text-center border border-gray-800 flex flex-col justify-center"><p className="text-gray-500 text-[10px] uppercase font-bold">Meilleur</p><p className="text-2xl font-mono font-bold text-purple-400 mt-1">{liveCarData?.lap?.best_lap_ms ? formatMsToLapTime(liveCarData.lap.best_lap_ms) : '-:--'}</p></div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S1</span><p className="font-mono text-white mt-1">{liveCarData?.s1 || '-'}</p></div>
-              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S2</span><p className="font-mono text-white mt-1">{liveCarData?.s2 || '-'}</p></div>
-              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S3</span><p className="font-mono text-white mt-1">{liveCarData?.s3 || '-'}</p></div>
+              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S1</span><p className="font-mono text-white mt-1">{liveCarData?.lap?.s1_ms ? (liveCarData.lap.s1_ms/1000).toFixed(3) : '-'}</p></div>
+              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S2</span><p className="font-mono text-white mt-1">{liveCarData?.lap?.s2_ms ? (liveCarData.lap.s2_ms/1000).toFixed(3) : '-'}</p></div>
+              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S3</span><p className="font-mono text-white mt-1">{liveCarData?.lap?.s3_ms ? (liveCarData.lap.s3_ms/1000).toFixed(3) : '-'}</p></div>
             </div>
           </div>
         </div>
@@ -748,8 +779,8 @@ export default function VoitureDetailPage() {
                 <Tooltip contentStyle={{ backgroundColor: '#1a1c23', borderColor: '#45A29E', color: '#fff', borderRadius: '8px' }} itemStyle={{ fontWeight: 'bold' }} />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}/>
                 <ReferenceLine y={0} stroke="#66FCF1" strokeWidth={2} strokeDasharray="4 4" />
-                {battleGroup.filter(c => String(c?.num) !== String(carId)).map((c, index) => (
-                  <Line key={c.num} type="monotone" dataKey={`car_${c.num}`} name={`#${c.num} ${c.team}`} stroke={chartColors[index % chartColors.length]} strokeWidth={3} dot={{ r: 3, fill: '#0B0C10' }} activeDot={{ r: 6 }} isAnimationActive={false} />
+                {battleGroup.filter(c => String(c?.car_number || c?.num) !== String(carId)).map((c, index) => (
+                  <Line key={c.car_number || c.num} type="monotone" dataKey={`car_${c.car_number || c.num}`} name={`#${c.car_number || c.num} ${c.team}`} stroke={chartColors[index % chartColors.length]} strokeWidth={3} dot={{ r: 3, fill: '#0B0C10' }} activeDot={{ r: 6 }} isAnimationActive={false} />
                 ))}
               </LineChart>
             </ResponsiveContainer>
@@ -764,18 +795,25 @@ export default function VoitureDetailPage() {
             <table className="w-full text-left border-collapse text-xs font-mono">
               <thead>
                 <tr className="bg-[#0B0C10] text-gray-400 uppercase tracking-wider border-b border-gray-800">
-                  <th className="p-3">Pos</th><th className="p-3">N°</th><th className="p-3 font-sans">Équipe</th><th className="p-3">Écart</th>
+                  <th className="p-3">Pos</th><th className="p-3">N°</th><th className="p-3 font-sans">Équipe</th><th className="p-3">INT</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800 text-sm">
                 {battleGroup.map(c => {
-                  const isUs = String(c?.num) === String(carId);
+                  const isUs = String(c?.car_number || c?.num) === String(carId);
+                  
+                  let intStr = "-";
+                  if (c.ints?.toAhead) {
+                    if (c.ints.toAhead.laps > 0) intStr = `+${c.ints.toAhead.laps}L`;
+                    else if (c.ints.toAhead.ms > 0) intStr = `+${(c.ints.toAhead.ms / 1000).toFixed(3)}s`;
+                  }
+
                   return (
-                    <tr key={c.num} className={isUs ? 'bg-[#153035] font-bold border-l-4 border-[#66FCF1]' : 'hover:bg-[#1F2833]'}>
-                      <td className="p-3 text-gray-400">P{c.pos}</td>
-                      <td className="p-3 text-[#ffaa00]">#{c.num}</td>
+                    <tr key={c.car_number || c.num} className={isUs ? 'bg-[#153035] font-bold border-l-4 border-[#66FCF1]' : 'hover:bg-[#1F2833]'}>
+                      <td className="p-3 text-gray-400">P{c.position || c.pos}</td>
+                      <td className="p-3 text-[#ffaa00]">#{c.car_number || c.num}</td>
                       <td className="p-3 font-sans text-white text-sm truncate max-w-[200px]">{c.team}</td>
-                      <td className="p-3 text-gray-300">{c.gap}</td>
+                      <td className="p-3 text-gray-300">{intStr}</td>
                     </tr>
                   );
                 })}
@@ -815,11 +853,11 @@ export default function VoitureDetailPage() {
               </thead>
               <tbody className="divide-y divide-gray-800 text-sm">
                 {predictorGroup.map((c: any) => (
-                  <tr key={c.num} className={c.isGhost ? 'bg-purple-900/40 font-bold border-l-4 border-purple-500 animate-pulse' : 'hover:bg-[#1F2833]'}>
-                    <td className="p-2">{c.isGhost ? 'SORTIE' : `P${c.pos}`}</td>
-                    <td className="p-2 text-[#ffaa00]">{c.num}</td>
+                  <tr key={c.num || c.car_number} className={c.isGhost ? 'bg-purple-900/40 font-bold border-l-4 border-purple-500 animate-pulse' : 'hover:bg-[#1F2833]'}>
+                    <td className="p-2">{c.isGhost ? 'SORTIE' : `P${c.position || c.pos}`}</td>
+                    <td className="p-2 text-[#ffaa00]">{c.num || c.car_number}</td>
                     <td className={`p-2 font-sans text-xs truncate max-w-[120px] ${c.isGhost ? 'text-purple-400' : 'text-white'}`}>{c.team}</td>
-                    <td className="p-2 text-gray-300">{c.gap}</td>
+                    <td className="p-2 text-gray-300">{c.isGhost ? c.gap : `+${(c.absoluteMs/1000).toFixed(1)}s`}</td>
                   </tr>
                 ))}
               </tbody>
