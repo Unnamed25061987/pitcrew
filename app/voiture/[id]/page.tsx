@@ -38,7 +38,17 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
-// 🚀 EXTRACTION PURE DU GAP AU LEADER 🚀
+// 🚀 NOUVEAU FORMATEUR DE TEMPS DE PIT INTELLIGENT (Bascule en Minutes si > 120s) 🚀
+const formatPitDuration = (sec: number | null) => {
+  if (sec === null || isNaN(sec)) return "0s";
+  if (sec > 120) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}m ${s.toString().padStart(2, '0')}s`;
+  }
+  return `${sec}s`;
+};
+
 const getAbsoluteGapMs = (car: any) => {
   if (!car || !car.gaps || !car.gaps.toLeader) return 0;
   const laps = car.gaps.toLeader.laps;
@@ -64,7 +74,7 @@ export default function VoitureDetailPage() {
   const { cars, context, messages: liveMessages } = useLiveTiming('JSON'); 
   
   const [apiStatus, setApiStatus] = useState("WAITING");
-  const [apiMsg, setApiMsg] = useState("");
+  const [manualStatus, setManualStatus] = useState("AUTO");
   
   const [config, setConfig] = useState({ 
     capaMax: 80, consoGreen: 1.7, timeGreenStr: "2:55.000", consoFcy: 0.7, timeFcyStr: "7:00.000",
@@ -77,9 +87,11 @@ export default function VoitureDetailPage() {
   const [stints, setStints] = useState<Stint[]>([]);
   const [lapHistory, setLapHistory] = useState<LapRecord[]>([]);
   const [aiMessages, setAiMessages] = useState<AiMessage[]>([{ role: 'ai', content: `Terminal IA connecté.`, timestamp: new Date().toLocaleTimeString() }]);
+  
   const [isLoaded, setIsLoaded] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
+  
   const [gapHistory, setGapHistory] = useState<any[]>([]);
 
   const [pitMode, setPitMode] = useState<'DT' | 'REFUEL' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
@@ -105,7 +117,20 @@ export default function VoitureDetailPage() {
     return sortedCars.slice(Math.max(0, carIndex - 2), Math.min(sortedCars.length - 1, carIndex + 2) + 1);
   }, [sortedCars, carIndex]);
 
-  // DERIVED GLOBAL STATUS
+  // RÉCUPÉRATION DU STATUT OVERRIDE
+  useEffect(() => {
+    const stored = localStorage.getItem('manual_track_status');
+    if (stored) setManualStatus(stored);
+    
+    const handleCustomEvent = () => {
+      const updated = localStorage.getItem('manual_track_status');
+      if (updated) setManualStatus(updated);
+    };
+    
+    window.addEventListener('manual_status_change', handleCustomEvent);
+    return () => window.removeEventListener('manual_status_change', handleCustomEvent);
+  }, []);
+
   useEffect(() => {
     const fetchRC = async () => {
       try {
@@ -113,7 +138,14 @@ export default function VoitureDetailPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.trackStatus) setApiStatus(data.trackStatus);
-          if (data.message) setApiMsg(data.message);
+          if (data.message) {
+            setRcHistory(prev => {
+              if (prev.length === 0 || prev[0].msg !== data.message) {
+                return [{ time: new Date().toLocaleTimeString(), msg: data.message }, ...prev].slice(0, 30);
+              }
+              return prev;
+            });
+          }
         }
       } catch (e) {}
     };
@@ -122,21 +154,21 @@ export default function VoitureDetailPage() {
     return () => clearInterval(int);
   }, []);
 
-  const globalStatus = apiStatus !== "WAITING" ? apiStatus : (context?.session?.track_state || "WAITING");
-  const rcEvents = Array.isArray(liveMessages) ? liveMessages.filter((e:any) => e.kind === "RC_MESSAGE") : [];
-  const fallbackMsg = rcEvents.length > 0 ? rcEvents[rcEvents.length - 1].message : "";
-  const raceMessage = apiMsg || fallbackMsg;
+  // LE VRAI STATUT COMBINÉ
+  const globalStatus = manualStatus !== "AUTO" ? manualStatus : (apiStatus !== "WAITING" ? apiStatus : (context?.session?.track_state || "WAITING"));
 
   useEffect(() => {
-    if (raceMessage) {
-      setRcHistory(prev => {
-        if (prev.length === 0 || prev[0].msg !== raceMessage) {
-          return [{ time: new Date().toLocaleTimeString(), msg: raceMessage }, ...prev].slice(0, 30);
-        }
-        return prev;
-      });
+    if (liveMessages && liveMessages.length > 0) {
+      const rcEvents = liveMessages.filter((e:any) => e.kind === "RC_MESSAGE");
+      if (rcEvents.length > 0) {
+        const msg = rcEvents[rcEvents.length - 1].message;
+        setRcHistory(prev => {
+          if (prev.length === 0 || prev[0].msg !== msg) return [{ time: new Date().toLocaleTimeString(), msg }, ...prev].slice(0, 30);
+          return prev;
+        });
+      }
     }
-  }, [raceMessage]);
+  }, [liveMessages]);
 
   useEffect(() => {
     const savedConfig = localStorage.getItem(`car_config_${carId}`);
@@ -207,6 +239,7 @@ export default function VoitureDetailPage() {
       }));
       if (isFuel) setCurrentFuel(prev => prev < config.capaMax ? config.capaMax : prev);
 
+      // --- CHRONO PIT STOP ---
       if (isIn && !prevPitStateRef.current) {
         pitEntryTimeRef.current = Date.now();
         setCurrentPitTimer(0);
@@ -237,8 +270,6 @@ export default function VoitureDetailPage() {
     }
   }, [liveCarData?.driver]);
 
-  // 🚀 RÉSOLUTION DE L'INFINITE LOOP GAPHISTORY 🚀
-  // Le graphique s'enregistre uniquement quand le tour de la voiture change !
   useEffect(() => {
     if (!liveCarData || battleGroup.length === 0) return;
     const currentLap = liveCarData.lap?.lap_number;
@@ -247,7 +278,6 @@ export default function VoitureDetailPage() {
     if (lastLapRef.current === null) {
       lastLapRef.current = currentLap;
     } else if (currentLap > lastLapRef.current) {
-      // 1. GESTION DU FUEL & TOURS
       const lapsDone = currentLap - lastLapRef.current;
       const lapTimeMs = liveCarData.lap.lap_time_ms;
       const greenMs = parseLapToMs(config.timeGreenStr) || 175000;
@@ -276,7 +306,6 @@ export default function VoitureDetailPage() {
 
       setLapHistory(prev => [newLap, ...prev].slice(0, 1000));
 
-      // 2. GESTION DU GAP HISTORY (1 point par tour maximum)
       const ourGapSec = getAbsoluteGapMs(liveCarData) / 1000;
       const newData: any = { lap: currentLap };
       
@@ -288,7 +317,6 @@ export default function VoitureDetailPage() {
       });
 
       setGapHistory(prev => {
-        // Anti-doublon strict
         if (prev.length > 0 && prev[prev.length - 1].lap === currentLap) return prev;
         return [...prev, newData].slice(-15);
       });
@@ -631,10 +659,11 @@ export default function VoitureDetailPage() {
               <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2">⏱️ STINT EN COURS</h3>
               <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 relative ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
                 
+                {/* 🚀 COMPTEUR DE STAND 🚀 */}
                 {currentPitTimer !== null && (
                   <div className="absolute inset-0 bg-yellow-900/95 flex flex-col items-center justify-center rounded z-20 backdrop-blur-sm shadow-[0_0_30px_rgba(255,170,0,0.5)] border-2 border-[#ffaa00]">
                     <span className="text-[#ffaa00] font-black text-sm tracking-widest animate-pulse mb-2 drop-shadow-md">⏱️ PIT STOP IN PROGRESS</span>
-                    <span className="text-6xl font-mono font-black text-white drop-shadow-[0_0_10px_#ffaa00]">{currentPitTimer}s</span>
+                    <span className="text-6xl font-mono font-black text-white drop-shadow-[0_0_10px_#ffaa00]">{formatPitDuration(currentPitTimer)}</span>
                   </div>
                 )}
 
@@ -733,7 +762,8 @@ export default function VoitureDetailPage() {
                       <span className="text-xs font-bold text-gray-500">Lap {pit.lap}</span>
                       <span className="text-xs text-gray-400">@ {pit.timeIn}</span>
                     </div>
-                    <span className="text-lg font-black text-[#ffaa00] font-mono">{pit.durationSec}s</span>
+                    {/* 🚀 AFFICHAGE FORMATÉ DU PIT HISTORIQUE 🚀 */}
+                    <span className="text-lg font-black text-[#ffaa00] font-mono">{formatPitDuration(pit.durationSec)}</span>
                   </div>
                 ))
               )}
