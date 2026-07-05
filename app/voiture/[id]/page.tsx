@@ -46,34 +46,11 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
-// Formateur pour le temps global restant
-const formatRemainingTime = (ms: number | undefined) => {
-  if (ms === undefined || ms === null || isNaN(ms) || ms < 0) return "--:--:--";
-  const totalSeconds = Math.floor(ms / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-};
-
-// Formateur visuel de Status pour le Leaderboard
-const getStatusBadge = (state: string) => {
-  const s = String(state || 'RUN').toUpperCase();
-  if (s.includes('PIT') || s.includes('IN')) return <span className="text-[10px] font-black px-1.5 py-0.5 bg-yellow-900/80 text-[#ffaa00] border border-[#ffaa00]/50 rounded shadow-[0_0_5px_rgba(255,170,0,0.5)] animate-pulse">PIT</span>;
-  if (s.includes('OUT') || s.includes('STOP')) return <span className="text-[10px] font-black px-1.5 py-0.5 bg-red-900/80 text-[#ff3333] border border-[#ff3333]/50 rounded shadow-[0_0_5px_rgba(255,51,51,0.5)]">OUT</span>;
-  if (s.includes('RUN') || s.includes('TRACK')) return <span className="text-[10px] font-black px-1.5 py-0.5 bg-green-900/30 text-[#00ff66] border border-[#00ff66]/30 rounded">RUN</span>;
-  return <span className="text-[10px] font-black px-1.5 py-0.5 bg-gray-800 text-gray-300 border border-gray-600 rounded">{s.substring(0, 3)}</span>;
-};
-
 export default function VoitureDetailPage() {
   const params = useParams();
   const router = useRouter();
   const carId = params.id as string;
-  
-  // 🚀 EXTRACTION DU CONTEXT POUR LE BANDEAU GLOBAL 🚀
-  const { cars, status, context } = useLiveTiming('JSON');
-  const trackState = context?.session?.track_state || status || 'WAITING';
-  const remainingMs = context?.clock?.remaining_ms;
+  const { cars, status } = useLiveTiming('JSON');
   
   const [config, setConfig] = useState({ 
     capaMax: 80, consoGreen: 1.7, timeGreenStr: "2:55.000", consoFcy: 0.7, timeFcyStr: "7:00.000",
@@ -84,7 +61,9 @@ export default function VoitureDetailPage() {
   const [pilotes, setPilotes] = useState<Pilote[]>([]);
   const [stints, setStints] = useState<Stint[]>([]);
   const [lapHistory, setLapHistory] = useState<LapRecord[]>([]);
-  const [aiMessages, setAiMessages] = useState<AiMessage[]>([{ role: 'ai', content: `Terminal IA Stratégie connecté. Je surveille la voiture #${carId}. Comment puis-je vous aider ?`, timestamp: new Date().toLocaleTimeString() }]);
+  const [aiMessages, setAiMessages] = useState<AiMessage[]>([
+    { role: 'ai', content: `Terminal IA Stratégie connecté. Je surveille la voiture #${carId}.`, timestamp: new Date().toLocaleTimeString() }
+  ]);
   
   const [isLoaded, setIsLoaded] = useState(false);
   const [aiInput, setAiInput] = useState("");
@@ -108,10 +87,12 @@ export default function VoitureDetailPage() {
       parsedCapa = Number(parsed.capaMax) || 80;
       setConfig({
         capaMax: parsedCapa, consoGreen: Number(parsed.consoGreen) || 1.7, timeGreenStr: parsed.timeGreenStr || "2:55.000", 
-        consoFcy: Number(parsed.consoFcy) || 0.7, timeFcyStr: parsed.timeFcyStr || "7:00.000", alertOrangePct: Number(parsed.alertOrangePct) || 35,
-        alertRedPct: Number(parsed.alertRedPct) || 17, pitLossTime: Number(parsed.pitLossTime) || 65, maxStintTime: Number(parsed.maxStintTime) || 65
+        consoFcy: Number(parsed.consoFcy) || 0.7, timeFcyStr: parsed.timeFcyStr || "7:00.000",
+        alertOrangePct: Number(parsed.alertOrangePct) || 35, alertRedPct: Number(parsed.alertRedPct) || 17, 
+        pitLossTime: Number(parsed.pitLossTime) || 65, maxStintTime: Number(parsed.maxStintTime) || 65
       });
     }
+
     const savedSession = localStorage.getItem(`car_session_${carId}`);
     if (savedSession) {
       try {
@@ -143,6 +124,7 @@ export default function VoitureDetailPage() {
     if (liveCarData.s3 && liveCarData.s3 !== '-') currentSectorsRef.current.s3 = String(liveCarData.s3);
   }, [liveCarData?.s1, liveCarData?.s2, liveCarData?.s3]);
 
+  // Stockage historique des chronos
   useEffect(() => {
     if (!safeCars) return;
     safeCars.forEach(c => {
@@ -169,7 +151,6 @@ export default function VoitureDetailPage() {
         }
         return p;
       }));
-
       if (isFuel) setCurrentFuel(prev => prev < config.capaMax ? config.capaMax : prev);
     }, 1000); 
     return () => clearInterval(interval);
@@ -180,10 +161,7 @@ export default function VoitureDetailPage() {
       const risName = String(liveCarData.driver || '').trim().toLowerCase();
       setPilotes(prevPilotes => prevPilotes.map(p => {
         const isMatch = p.nomRIS && String(p.nomRIS || '').trim().toLowerCase() === risName;
-        if (isMatch) {
-          if (p.statut !== 'AU_VOLANT') return { ...p, statut: 'AU_VOLANT', stintActuel: 0 };
-          return { ...p, statut: 'AU_VOLANT' };
-        }
+        if (isMatch) return { ...p, statut: 'AU_VOLANT', stintActuel: p.statut !== 'AU_VOLANT' ? 0 : p.stintActuel };
         return { ...p, statut: 'REPOS' };
       }));
     }
@@ -198,8 +176,8 @@ export default function VoitureDetailPage() {
         const lapTimeMs = parseLapToMs(liveCarData.lastLap);
         const greenMs = parseLapToMs(config.timeGreenStr) || 175000;
         const fcyMs = parseLapToMs(config.timeFcyStr) || 420000;
+        
         let lapConso = config.consoGreen;
-
         if (lapTimeMs > 0 && lapTimeMs !== Infinity) {
           if (lapTimeMs <= greenMs) lapConso = config.consoGreen; 
           else if (lapTimeMs >= fcyMs) lapConso = config.consoFcy; 
@@ -209,15 +187,13 @@ export default function VoitureDetailPage() {
           }
         } else {
           const safeStatus = String(status || '').toUpperCase();
-          const isFcy = safeStatus.includes('FCY') || safeStatus.includes('SAFETY') || safeStatus.includes('YELLOW');
-          lapConso = isFcy ? config.consoFcy : config.consoGreen;
+          lapConso = safeStatus.includes('FCY') || safeStatus.includes('YELLOW') ? config.consoFcy : config.consoGreen;
         }
 
         setCurrentFuel(prev => parseFloat(Math.max(0, prev - (lapsDone * lapConso)).toFixed(2)));
         
-        const currentDriverRIS = liveCarData.driver || 'Inconnu';
         const newLap: LapRecord = {
-          id: Date.now(), lapNumber: lastLapRef.current, driverRIS: String(currentDriverRIS),
+          id: Date.now(), lapNumber: lastLapRef.current, driverRIS: String(liveCarData.driver || 'Inconnu'),
           s1: currentSectorsRef.current.s1, s2: currentSectorsRef.current.s2, s3: currentSectorsRef.current.s3,
           lapTime: String(liveCarData.lastLap || '-'), lapTimeMs: lapTimeMs
         };
@@ -245,7 +221,6 @@ export default function VoitureDetailPage() {
     
     const current3Laps = driverLaps.slice(0, 3);
     const avgCurrentMs = current3Laps.reduce((acc, curr) => acc + curr.lapTimeMs, 0) / 3;
-    
     let trend: 'improving' | 'worsening' | 'stable' = 'stable';
     let deltaStr = "";
 
@@ -253,7 +228,6 @@ export default function VoitureDetailPage() {
       const prev3Laps = driverLaps.slice(1, 4);
       const avgPrevMs = prev3Laps.reduce((acc, curr) => acc + curr.lapTimeMs, 0) / 3;
       const deltaMs = avgCurrentMs - avgPrevMs;
-      
       if (Math.abs(deltaMs) <= 300) { trend = 'stable'; deltaStr = "⚖️ ="; } 
       else if (deltaMs > 0) { trend = 'worsening'; deltaStr = `↘️ +${(deltaMs / 1000).toFixed(2)}s`; } 
       else { trend = 'improving'; deltaStr = `↗️ ${(deltaMs / 1000).toFixed(2)}s`; }
@@ -280,9 +254,11 @@ export default function VoitureDetailPage() {
     });
   }, [safeCars, liveCarData?.laps, carId]);
 
+  // 🚀 SUPER CALCULATEUR AWS (DIFFÉRENCE DE PACE 2 TOURS) 🚀
   const overtakePredictions = useMemo(() => {
     if (!liveCarData || carIndex === -1 || safeCars.length === 0) return { attack: null, defend: null };
 
+    // Extraction de la moyenne des 2 derniers chronos
     const getAveragePace = (carNum: string) => {
       const history = competitorsPaceRef.current[carNum] || {};
       const lapNums = Object.keys(history).map(Number).sort((a,b) => b - a);
@@ -299,20 +275,21 @@ export default function VoitureDetailPage() {
     const getPrediction = (targetCar: any, isAhead: boolean) => {
       const targetPaceData = getAveragePace(targetCar.num);
       const targetGapSec = parseGapToSeconds(targetCar.gap);
-      const currentAbsoluteGap = Math.abs(ourGapSec - targetGapSec);
+      // Écart absolu en temps (Minimum 0.1 pour éviter division par 0)
+      const currentAbsoluteGap = Math.abs(ourGapSec - targetGapSec) || 0.1;
 
       let paceAdvantageSec = 0;
       let valid = false;
       let calcMethod = "GATHERING DATA";
 
       if (ourPaceData.ms !== Infinity && targetPaceData.ms !== Infinity) {
+        // Avantage = Leur chrono - Notre chrono. Si > 0, on est plus rapide !
         paceAdvantageSec = (targetPaceData.ms - ourPaceData.ms) / 1000;
         valid = true;
         calcMethod = (ourPaceData.method.includes("2-LAP") && targetPaceData.method.includes("2-LAP")) ? "2-LAP PACE AVG" : "1-LAP PACE";
       } else {
         const ourS1 = parseFloat(liveCarData.s1); const theirS1 = parseFloat(targetCar.s1);
         const ourS2 = parseFloat(liveCarData.s2); const theirS2 = parseFloat(targetCar.s2);
-        
         if (!isNaN(ourS1) && !isNaN(theirS1)) {
           if (!isNaN(ourS2) && !isNaN(theirS2)) { paceAdvantageSec = (theirS1 + theirS2) - (ourS1 + ourS2); calcMethod = "S1+S2 DELTA"; } 
           else { paceAdvantageSec = theirS1 - ourS1; calcMethod = "S1 DELTA"; }
@@ -326,13 +303,21 @@ export default function VoitureDetailPage() {
 
       if (valid) {
         if (isAhead) {
-          if (paceAdvantageSec > 0.5) { trend = 'GOOD'; statusText = 'CATCHING'; lapsToCatch = currentAbsoluteGap / paceAdvantageSec; }
-          else if (paceAdvantageSec < -0.5) { trend = 'BAD'; statusText = 'LOSING GROUND'; }
-          else { trend = 'STABLE'; statusText = 'PACE MATCHED'; }
+          // On attaque: on veut être plus rapide (PaceAdvantage > 0)
+          if (paceAdvantageSec > 0.5) { 
+            trend = 'GOOD'; statusText = 'CATCHING'; 
+            lapsToCatch = currentAbsoluteGap / paceAdvantageSec; 
+          } else if (paceAdvantageSec < -0.5) { 
+            trend = 'BAD'; statusText = 'LOSING GROUND'; 
+          }
         } else {
-          if (paceAdvantageSec > 0.5) { trend = 'GOOD'; statusText = 'PULLING AWAY'; }
-          else if (paceAdvantageSec < -0.5) { trend = 'BAD'; statusText = 'BEING CAUGHT'; lapsToCatch = currentAbsoluteGap / Math.abs(paceAdvantageSec); }
-          else { trend = 'STABLE'; statusText = 'PACE MATCHED'; }
+          // On défend: on veut être plus rapide (PaceAdvantage > 0)
+          if (paceAdvantageSec > 0.5) { 
+            trend = 'GOOD'; statusText = 'PULLING AWAY'; 
+          } else if (paceAdvantageSec < -0.5) { 
+            trend = 'BAD'; statusText = 'BEING CAUGHT'; 
+            lapsToCatch = currentAbsoluteGap / Math.abs(paceAdvantageSec); 
+          }
         }
       }
 
@@ -340,8 +325,8 @@ export default function VoitureDetailPage() {
         type: isAhead ? 'ATTACK' : 'DEFEND', targetCar: targetCar.num, targetTeam: targetCar.team,
         paceAdvantageSec: valid ? Math.abs(paceAdvantageSec).toFixed(2) : "0.00",
         trend, statusText, calcMethod, gapSec: currentAbsoluteGap.toFixed(1),
-        lapsRemaining: lapsToCatch !== Infinity && lapsToCatch < 99 && valid ? Math.ceil(lapsToCatch) : '-',
-        predictedLap: lapsToCatch !== Infinity && lapsToCatch < 99 && valid ? (liveCarData.laps || 0) + Math.ceil(lapsToCatch) : '-'
+        lapsRemaining: lapsToCatch !== Infinity && lapsToCatch < 999 && valid ? Math.ceil(lapsToCatch) : '-',
+        predictedLap: lapsToCatch !== Infinity && lapsToCatch < 999 && valid ? (liveCarData.laps || 0) + Math.ceil(lapsToCatch) : '-'
       };
     };
 
@@ -414,16 +399,8 @@ export default function VoitureDetailPage() {
     setTimeout(() => {
       let mockResponse = "Analyse en cours...";
       const toursRestants = Math.floor(currentFuel / config.consoGreen);
-      const safeQuery = String(userQuery || '').toLowerCase();
       const safeStatus = String(status || '');
-      
-      if (safeQuery.includes('essence') || safeQuery.includes('fuel') || safeQuery.includes('pit')) {
-        mockResponse = `Au rythme actuel sous ${safeStatus}, il te reste ${currentFuel.toFixed(1)}L (${toursRestants} tours). Le pilote ${activePilote?.nom || ''} a roulé ${Math.floor((activePilote?.stintActuel || 0) / 60)} minutes.`;
-      } else if (safeQuery.includes('pilote') || safeQuery.includes('stint')) {
-        mockResponse = `${activePilote?.nom || 'Le pilote'} a roulé ${Math.floor((activePilote?.stintActuel || 0) / 60)} minutes sur un max de ${config.maxStintTime}. Il lui reste ${(activePilote?.totalMax || 120) - Math.floor((activePilote?.totalRoulé || 0) / 60)} minutes au total.`;
-      } else {
-        mockResponse = `Bien reçu. La piste est sous ${safeStatus}. Avec ${toursRestants} tours restants avant panne sèche, je garde un œil sur la fenêtre stratégique.`;
-      }
+      mockResponse = `Bien reçu. La piste est sous ${safeStatus}. Avec ${toursRestants} tours restants avant panne sèche, je garde un œil sur la fenêtre stratégique.`;
       setAiMessages(prev => [...prev, { role: 'ai', content: mockResponse, timestamp: new Date().toLocaleTimeString() }]);
       setIsAiTyping(false);
     }, 1500);
@@ -449,7 +426,6 @@ export default function VoitureDetailPage() {
     return (
       <div className={`flex-1 flex flex-col p-5 rounded-lg border backdrop-blur-sm shadow-xl transition-all duration-500 bg-gradient-to-r ${bgGradient} to-[#0B0C10]`}
            style={{ borderColor: `${themeColor}50`, boxShadow: `0 0 15px ${themeColor}15` }}>
-        
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{data.type === 'ATTACK' ? '🎯' : '🛡️'}</span>
@@ -478,14 +454,12 @@ export default function VoitureDetailPage() {
               )
             })}
           </div>
-
           <div className="flex flex-col items-center justify-center">
             <span className="text-[9px] text-gray-400 uppercase tracking-widest">Pace Delta</span>
             <span className="text-base font-black px-2 py-0.5 rounded border mt-1" style={{ backgroundColor: `${themeColor}15`, color: themeColor, borderColor: `${themeColor}30` }}>
               {deltaSign}{data.paceAdvantageSec}s
             </span>
           </div>
-
           <div className="flex flex-col items-end">
             <span className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">
               {data.trend === 'GOOD' && data.type === 'ATTACK' ? 'STRIKING IN' : data.trend === 'BAD' && data.type === 'DEFEND' ? 'BEING CAUGHT IN' : 'DISTANCE MAINTAINED'}
@@ -504,375 +478,215 @@ export default function VoitureDetailPage() {
 
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
-  // Calcul pour la taille du Leaderboard dynamique
-  const ROW_HEIGHT = 44;
-  const maxRank = Math.max(...safeCars.map(c => parseInt(c.pos) || 0), safeCars.length);
-  const containerHeight = maxRank * ROW_HEIGHT;
-
   return (
-    <div className="flex h-screen bg-[#0B0C10] text-white font-sans overflow-hidden">
+    // 🚀 L'interface principale est décalée de 320px sur la gauche et de 56px (pt-14) en haut pour laisser la place à l'overlay et au header 🚀
+    <div className={`min-h-screen text-white p-6 font-sans transition-colors duration-500 ml-[320px] pt-[80px] ${mustPitNow ? 'bg-red-950/40' : 'bg-[#0B0C10]'}`}>
       
-      <style>{`
-        /* Styles Globaux Piste / Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0B0C10; }
-        ::-webkit-scrollbar-thumb { background: #1F2833; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #45A29E; }
-        
-        /* Animations AWS existantes */
-        @keyframes aws-wave-good {
-            0%, 100% { opacity: 0.2; transform: translateX(-3px) scale(0.9); filter: drop-shadow(0 0 0px transparent); }
-            50% { opacity: 1; transform: translateX(3px) scale(1.1); filter: drop-shadow(0 0 6px #00ff66); }
-        }
-        @keyframes aws-wave-bad {
-            0%, 100% { opacity: 0.2; transform: translateX(3px) scale(0.9); filter: drop-shadow(0 0 0px transparent); }
-            50% { opacity: 1; transform: translateX(-3px) scale(1.1); filter: drop-shadow(0 0 6px #ff3333); }
-        }
-        @keyframes aws-pulse-stable {
-            0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 0px transparent); transform: scale(0.95); }
-            50% { opacity: 1; filter: drop-shadow(0 0 6px #ffaa00); transform: scale(1.05); }
-        }
-        .aws-arrow-good { animation: aws-wave-good 1s infinite; margin: 0 -3px; }
-        .aws-arrow-bad { animation: aws-wave-bad 1s infinite; margin: 0 -3px; }
-        .aws-arrow-stable { animation: aws-pulse-stable 1.5s infinite; margin: 0 -3px; }
-        
-        /* MAGIE CSS : Overtake Animation pour le Leaderboard */
-        .leaderboard-row {
-           transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
-        }
-      `}</style>
-
-      {/* 🚀 LEADERBOARD TV BROADCAST (OVERLAY GAUCHE) 🚀 */}
-      <div className="w-[320px] flex-shrink-0 flex flex-col bg-[#12141A] border-r border-gray-800 relative z-20 shadow-[10px_0_20px_rgba(0,0,0,0.5)]">
-        <div className="sticky top-0 z-50 bg-[#0B0C10] p-4 border-b border-gray-800 text-center shadow-md">
-          <h2 className="text-[#66FCF1] font-black tracking-widest text-sm flex items-center justify-center gap-2">
-            <span className="text-lg">🏆</span> LIVE CLASSIFICATION
-          </h2>
+      {mustPitNow && (
+        <div className="bg-red-600 text-white font-black text-center py-2 text-xl tracking-widest uppercase animate-pulse mb-6 rounded shadow-lg border border-red-400">
+          ⚠️ BOX THIS LAP - {isStintCritical ? `LIMITE TEMPS PILOTE (${activePilote?.nom})` : 'CARBURANT CRITIQUE'} ⚠️
         </div>
-        
-        {/* Conteneur principal absolu du classement */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden relative" style={{ height: 'calc(100vh - 60px)' }}>
-          <div className="relative w-full" style={{ height: `${containerHeight}px` }}>
-            {safeCars.map((car) => {
-              const positionRank = parseInt(car.pos) || 999;
-              const topPosition = (positionRank - 1) * ROW_HEIGHT;
-              const isOurCar = String(car.num) === String(carId);
+      )}
 
-              return (
-                <div key={car.num} 
-                     className={`leaderboard-row absolute left-0 right-0 flex items-center px-4 py-2 border-b border-gray-800/30 ${isOurCar ? 'bg-[#153035] border-l-4 border-l-[#66FCF1]' : 'bg-[#12141A] hover:bg-[#1a1c23]'}`}
-                     style={{ top: `${topPosition}px`, height: `${ROW_HEIGHT}px` }}>
-                  
-                  <div className={`w-8 font-black text-sm ${isOurCar ? 'text-[#66FCF1]' : 'text-gray-500'}`}>P{car.pos}</div>
-                  <div className={`w-10 font-bold text-sm ${isOurCar ? 'text-white' : 'text-[#ffaa00]'}`}>#{car.num}</div>
-                  <div className={`flex-1 truncate font-sans text-xs uppercase pr-2 ${isOurCar ? 'text-[#66FCF1] font-black' : 'text-gray-200'}`}>{car.team}</div>
-                  
-                  {/* Status Visuel du Leaderboard */}
-                  <div className="w-10 text-right flex justify-end">
-                    {getStatusBadge(car.car_state)}
-                  </div>
-                </div>
-              );
-            })}
+      <div className="flex justify-between items-start border-b border-gray-800 pb-4 mb-6">
+        <div className="flex items-center space-x-4">
+          <span className="text-5xl font-black text-[#66FCF1]">#{carId}</span>
+          <div>
+            <h1 className="text-2xl font-bold text-white">{liveCarData?.team || 'Écurie Connectée'}</h1>
+            <p className="text-sm text-gray-400 font-mono">P{liveCarData?.pos || '?'} | Piste : <span className="text-[#00ff66]">{status || 'Inconnu'}</span></p>
+            <p className="text-xs text-gray-500 font-mono mt-1">Pilote RIS détecté : <span className="text-[#ffaa00] font-bold">{liveCarData?.driver || 'Inconnu'}</span> | Statut : <span className="text-white font-black">{carStateRef.current}</span></p>
           </div>
         </div>
+        <button onClick={() => router.push(`/voiture/${carId}/config`)} className="bg-[#1F2833] hover:bg-[#45A29E] hover:text-black text-[#66FCF1] font-bold py-2 px-4 rounded border border-gray-700 transition text-sm shadow">⚙️ PARAMÈTRES ET LIMITES</button>
       </div>
 
-      {/* 🚀 MAIN DASHBOARD (DROITE) 🚀 */}
-      <div className={`flex-1 overflow-y-auto p-6 transition-colors duration-500 relative ${mustPitNow ? 'bg-red-950/40' : 'bg-[#0B0C10]'}`}>
-        
-        {/* TOP GLOBAL BANNER (Track Status & Remaining Time) */}
-        <div className="flex justify-between items-center bg-[#1F2833] border border-gray-700 p-4 rounded-lg shadow-[0_5px_15px_rgba(0,0,0,0.5)] mb-8">
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Track Status</span>
-              <div className="flex items-center gap-2 mt-1">
-                {/* Petit voyant clignotant selon la couleur de la piste */}
-                <span className={`w-3 h-3 rounded-full animate-pulse ${
-                  trackState.includes('GREEN') ? 'bg-[#00ff66] shadow-[0_0_8px_#00ff66]' : 
-                  trackState.includes('FCY') || trackState.includes('YELLOW') ? 'bg-[#ffaa00] shadow-[0_0_8px_#ffaa00]' : 
-                  trackState.includes('RED') ? 'bg-[#ff3333] shadow-[0_0_8px_#ff3333]' : 'bg-gray-500'
-                }`}></span>
-                <span className={`text-xl font-black uppercase tracking-widest ${
-                  trackState.includes('GREEN') ? 'text-[#00ff66]' : 
-                  trackState.includes('FCY') || trackState.includes('YELLOW') ? 'text-[#ffaa00]' : 
-                  trackState.includes('RED') ? 'text-[#ff3333]' : 'text-gray-300'
-                }`}>
-                  {trackState}
-                </span>
+      {/* 🚀 LE VRAI MODULE AWS OVERTAKE PREDICTION (PLEINE LARGEUR) 🚀 */}
+      <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-6 rounded-lg border border-gray-700 shadow-2xl relative overflow-hidden mb-8">
+        <div className="absolute inset-0 opacity-[0.03] bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ffffff_10px,#ffffff_20px)] pointer-events-none" />
+        <div className="flex justify-between items-center mb-6 relative z-10">
+          <h3 className="text-white font-black text-lg tracking-wider uppercase flex items-center gap-2">
+            <span className="text-2xl">⚡</span> AWS BATTLE FORECAST
+          </h3>
+          <span className="text-xs bg-[#0B0C10] px-3 py-1.5 rounded font-mono text-gray-400 border border-gray-700 shadow-sm">
+            SMART PACE CALCULATOR
+          </span>
+        </div>
+        <div className="flex flex-col xl:flex-row gap-6 font-mono relative z-10">
+          <RenderAwsBox data={overtakePredictions.attack} />
+          <RenderAwsBox data={overtakePredictions.defend} />
+        </div>
+      </div>
+      {/* 🚀 FIN DU MODULE AWS 🚀 */}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="flex flex-col gap-6">
+          <div className="bg-[#1F2833] p-4 rounded-lg border border-gray-700 shadow-xl flex flex-col flex-1">
+            <h3 className={`${fuelTitleColor} font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2 transition-colors`}>⛽ Niveau Carburant</h3>
+            <div className={`bg-[#0B0C10] p-3 rounded text-center border transition-all duration-300 flex-1 flex flex-col justify-center ${fuelBorderColor}`}>
+              <p className={`text-5xl font-mono font-black ${fuelColorText}`}>{currentFuel.toFixed(1)} L</p>
+              <p className="text-[10px] text-gray-500 mt-2">{fuelPct.toFixed(0)}% (Alerte: {config.alertOrangePct}% / {config.alertRedPct}%)</p>
+              <p className="text-sm font-bold text-gray-400 mt-2">~{Math.floor(currentFuel / config.consoGreen)} Tours restants</p>
+              <input type="range" min="0" max={config.capaMax} value={currentFuel} onChange={e => setCurrentFuel(Number(e.target.value))} className="w-full mt-4 accent-[#45A29E]" />
+            </div>
+          </div>
+          <div className="bg-[#1F2833] p-3 rounded-lg border border-gray-700 shadow-xl flex flex-col flex-1">
+            <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2">⏱️ STINT EN COURS</h3>
+            <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
+              <p className="text-[10px] text-gray-400 font-bold uppercase mb-1 truncate">{activePilote?.nom || 'AUCUN PILOTE DÉTECTÉ'}</p>
+              <p className={`text-4xl font-mono font-black tracking-wider ${isStintCritical ? 'text-red-500 animate-pulse' : 'text-[#66FCF1]'}`}>
+                {formatLiveTimer(activePilote?.stintActuel || 0)}
+              </p>
+              <p className="text-[10px] text-gray-500 mt-1 mb-2">
+                Max Légal : {config.maxStintTime} min
+                {carStateRef.current === 'IN' && <span className="text-[#ffaa00] ml-1 animate-pulse">(PIT IN)</span>}
+              </p>
+              <div className="mt-auto pt-2 border-t border-gray-800/50">
+                <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">Rythme Moyen (3 Trs)</p>
+                {driverPace ? (
+                  <div className="flex justify-center items-center gap-2">
+                    <span className="text-lg font-mono font-bold text-white shadow-sm">{driverPace.avgStr}</span>
+                    {driverPace.trend === 'improving' && <span className="text-[10px] font-black text-[#00ff66] bg-[#00ff66]/10 border border-[#00ff66]/20 px-1.5 py-0.5 rounded shadow-sm">{driverPace.deltaStr}</span>}
+                    {driverPace.trend === 'worsening' && <span className="text-[10px] font-black text-red-400 bg-red-400/10 border border-red-400/20 px-1.5 py-0.5 rounded shadow-sm">{driverPace.deltaStr}</span>}
+                    {driverPace.trend === 'stable' && <span className="text-[10px] font-bold text-gray-400 bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded">{driverPace.deltaStr}</span>}
+                  </div>
+                ) : (
+                  <p className="text-[9px] text-gray-600 font-mono mt-1">Calcul en cours...</p>
+                )}
               </div>
             </div>
           </div>
-          
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Time Remaining</span>
-            <span className="text-3xl font-mono font-black text-white tracking-widest shadow-sm">
-              {formatRemainingTime(remainingMs)}
-            </span>
-          </div>
         </div>
 
-        {mustPitNow && (
-          <div className="bg-red-600 text-white font-black text-center py-2 text-xl tracking-widest uppercase animate-pulse mb-6 rounded shadow-lg border border-red-400">
-            ⚠️ BOX THIS LAP - {isStintCritical ? `LIMITE TEMPS PILOTE (${activePilote?.nom})` : 'CARBURANT CRITIQUE'} ⚠️
-          </div>
-        )}
-
-        <div className="flex justify-between items-start border-b border-gray-800 pb-4 mb-6 mt-4">
-          <div className="flex items-center space-x-4">
-            <span className="text-5xl font-black text-[#66FCF1]">#{carId}</span>
-            <div>
-              <h1 className="text-2xl font-bold text-white">{liveCarData?.team || 'Écurie Connectée'}</h1>
-              <p className="text-xs text-gray-500 font-mono mt-1">Pilote RIS détecté : <span className="text-[#ffaa00] font-bold">{liveCarData?.driver || 'Inconnu'}</span> | Statut : <span className="text-white font-black">{carStateRef.current}</span></p>
+        <div className="bg-[#1F2833] p-4 rounded-lg border border-gray-700 shadow-xl flex flex-col">
+          <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
+            <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase">👥 Pilotes & Config (Min)</h3>
+            <div className="flex items-center space-x-2">
+              <span className="text-[9px] text-[#ffaa00] bg-gray-900 px-1 rounded border border-gray-700 font-bold">Max Stint: {config.maxStintTime}m</span>
+              <button onClick={addPilote} className="text-[10px] bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded">+ Ajouter</button>
             </div>
           </div>
-          <button onClick={() => router.push(`/voiture/${carId}/config`)} className="bg-[#1F2833] hover:bg-[#45A29E] hover:text-black text-[#66FCF1] font-bold py-2 px-4 rounded border border-gray-700 transition text-sm shadow">⚙️ PARAMÈTRES ET LIMITES</button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="flex flex-col gap-6">
-            <div className="bg-[#1F2833] p-4 rounded-lg border border-gray-700 shadow-xl flex flex-col flex-1">
-              <h3 className={`${fuelTitleColor} font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2 transition-colors`}>⛽ Niveau Carburant</h3>
-              <div className={`bg-[#0B0C10] p-3 rounded text-center border transition-all duration-300 flex-1 flex flex-col justify-center ${fuelBorderColor}`}>
-                <p className={`text-5xl font-mono font-black ${fuelColorText}`}>{currentFuel.toFixed(1)} L</p>
-                <p className="text-[10px] text-gray-500 mt-2">{fuelPct.toFixed(0)}% (Alerte: {config.alertOrangePct}% / {config.alertRedPct}%)</p>
-                <p className="text-sm font-bold text-gray-400 mt-2">~{Math.floor(currentFuel / config.consoGreen)} Tours restants</p>
-                <input type="range" min="0" max={config.capaMax} value={currentFuel} onChange={e => setCurrentFuel(Number(e.target.value))} className="w-full mt-4 accent-[#45A29E]" />
-              </div>
-            </div>
-            <div className="bg-[#1F2833] p-3 rounded-lg border border-gray-700 shadow-xl flex flex-col flex-1">
-              <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2">⏱️ STINT EN COURS</h3>
-              <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mb-1 truncate">{activePilote?.nom || 'AUCUN PILOTE DÉTECTÉ'}</p>
-                <p className={`text-4xl font-mono font-black tracking-wider ${isStintCritical ? 'text-red-500 animate-pulse' : 'text-[#66FCF1]'}`}>
-                  {formatLiveTimer(activePilote?.stintActuel || 0)}
-                </p>
-                <p className="text-[10px] text-gray-500 mt-1 mb-2">
-                  Max Légal : {config.maxStintTime} min
-                  {carStateRef.current === 'IN' && <span className="text-[#ffaa00] ml-1 animate-pulse">(PIT IN)</span>}
-                </p>
-                <div className="mt-auto pt-2 border-t border-gray-800/50">
-                  <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">Rythme Moyen (3 Trs)</p>
-                  {driverPace ? (
-                    <div className="flex justify-center items-center gap-2">
-                      <span className="text-lg font-mono font-bold text-white shadow-sm">{driverPace.avgStr}</span>
-                      {driverPace.trend === 'improving' && <span className="text-[10px] font-black text-[#00ff66] bg-[#00ff66]/10 border border-[#00ff66]/20 px-1.5 py-0.5 rounded shadow-sm">{driverPace.deltaStr}</span>}
-                      {driverPace.trend === 'worsening' && <span className="text-[10px] font-black text-red-400 bg-red-400/10 border border-red-400/20 px-1.5 py-0.5 rounded shadow-sm">{driverPace.deltaStr}</span>}
-                      {driverPace.trend === 'stable' && <span className="text-[10px] font-bold text-gray-400 bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded">{driverPace.deltaStr}</span>}
+          <div className="space-y-2 overflow-y-auto pr-1 flex-1">
+            {pilotes.map((pilote) => (
+              <div key={pilote.id} className={`p-2 rounded border transition-colors ${pilote.statut === 'AU_VOLANT' ? 'bg-[#153035] border-[#45A29E]' : 'bg-[#0B0C10] border-gray-800'}`}>
+                <div className="flex gap-2 mb-2 items-center">
+                  <input type="text" placeholder="Nom Complet" value={pilote.nom} onChange={e => updatePilote(pilote.id, 'nom', e.target.value)} className="bg-transparent font-bold text-sm text-white outline-none border-b border-gray-700 w-1/2" />
+                  {liveCarData?.driver && (!pilote.nomRIS || String(pilote.nomRIS || '').toLowerCase() !== String(liveCarData.driver || '').toLowerCase()) ? (
+                    <div className="w-1/2 flex gap-1 items-center">
+                      <input type="text" placeholder="Lien RIS" value={pilote.nomRIS || ''} onChange={e => updatePilote(pilote.id, 'nomRIS', e.target.value)} className="bg-transparent font-mono text-xs text-[#ffaa00] outline-none border-b border-gray-700 w-full" />
+                      <button onClick={() => { updatePilote(pilote.id, 'nomRIS', liveCarData.driver); setPiloteAuVolant(pilote.id); }} className="text-[9px] bg-[#45A29E] hover:bg-[#66FCF1] text-black font-black px-1.5 py-0.5 rounded transition-colors shadow shadow-[#45A29E]/50 animate-pulse">LIER</button>
                     </div>
                   ) : (
-                    <p className="text-[9px] text-gray-600 font-mono mt-1">Calcul en cours...</p>
+                    <div className="w-1/2 flex items-center gap-1 border-b border-gray-700">
+                      <span className="text-[9px] text-[#00ff66]">✅</span>
+                      <input type="text" placeholder="Lien RIS" value={pilote.nomRIS || ''} onChange={e => updatePilote(pilote.id, 'nomRIS', e.target.value)} className="bg-transparent font-mono text-xs text-[#ffaa00] outline-none w-full" />
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#1F2833] p-4 rounded-lg border border-gray-700 shadow-xl flex flex-col">
-            <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
-              <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase">👥 Pilotes & Config (Min)</h3>
-              <div className="flex items-center space-x-2">
-                <span className="text-[9px] text-[#ffaa00] bg-gray-900 px-1 rounded border border-gray-700 font-bold">Max Stint: {config.maxStintTime}m</span>
-                <button onClick={addPilote} className="text-[10px] bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded">+ Ajouter</button>
-              </div>
-            </div>
-            <div className="space-y-2 overflow-y-auto pr-1 flex-1">
-              {pilotes.map((pilote) => (
-                <div key={pilote.id} className={`p-2 rounded border transition-colors ${pilote.statut === 'AU_VOLANT' ? 'bg-[#153035] border-[#45A29E]' : 'bg-[#0B0C10] border-gray-800'}`}>
-                  <div className="flex gap-2 mb-2 items-center">
-                    <input type="text" placeholder="Nom Complet" value={pilote.nom} onChange={e => updatePilote(pilote.id, 'nom', e.target.value)} className="bg-transparent font-bold text-sm text-white outline-none border-b border-gray-700 w-1/2" />
-                    {liveCarData?.driver && (!pilote.nomRIS || String(pilote.nomRIS || '').toLowerCase() !== String(liveCarData.driver || '').toLowerCase()) ? (
-                      <div className="w-1/2 flex gap-1 items-center">
-                        <input type="text" placeholder="Lien RIS" value={pilote.nomRIS || ''} onChange={e => updatePilote(pilote.id, 'nomRIS', e.target.value)} className="bg-transparent font-mono text-xs text-[#ffaa00] outline-none border-b border-gray-700 w-full" />
-                        <button onClick={() => { updatePilote(pilote.id, 'nomRIS', liveCarData.driver); setPiloteAuVolant(pilote.id); }} className="text-[9px] bg-[#45A29E] hover:bg-[#66FCF1] text-black font-black px-1.5 py-0.5 rounded transition-colors shadow shadow-[#45A29E]/50 animate-pulse">LIER</button>
-                      </div>
-                    ) : (
-                      <div className="w-1/2 flex items-center gap-1 border-b border-gray-700">
-                        <span className="text-[9px] text-[#00ff66]">✅</span>
-                        <input type="text" placeholder="Lien RIS" value={pilote.nomRIS || ''} onChange={e => updatePilote(pilote.id, 'nomRIS', e.target.value)} className="bg-transparent font-mono text-xs text-[#ffaa00] outline-none w-full" />
-                      </div>
-                    )}
+                <div className="flex justify-between items-center mt-2 text-[10px]">
+                  <div className="flex space-x-2">
+                    <div className="flex items-center"><span className="text-gray-500 mr-1">Stint(m):</span><input type="number" value={Math.floor(pilote.stintActuel / 60)} onChange={e => updatePilote(pilote.id, 'stintActuel', Number(e.target.value) * 60)} className={`w-8 bg-gray-800 text-center rounded font-bold ${pilote.statut === 'AU_VOLANT' && isStintCritical ? 'text-red-500' : pilote.statut === 'AU_VOLANT' ? 'text-[#66FCF1]' : 'text-white'}`} /></div>
+                    <div className="flex items-center"><span className="text-gray-500 mr-1">Total(m):</span><input type="number" value={Math.floor(pilote.totalRoulé / 60)} onChange={e => updatePilote(pilote.id, 'totalRoulé', Number(e.target.value) * 60)} className="w-8 bg-gray-800 text-center rounded text-white" /></div>
                   </div>
-                  <div className="flex justify-between items-center mt-2 text-[10px]">
-                    <div className="flex space-x-2">
-                      <div className="flex items-center"><span className="text-gray-500 mr-1">Stint(m):</span><input type="number" value={Math.floor(pilote.stintActuel / 60)} onChange={e => updatePilote(pilote.id, 'stintActuel', Number(e.target.value) * 60)} className={`w-8 bg-gray-800 text-center rounded font-bold ${pilote.statut === 'AU_VOLANT' && isStintCritical ? 'text-red-500' : pilote.statut === 'AU_VOLANT' ? 'text-[#66FCF1]' : 'text-white'}`} /></div>
-                      <div className="flex items-center"><span className="text-gray-500 mr-1">Total(m):</span><input type="number" value={Math.floor(pilote.totalRoulé / 60)} onChange={e => updatePilote(pilote.id, 'totalRoulé', Number(e.target.value) * 60)} className="w-8 bg-gray-800 text-center rounded text-white" /></div>
-                    </div>
-                    <div className="flex space-x-1">
-                      <button onClick={() => updatePilote(pilote.id, 'stintActuel', 0)} className="text-[9px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-500 text-white">↺</button>
-                      <button onClick={() => setPiloteAuVolant(pilote.id)} className={`text-[9px] px-2 py-0.5 rounded ${pilote.statut === 'AU_VOLANT' ? 'bg-[#00ff66] text-black font-black' : 'bg-gray-700 text-white'}`}>TRACK</button>
-                    </div>
+                  <div className="flex space-x-1">
+                    <button onClick={() => updatePilote(pilote.id, 'stintActuel', 0)} className="text-[9px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-500 text-white">↺</button>
+                    <button onClick={() => setPiloteAuVolant(pilote.id)} className={`text-[9px] px-2 py-0.5 rounded ${pilote.statut === 'AU_VOLANT' ? 'bg-[#00ff66] text-black font-black' : 'bg-gray-700 text-white'}`}>TRACK</button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-[#1F2833] p-4 rounded-lg border border-gray-700 shadow-xl flex flex-col">
-            <h3 className="text-[#66FCF1] font-bold text-sm tracking-wider mb-2 uppercase border-b border-gray-700 pb-2">⏱️ Télémétrie Piste</h3>
-            <div className="grid grid-cols-2 gap-2 mb-2 flex-1">
-              <div className="bg-[#0B0C10] p-4 rounded text-center border border-gray-800 flex flex-col justify-center"><p className="text-gray-500 text-[10px] uppercase font-bold">Dernier</p><p className="text-2xl font-mono font-bold text-white mt-1">{liveCarData?.lastLap || '-:--'}</p></div>
-              <div className="bg-[#0B0C10] p-4 rounded text-center border border-gray-800 flex flex-col justify-center"><p className="text-gray-500 text-[10px] uppercase font-bold">Meilleur</p><p className="text-2xl font-mono font-bold text-purple-400 mt-1">{liveCarData?.bestLap || '-:--'}</p></div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S1</span><p className="font-mono text-white mt-1">{liveCarData?.s1 || '-'}</p></div>
-              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S2</span><p className="font-mono text-white mt-1">{liveCarData?.s2 || '-'}</p></div>
-              <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S3</span><p className="font-mono text-white mt-1">{liveCarData?.s3 || '-'}</p></div>
-            </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* 🚀 LE VRAI MODULE AWS OVERTAKE PREDICTION 🚀 */}
-        <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-6 rounded-lg border border-gray-700 shadow-2xl relative overflow-hidden mb-8">
-          <div className="absolute inset-0 opacity-[0.03] bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ffffff_10px,#ffffff_20px)] pointer-events-none" />
-          
-          <div className="flex justify-between items-center mb-6 relative z-10">
-            <h3 className="text-white font-black text-lg tracking-wider uppercase flex items-center gap-2">
-              <span className="text-2xl">⚡</span> AWS BATTLE FORECAST
-            </h3>
-            <span className="text-xs bg-[#0B0C10] px-3 py-1.5 rounded font-mono text-gray-400 border border-gray-700 shadow-sm">
-              SMART PACE CALCULATOR
-            </span>
+        <div className="bg-[#1F2833] p-4 rounded-lg border border-gray-700 shadow-xl flex flex-col">
+          <h3 className="text-[#66FCF1] font-bold text-sm tracking-wider mb-2 uppercase border-b border-gray-700 pb-2">⏱️ Télémétrie Piste</h3>
+          <div className="grid grid-cols-2 gap-2 mb-2 flex-1">
+            <div className="bg-[#0B0C10] p-4 rounded text-center border border-gray-800 flex flex-col justify-center"><p className="text-gray-500 text-[10px] uppercase font-bold">Dernier</p><p className="text-2xl font-mono font-bold text-white mt-1">{liveCarData?.lastLap || '-:--'}</p></div>
+            <div className="bg-[#0B0C10] p-4 rounded text-center border border-gray-800 flex flex-col justify-center"><p className="text-gray-500 text-[10px] uppercase font-bold">Meilleur</p><p className="text-2xl font-mono font-bold text-purple-400 mt-1">{liveCarData?.bestLap || '-:--'}</p></div>
           </div>
-
-          <div className="flex flex-col xl:flex-row gap-6 font-mono relative z-10">
-            <RenderAwsBox data={overtakePredictions.attack} />
-            <RenderAwsBox data={overtakePredictions.defend} />
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S1</span><p className="font-mono text-white mt-1">{liveCarData?.s1 || '-'}</p></div>
+            <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S2</span><p className="font-mono text-white mt-1">{liveCarData?.s2 || '-'}</p></div>
+            <div className="bg-[#0B0C10] p-2 rounded border border-gray-800"><span className="text-gray-500 font-bold">S3</span><p className="font-mono text-white mt-1">{liveCarData?.s3 || '-'}</p></div>
           </div>
-        </div>
-        {/* 🚀 FIN DU MODULE AWS OVERTAKE 🚀 */}
-
-        <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl mb-8">
-          <h3 className="text-[#66FCF1] font-black text-base tracking-wider uppercase mb-4">📈 Évolution des Écarts (Deltas en Secondes)</h3>
-          <div className="h-[300px] w-full bg-[#0B0C10] rounded border border-gray-800 pt-4 pr-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={gapHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1F2833" />
-                <XAxis dataKey="lap" stroke="#555" tick={{ fill: '#888', fontSize: 10 }} />
-                <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 10 }} domain={['auto', 'auto']} />
-                <Tooltip contentStyle={{ backgroundColor: '#1a1c23', borderColor: '#45A29E', color: '#fff', borderRadius: '8px' }} itemStyle={{ fontWeight: 'bold' }} />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}/>
-                <ReferenceLine y={0} stroke="#66FCF1" strokeWidth={2} strokeDasharray="4 4" />
-                {battleGroup.filter(c => String(c?.num) !== String(carId)).map((c, index) => (
-                  <Line key={c.num} type="monotone" dataKey={`car_${c.num}`} name={`#${c.num} ${c.team}`} stroke={chartColors[index % chartColors.length]} strokeWidth={3} dot={{ r: 3, fill: '#0B0C10' }} activeDot={{ r: 6 }} isAnimationActive={false} />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-          <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-[#66FCF1] font-black text-sm tracking-wider uppercase">📋 PLANIFICATEUR DE RELAIS</h3>
-              <button onClick={addStint} className="bg-[#45A29E] hover:bg-[#66FCF1] text-black font-bold text-[10px] px-3 py-1.5 rounded shadow">+ AJOUTER RELAIS</button>
-            </div>
-            <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-[#0B0C10] text-gray-400 uppercase tracking-wider sticky top-0">
-                    <th className="p-2">Relais</th><th className="p-2">Pilote Prévu</th><th className="p-2 text-center">Tours</th><th className="p-2 text-[#00ff66]">Fin Est.</th><th className="p-2 text-center">X</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800 text-sm font-mono">
-                  {calculatedStints.map((stint, index) => (
-                    <tr key={stint.id} className="hover:bg-[#1F2833]">
-                      <td className="p-2 font-sans font-bold text-gray-400">R{index + 1}</td>
-                      <td className="p-2">
-                        <select value={stint.driver} onChange={e => updateStint(stint.id, 'driver', e.target.value)} className="bg-[#0B0C10] border border-gray-700 text-white rounded p-1 w-28 outline-none text-xs cursor-pointer hover:border-gray-500">
-                          <option value="">-- Pilote --</option>
-                          {pilotes.map(p => <option key={p.id} value={p.nom}>{p.nom}</option>)}
-                        </select>
-                      </td>
-                      <td className="p-2 text-center">
-                        <input type="number" value={stint.laps} onChange={e => updateStint(stint.id, 'laps', parseInt(e.target.value) || 0)} className="bg-[#0B0C10] border border-gray-700 text-[#ffaa00] font-bold rounded p-1 w-12 text-center outline-none" />
-                      </td>
-                      <td className="p-2 text-[#00ff66] font-bold">{stint.endTimeStr}</td>
-                      <td className="p-2 text-center"><button onClick={() => removeStint(stint.id)} className="text-red-500 hover:text-red-400 font-bold text-lg">×</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="bg-[#0B0C10] p-5 rounded-lg border border-[#a855f7] shadow-[0_0_15px_rgba(168,85,247,0.15)] flex flex-col h-[380px]">
-            <h3 className="text-[#a855f7] font-black text-sm tracking-wider uppercase mb-4 flex items-center">
-              <span className="mr-2">✨</span> GEMINI IA - INGÉNIEUR STRATÉGISTE
-            </h3>
-            <div className="flex-1 overflow-y-auto mb-4 pr-2 space-y-3 font-mono text-xs">
-              {aiMessages.map((msg, i) => (
-                <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  <span className="text-[9px] text-gray-500 mb-0.5">{msg.timestamp}</span>
-                  <div className={`p-3 rounded-lg max-w-[85%] ${msg.role === 'user' ? 'bg-[#1F2833] text-[#66FCF1] border border-gray-700 rounded-br-none' : 'bg-[#1a1225] text-white border border-[#a855f7]/50 rounded-bl-none'}`}>
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              {isAiTyping && <div className="text-[#a855f7] animate-pulse text-xs">Gemini analyse les données télémétriques...</div>}
-            </div>
-            <form onSubmit={handleAskAi} className="flex gap-2">
-              <input type="text" value={aiInput} onChange={e => setAiInput(e.target.value)} placeholder="Posez une question stratégique..." className="flex-1 bg-[#1F2833] text-white rounded p-2 text-xs border border-gray-700 outline-none focus:border-[#a855f7]" />
-              <button type="submit" disabled={isAiTyping || !aiInput.trim()} className="bg-[#a855f7] hover:bg-purple-400 disabled:opacity-50 text-black font-bold px-4 py-2 rounded text-xs transition">ENVOYER</button>
-            </form>
-          </div>
-        </div>
-
-        <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl mb-10">
-          <h3 className="text-[#66FCF1] font-black text-sm tracking-wider uppercase mb-6 flex items-center">
-            <span className="mr-2">📊</span> HISTORIQUE DES TOURS & PACE (PAR PILOTE)
-          </h3>
-
-          {uniqueDriversRIS.length === 0 ? (
-            <p className="text-sm text-gray-500 font-sans italic text-center py-6">En attente de la complétion du premier tour...</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {uniqueDriversRIS.map(driverRIS => {
-                const driverLaps = lapHistory.filter(l => l.driverRIS === driverRIS);
-                const bestLapData = bestLapsPerDriver.find(b => b.driverRIS === driverRIS);
-
-                return (
-                  <div key={driverRIS} className="bg-[#1F2833] rounded border border-gray-700 overflow-hidden flex flex-col h-[500px] shadow-lg">
-                    <div className="bg-[#0B0C10] p-4 border-b border-gray-800 text-center relative">
-                      <h4 className="text-[#00ff66] font-bold uppercase tracking-widest text-sm mb-1 truncate">{getDriverName(driverRIS)}</h4>
-                      <p className="text-[9px] text-gray-500 uppercase tracking-widest">Meilleur Tour Absolu</p>
-                      <p className="text-2xl font-mono font-black text-[#a855f7] mt-1 shadow-sm">{bestLapData?.bestTimeStr || '-:--'}</p>
-                      <span className="absolute top-2 right-2 text-[10px] text-gray-600 bg-gray-900 px-1.5 py-0.5 rounded border border-gray-700">{driverLaps.length} tours</span>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                      <table className="w-full text-left border-collapse text-[10px] xl:text-xs">
-                        <thead className="bg-[#1a1c23] text-gray-400 uppercase tracking-wider sticky top-0 z-10 shadow">
-                          <tr>
-                            <th className="p-2 border-b border-gray-700">Tr</th>
-                            <th className="p-2 text-center border-b border-gray-700">S1</th>
-                            <th className="p-2 text-center border-b border-gray-700">S2</th>
-                            <th className="p-2 text-center border-b border-gray-700">S3</th>
-                            <th className="p-2 text-[#66FCF1] text-right border-b border-gray-700">Temps</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-800 font-mono">
-                          {driverLaps.map(lap => {
-                            const isBest = lap.lapTime === bestLapData?.bestTimeStr;
-                            return (
-                              <tr key={lap.id} className={`transition-colors ${isBest ? 'bg-[#a855f7]/20 border-l-2 border-[#a855f7]' : 'hover:bg-[#1a1c23] border-l-2 border-transparent'}`}>
-                                <td className="p-2 text-gray-500 font-bold">T{lap.lapNumber}</td>
-                                <td className="p-2 text-center text-gray-400">{lap.s1}</td>
-                                <td className="p-2 text-center text-gray-400">{lap.s2}</td>
-                                <td className="p-2 text-center text-gray-400">{lap.s3}</td>
-                                <td className={`p-2 text-right font-bold ${isBest ? 'text-[#a855f7]' : 'text-white'}`}>{lap.lapTime}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
+
+      <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl mb-8">
+        <h3 className="text-[#66FCF1] font-black text-base tracking-wider uppercase mb-4">📈 Évolution des Écarts (Deltas en Secondes)</h3>
+        <div className="h-[300px] w-full bg-[#0B0C10] rounded border border-gray-800 pt-4 pr-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={gapHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1F2833" />
+              <XAxis dataKey="lap" stroke="#555" tick={{ fill: '#888', fontSize: 10 }} />
+              <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 10 }} domain={['auto', 'auto']} />
+              <Tooltip contentStyle={{ backgroundColor: '#1a1c23', borderColor: '#45A29E', color: '#fff', borderRadius: '8px' }} itemStyle={{ fontWeight: 'bold' }} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}/>
+              <ReferenceLine y={0} stroke="#66FCF1" strokeWidth={2} strokeDasharray="4 4" />
+              {battleGroup.filter(c => String(c?.num) !== String(carId)).map((c, index) => (
+                <Line key={c.num} type="monotone" dataKey={`car_${c.num}`} name={`#${c.num} ${c.team}`} stroke={chartColors[index % chartColors.length]} strokeWidth={3} dot={{ r: 3, fill: '#0B0C10' }} activeDot={{ r: 6 }} isAnimationActive={false} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+        <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-[#66FCF1] font-black text-sm tracking-wider uppercase">📋 PLANIFICATEUR DE RELAIS</h3>
+            <button onClick={addStint} className="bg-[#45A29E] hover:bg-[#66FCF1] text-black font-bold text-[10px] px-3 py-1.5 rounded shadow">+ AJOUTER RELAIS</button>
+          </div>
+          <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-[#0B0C10] text-gray-400 uppercase tracking-wider sticky top-0">
+                  <th className="p-2">Relais</th><th className="p-2">Pilote Prévu</th><th className="p-2 text-center">Tours</th><th className="p-2 text-[#00ff66]">Fin Est.</th><th className="p-2 text-center">X</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800 text-sm font-mono">
+                {calculatedStints.map((stint, index) => (
+                  <tr key={stint.id} className="hover:bg-[#1F2833]">
+                    <td className="p-2 font-sans font-bold text-gray-400">R{index + 1}</td>
+                    <td className="p-2">
+                      <select value={stint.driver} onChange={e => updateStint(stint.id, 'driver', e.target.value)} className="bg-[#0B0C10] border border-gray-700 text-white rounded p-1 w-28 outline-none text-xs cursor-pointer hover:border-gray-500">
+                        <option value="">-- Pilote --</option>
+                        {pilotes.map(p => <option key={p.id} value={p.nom}>{p.nom}</option>)}
+                      </select>
+                    </td>
+                    <td className="p-2 text-center">
+                      <input type="number" value={stint.laps} onChange={e => updateStint(stint.id, 'laps', parseInt(e.target.value) || 0)} className="bg-[#0B0C10] border border-gray-700 text-[#ffaa00] font-bold rounded p-1 w-12 text-center outline-none" />
+                    </td>
+                    <td className="p-2 text-[#00ff66] font-bold">{stint.endTimeStr}</td>
+                    <td className="p-2 text-center"><button onClick={() => removeStint(stint.id)} className="text-red-500 hover:text-red-400 font-bold text-lg">×</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-[#0B0C10] p-5 rounded-lg border border-[#a855f7] shadow-[0_0_15px_rgba(168,85,247,0.15)] flex flex-col h-[380px]">
+          <h3 className="text-[#a855f7] font-black text-sm tracking-wider uppercase mb-4 flex items-center">
+            <span className="mr-2">✨</span> GEMINI IA - INGÉNIEUR STRATÉGISTE
+          </h3>
+          <div className="flex-1 overflow-y-auto mb-4 pr-2 space-y-3 font-mono text-xs">
+            {aiMessages.map((msg, i) => (
+              <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                <span className="text-[9px] text-gray-500 mb-0.5">{msg.timestamp}</span>
+                <div className={`p-3 rounded-lg max-w-[85%] ${msg.role === 'user' ? 'bg-[#1F2833] text-[#66FCF1] border border-gray-700 rounded-br-none' : 'bg-[#1a1225] text-white border border-[#a855f7]/50 rounded-bl-none'}`}>
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+            {isAiTyping && <div className="text-[#a855f7] animate-pulse text-xs">Gemini analyse les données télémétriques...</div>}
+          </div>
+          <form onSubmit={handleAskAi} className="flex gap-2">
+            <input type="text" value={aiInput} onChange={e => setAiInput(e.target.value)} placeholder="Posez une question stratégique..." className="flex-1 bg-[#1F2833] text-white rounded p-2 text-xs border border-gray-700 outline-none focus:border-[#a855f7]" />
+            <button type="submit" disabled={isAiTyping || !aiInput.trim()} className="bg-[#a855f7] hover:bg-purple-400 disabled:opacity-50 text-black font-bold px-4 py-2 rounded text-xs transition">ENVOYER</button>
+          </form>
+        </div>
+      </div>
+
     </div>
   );
 }
