@@ -1,8 +1,17 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
-import { useLiveTiming } from '../../hooks/useLiveTiming'; // Ajuste si nécessaire
+import { useLiveTiming } from '../../hooks/useLiveTiming';
 
 const ROW_HEIGHT = 44;
+
+const formatRemainingTime = (ms: number | undefined) => {
+  if (ms === undefined || ms === null || isNaN(ms) || ms < 0) return "--:--:--";
+  const totalSeconds = Math.floor(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
 
 const getStatusBadge = (state: string) => {
   const s = String(state || 'RUN').toUpperCase();
@@ -49,29 +58,45 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
 };
 
 export default function GlobalHeader() {
-  const { cars } = useLiveTiming('JSON'); // On utilise LiveTiming uniquement pour les voitures
-  
-  // 🚀 Ton API personnelle pour le statut 🚀
-  const [status, setStatus] = useState("WAITING");
-  const [remain, setRemain] = useState("--:--:--");
-  const [msg, setMsg] = useState("");
+  const { cars } = useLiveTiming('JSON'); // Toujours utiliser pour récupérer le classement
 
+  const [trackStatus, setTrackStatus] = useState("WAITING");
+  const [remainStr, setRemainStr] = useState("--:--:--");
+  const [rcMessage, setRcMessage] = useState("");
+
+  // 🚀 FETCH EXTRACTION ROBUSTE DU JSON POUR LA DIRECTION DE COURSE 🚀
   useEffect(() => {
-    const fetchMessages = async () => {
+    const fetchGlobalData = async () => {
       try {
-        const res = await fetch('/api/messages');
+        const res = await fetch('/api/timing'); // On tape directement sur ton extracteur Node.js !
         if (res.ok) {
           const data = await res.json();
-          setStatus(data.trackStatus || "WAITING");
-          setRemain(data.remain || "--:--:--");
-          setMsg(data.message || "");
+          
+          // 1. Statut de la Piste
+          if (data.context?.session?.track_state) setTrackStatus(data.context.session.track_state);
+          else if (data.status) setTrackStatus(data.status);
+          
+          // 2. Temps Restant
+          if (data.context?.clock?.remaining_ms !== undefined) setRemainStr(formatRemainingTime(data.context.clock.remaining_ms));
+          else if (data.remain) setRemainStr(data.remain); 
+          
+          // 3. Dernier Message de Direction de Course
+          if (data.messages && data.messages.length > 0) {
+            const lastMsg = data.messages[data.messages.length - 1];
+            // Format fallback si c'est un object complexe de RIS Timing
+            const msgText = typeof lastMsg === 'string' ? lastMsg : (lastMsg.message || lastMsg.content || lastMsg.event || "");
+            setRcMessage(msgText);
+          } else if (data.message) {
+            setRcMessage(data.message);
+          }
         }
-      } catch (err) {
-        console.error("Erreur lecture flux messages");
+      } catch (e) {
+        console.error("Erreur lecture data pour le header", e);
       }
     };
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5000); 
+
+    fetchGlobalData();
+    const interval = setInterval(fetchGlobalData, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -80,7 +105,7 @@ export default function GlobalHeader() {
   const containerHeight = maxRank * ROW_HEIGHT;
 
   let bgClass = "bg-[#1a1c23]"; let textClass = "text-white"; let dotClass = "bg-gray-500"; let pulse = false;
-  const s = status.toUpperCase();
+  const s = trackStatus.toUpperCase();
   
   if (s.includes("GREEN") || s.includes("RUN") || s.includes("RUNNING")) {
     bgClass = "bg-[#003311]"; textClass = "text-[#00ff66]"; dotClass = "bg-[#00ff66]";
@@ -99,7 +124,7 @@ export default function GlobalHeader() {
   useEffect(() => {
     if (prevStatusRef.current !== null && prevStatusRef.current !== s && s !== "WAITING") {
       setShowStatusAnim(true);
-      const timer = setTimeout(() => setShowStatusAnim(false), 5000); // 5 secondes
+      const timer = setTimeout(() => setShowStatusAnim(false), 5000); // Animation géante de 5 secondes
       return () => clearTimeout(timer);
     }
     prevStatusRef.current = s;
@@ -126,7 +151,7 @@ export default function GlobalHeader() {
         .anim-arrow-l { animation: slide-left 1.2s infinite; display: inline-block; }
       `}</style>
 
-      {/* 🏁 BANDEAU SUPÉRIEUR (S'agrandit pendant l'animation) */}
+      {/* 🏁 BANDEAU SUPÉRIEUR (GÉANT SI ANIMATION, NORMAL SINON) */}
       <header 
         className={`fixed top-0 left-0 right-0 z-[70] border-b border-gray-800 flex flex-col justify-center transition-all duration-700 ease-in-out overflow-hidden shadow-2xl ${bgClass}`}
         style={{ height: showStatusAnim ? '160px' : '56px' }}
@@ -137,15 +162,15 @@ export default function GlobalHeader() {
               <span className={`w-3 h-3 rounded-full mr-3 ${dotClass} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`}></span>
               TRACK STATUS: {s}
             </span>
-            {msg && (
+            {rcMessage && (
               <div className="border-l border-gray-700 pl-4 flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center gap-2">
                 <span className="text-[#ffaa00] font-bold text-[10px] uppercase bg-[#0B0C10] px-2 py-1 rounded border border-gray-700">⚠️ DIR. COURSE</span>
-                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{msg}</span>
+                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{rcMessage}</span>
               </div>
             )}
           </div>
           <div className="text-sm font-mono text-gray-400 shrink-0 ml-4">
-            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{remain}</span>
+            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{remainStr}</span>
           </div>
         </div>
 
@@ -157,7 +182,9 @@ export default function GlobalHeader() {
               <span className="anim-arrow-r" style={{ animationDelay: '200ms' }}>❯</span>
               <span className="anim-arrow-r" style={{ animationDelay: '400ms' }}>❯</span>
             </div>
+            
             <span className={`tracking-[0.2em] ${textClass} drop-shadow-[0_0_15px_currentColor]`}>{s}</span>
+            
             <div className={`flex gap-2 ${textClass} opacity-60`}>
               <span className="anim-arrow-l" style={{ animationDelay: '400ms' }}>❮</span>
               <span className="anim-arrow-l" style={{ animationDelay: '200ms' }}>❮</span>
@@ -176,6 +203,7 @@ export default function GlobalHeader() {
           </h2>
           <span className="text-[10px] font-bold text-gray-500">INT</span>
         </div>
+        
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide">
           <div className="relative w-full" style={{ height: `${containerHeight}px` }}>
             {safeCars.map((car) => {
