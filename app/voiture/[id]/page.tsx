@@ -69,8 +69,6 @@ export default function VoitureDetailPage() {
   const [aiInput, setAiInput] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [gapHistory, setGapHistory] = useState<any[]>([]);
-  
-  // 🚀 NOUVEAUX ÉTATS POUR LE PRÉDICTEUR DE STANDS 🚀
   const [pitMode, setPitMode] = useState<'DT' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
   const [customPitTime, setCustomPitTime] = useState<number>(65);
   
@@ -128,7 +126,6 @@ export default function VoitureDetailPage() {
     if (liveCarData.s3 && liveCarData.s3 !== '-') currentSectorsRef.current.s3 = String(liveCarData.s3);
   }, [liveCarData?.s1, liveCarData?.s2, liveCarData?.s3]);
 
-  // Stockage historique des chronos pour l'AWS
   useEffect(() => {
     if (!safeCars) return;
     safeCars.forEach(c => {
@@ -258,7 +255,6 @@ export default function VoitureDetailPage() {
     });
   }, [safeCars, liveCarData?.laps, carId]);
 
-  // 🚀 SUPER CALCULATEUR AWS (DIFFÉRENCE DE PACE 2 TOURS) 🚀
   const overtakePredictions = useMemo(() => {
     if (!liveCarData || carIndex === -1 || safeCars.length === 0) return { attack: null, defend: null };
 
@@ -328,12 +324,11 @@ export default function VoitureDetailPage() {
     return result;
   }, [safeCars, liveCarData, carIndex]);
 
-  // 🚀 CALCULATEUR DU TEMPS DE PIT DYNAMIQUE 🚀
   const currentPitLoss = useMemo(() => {
-    if (pitMode === 'DT') return 25; // Drive-Through
-    if (pitMode === 'DRIVER') return 45; // Pit + Driver
-    if (pitMode === 'FULL') return config.pitLossTime; // Pit + Driver + Fuel
-    return customPitTime; // Custom
+    if (pitMode === 'DT') return 25; 
+    if (pitMode === 'DRIVER') return 45; 
+    if (pitMode === 'FULL') return config.pitLossTime; 
+    return customPitTime; 
   }, [pitMode, customPitTime, config.pitLossTime]);
 
   const predictorGroup = useMemo(() => {
@@ -346,7 +341,6 @@ export default function VoitureDetailPage() {
     };
     const carsWithGhost = [...carsWithGaps, ghostCar].sort((a: any, b: any) => a.gapSec - b.gapSec);
     const ghostIndex = carsWithGhost.findIndex(c => c.isGhost);
-    // On affiche 2 devant et 2 derrière pour bien voir où on s'insère
     return carsWithGhost.slice(Math.max(0, ghostIndex - 2), Math.min(carsWithGhost.length - 1, ghostIndex + 2) + 1);
   }, [safeCars, liveCarData, currentPitLoss]);
 
@@ -492,10 +486,9 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
-    // 🚀 L'interface est décalée de 320px sur la gauche et de 56px (pt-14) en haut 🚀
-    // LE FOND EST GLOBAL POUR ÉVITER TOUT ESPACE BLANC
-    <div className="min-h-screen bg-[#0B0C10] w-full">
-      <div className={`text-white p-6 font-sans transition-colors duration-500 ml-[320px] pt-[56px] ${mustPitNow ? 'bg-red-950/40' : 'bg-[#0B0C10]'}`}>
+    // 🚀 ROOT WRAPPER : Le fond de page noir recouvre tout, le contenu s'écarte du menu 🚀
+    <div className="min-h-screen bg-[#0B0C10] w-full pl-[320px] pt-[56px] relative overflow-x-hidden">
+      <div className={`p-6 font-sans transition-colors duration-500 min-h-[calc(100vh-56px)] ${mustPitNow ? 'bg-red-950/40' : 'bg-transparent'}`}>
         
         {mustPitNow && (
           <div className="bg-red-600 text-white font-black text-center py-2 text-xl tracking-widest uppercase animate-pulse mb-6 rounded shadow-lg border border-red-400 mt-4">
@@ -531,7 +524,6 @@ export default function VoitureDetailPage() {
             <RenderAwsBox data={overtakePredictions.defend} />
           </div>
         </div>
-        {/* 🚀 FIN DU MODULE AWS 🚀 */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="flex flex-col gap-6">
@@ -645,7 +637,7 @@ export default function VoitureDetailPage() {
           </div>
         </div>
 
-        {/* 🚀 BATAILLE DIRECTE ET PRÉDICTEUR DE STAND (2 COLONNES) 🚀 */}
+        {/* 🚀 BATAILLE DIRECTE ET PRÉDICTEUR DE STAND 🚀 */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
           
           <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">

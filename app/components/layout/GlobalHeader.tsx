@@ -27,10 +27,9 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
   const prevTopRef = useRef(topPosition);
 
   useEffect(() => {
-    // Si la position change, on déclenche l'animation d'agrandissement pendant le mouvement
     if (prevTopRef.current !== topPosition) {
       setIsOvertaking(true);
-      const timer = setTimeout(() => setIsOvertaking(false), 1500); // Durée de l'effet d'agrandissement (1.5s)
+      const timer = setTimeout(() => setIsOvertaking(false), 1500); 
       prevTopRef.current = topPosition;
       return () => clearTimeout(timer);
     }
@@ -44,9 +43,7 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
           : (isOurCar ? 'bg-[#1a383b] border-l-4 border-l-[#66FCF1] z-40' : 'bg-[#0B0C10] hover:bg-[#1a1c23] z-10')
       }`}
       style={{ 
-        top: `${topPosition}px`, 
-        height: `${ROW_HEIGHT}px`,
-        // Transition CSS de 1.5s pour la hauteur et l'échelle
+        top: `${topPosition}px`, height: `${ROW_HEIGHT}px`,
         transition: 'top 1.5s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s ease-in-out, background-color 0.5s',
         transform: isOvertaking ? 'scale(1.05)' : 'scale(1)'
       }}
@@ -56,12 +53,8 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
       <div className={`flex-1 truncate font-sans text-[11px] uppercase pr-2 ${isOurCar || isOvertaking ? 'text-[#66FCF1] font-black' : 'text-gray-200'}`}>
         {car.team}
       </div>
-      <div className="w-14 text-right font-mono text-[10px] text-gray-400 truncate pr-2">
-        {car.gap}
-      </div>
-      <div className="w-8 text-right flex justify-end">
-        {getStatusBadge(car.car_state)}
-      </div>
+      <div className="w-14 text-right font-mono text-[10px] text-gray-400 truncate pr-2">{car.gap}</div>
+      <div className="w-8 text-right flex justify-end">{getStatusBadge(car.car_state)}</div>
     </div>
   );
 };
@@ -85,38 +78,91 @@ export default function GlobalHeader() {
   
   if (s.includes("GREEN") || s.includes("RUN") || s.includes("RUNNING")) {
     bgClass = "bg-[#003311]"; textClass = "text-[#00ff66]"; dotClass = "bg-[#00ff66]";
-  } else if (s.includes("FCY") || s.includes("YELLOW") || s.includes("SAFETY")) {
+  } else if (s.includes("FCY") || s.includes("YELLOW") || s.includes("SAFETY") || s.includes("SLOW")) {
     bgClass = "bg-[#442D00]"; textClass = "text-[#ffaa00]"; dotClass = "bg-[#ffaa00]"; pulse = true;
   } else if (s.includes("RED") || s.includes("ROUGE")) {
     bgClass = "bg-[#440000]"; textClass = "text-[#ff3333]"; dotClass = "bg-[#ff3333]"; pulse = true;
+  } else if (s.includes("CHECKERED") || s.includes("FINISH")) {
+    bgClass = "bg-gray-800"; textClass = "text-white"; dotClass = "bg-white"; pulse = true;
   }
 
-  // Idéalement, récupère l'ID de la voiture surveillée depuis l'URL si possible
+  // 🚀 DÉTECTION ET GESTION DE L'ANIMATION DU BANDEAU 🚀
+  const [showStatusAnim, setShowStatusAnim] = useState(false);
+  const prevStatusRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (prevStatusRef.current !== null && prevStatusRef.current !== s && s !== "WAITING") {
+      setShowStatusAnim(true);
+      const timer = setTimeout(() => setShowStatusAnim(false), 5000); // Reste géant pendant 5 secondes
+      return () => clearTimeout(timer);
+    }
+    prevStatusRef.current = s;
+  }, [s]);
+
   const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
   const carIdMatch = currentPath.match(/\/voiture\/(\d+)/);
   const watchedCarId = carIdMatch ? carIdMatch[1] : null;
 
   return (
     <>
-      {/* 🏁 BANDEAU SUPÉRIEUR (Track Status, RC Message, Remaining Time) */}
-      <header className={`fixed top-0 left-0 right-0 h-14 border-b border-gray-800 flex items-center justify-between px-6 z-[60] transition-colors duration-300 ${bgClass}`}>
-        <div className="flex items-center space-x-4 flex-1 overflow-hidden">
-          <span className={`flex items-center text-sm font-black tracking-widest shrink-0 ${textClass}`}>
-            <span className={`w-3 h-3 rounded-full mr-3 ${dotClass} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`}></span>
-            TRACK STATUS: {s}
-          </span>
-          
-          {latestMessage && (
-            <div className="border-l border-gray-700 pl-4 flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center gap-2">
-              <span className="text-[#ffaa00] font-bold text-[10px] uppercase bg-[#0B0C10] px-2 py-1 rounded border border-gray-700">
-                ⚠️ DIR. COURSE
-              </span>
-              <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{latestMessage}</span>
-            </div>
-          )}
+      <style>{`
+        .leaderboard-row { transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
+        
+        @keyframes slide-right {
+            0% { transform: translateX(-20px); opacity: 0; }
+            50% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(20px); opacity: 0; }
+        }
+        @keyframes slide-left {
+            0% { transform: translateX(20px); opacity: 0; }
+            50% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(-20px); opacity: 0; }
+        }
+        .anim-arrow-r { animation: slide-right 1.2s infinite; display: inline-block; }
+        .anim-arrow-l { animation: slide-left 1.2s infinite; display: inline-block; }
+      `}</style>
+
+      {/* 🏁 BANDEAU SUPÉRIEUR (GÉANT SI ANIMATION, NORMAL SINON) */}
+      <header 
+        className={`fixed top-0 left-0 right-0 z-[70] border-b border-gray-800 flex flex-col justify-center transition-all duration-700 ease-in-out overflow-hidden shadow-2xl ${bgClass}`}
+        style={{ height: showStatusAnim ? '160px' : '56px' }}
+      >
+        {/* BANDEAU NORMAL (S'efface pendant l'animation) */}
+        <div className={`absolute top-0 left-0 w-full h-[56px] flex items-center justify-between px-6 transition-opacity duration-300 ${showStatusAnim ? 'opacity-0' : 'opacity-100'}`}>
+          <div className="flex items-center space-x-4 flex-1 overflow-hidden">
+            <span className={`flex items-center text-sm font-black tracking-widest shrink-0 ${textClass}`}>
+              <span className={`w-3 h-3 rounded-full mr-3 ${dotClass} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`}></span>
+              TRACK STATUS: {s}
+            </span>
+            {latestMessage && (
+              <div className="border-l border-gray-700 pl-4 flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center gap-2">
+                <span className="text-[#ffaa00] font-bold text-[10px] uppercase bg-[#0B0C10] px-2 py-1 rounded border border-gray-700">⚠️ DIR. COURSE</span>
+                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{latestMessage}</span>
+              </div>
+            )}
+          </div>
+          <div className="text-sm font-mono text-gray-400 shrink-0 ml-4">
+            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{formatRemainingTime(remainMs)}</span>
+          </div>
         </div>
-        <div className="text-sm font-mono text-gray-400 shrink-0 ml-4">
-          REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{formatRemainingTime(remainMs)}</span>
+
+        {/* 🎬 GRAND TITRE ANIMÉ AU CENTRE (S'affiche uniquement lors du changement de drapeau) */}
+        <div className={`absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none transition-opacity duration-700 delay-200 ${showStatusAnim ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex items-center gap-8 text-6xl font-black uppercase tracking-widest drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+            <div className={`flex gap-2 ${textClass} opacity-60`}>
+              <span className="anim-arrow-r" style={{ animationDelay: '0ms' }}>❯</span>
+              <span className="anim-arrow-r" style={{ animationDelay: '200ms' }}>❯</span>
+              <span className="anim-arrow-r" style={{ animationDelay: '400ms' }}>❯</span>
+            </div>
+            
+            <span className={`tracking-[0.2em] ${textClass} drop-shadow-[0_0_15px_currentColor]`}>{s}</span>
+            
+            <div className={`flex gap-2 ${textClass} opacity-60`}>
+              <span className="anim-arrow-l" style={{ animationDelay: '400ms' }}>❮</span>
+              <span className="anim-arrow-l" style={{ animationDelay: '200ms' }}>❮</span>
+              <span className="anim-arrow-l" style={{ animationDelay: '0ms' }}>❮</span>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -136,10 +182,7 @@ export default function GlobalHeader() {
               const positionRank = parseInt(car.pos) || 999;
               const topPosition = (positionRank - 1) * ROW_HEIGHT;
               const isOurCar = String(car.num) === String(watchedCarId);
-              
-              return (
-                <LeaderboardRow key={car.num} car={car} topPosition={topPosition} isOurCar={isOurCar} />
-              );
+              return <LeaderboardRow key={car.num} car={car} topPosition={topPosition} isOurCar={isOurCar} />;
             })}
           </div>
         </div>
