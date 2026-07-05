@@ -117,7 +117,7 @@ export default function GlobalHeader() {
     bgClass = "bg-[#442D00]"; textClass = "text-[#ffaa00]"; dotClass = "bg-[#ffaa00]"; pulse = true;
   } else if (s.includes("RED") || s.includes("ROUGE")) {
     bgClass = "bg-[#440000]"; textClass = "text-[#ff3333]"; dotClass = "bg-[#ff3333]"; pulse = true;
-  } else if (s.includes("CHECKERED") || s.includes("CHEQUERED") || s.includes("FINISH")) {
+  } else if (s.includes("CHECKERED") || s.includes("CHEQUERED") || s.includes("FINISHED")) {
     bgClass = "bg-gray-200"; textClass = "text-black"; dotClass = "bg-black"; pulse = true;
   }
 
