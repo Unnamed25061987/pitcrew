@@ -41,9 +41,15 @@ export function useLiveTiming(type: string = 'JSON') {
                 setError(`API RIS: ${data.error_api}`);
             } else if (data && data.cars) {
                 
-              // 🚀 C'EST ICI QUE TOUT SE JOUE : TRADUCTION EXACTE COMME EN PYTHON
+              // 🚀 TRADUCTION EXACTE AVEC LES BONS SECTEURS (EN DIRECT)
               const formattedCars = data.cars.map((c: any) => {
                 const lapInfo = c.lap || {};
+                
+                // On privilégie le secteur en cours (s1_ms). S'il est vide, on met le best par défaut.
+                const s1_val = lapInfo.s1_ms || lapInfo.s1_best_ms;
+                const s2_val = lapInfo.s2_ms || lapInfo.s2_best_ms;
+                const s3_val = lapInfo.s3_ms || lapInfo.s3_best_ms;
+
                 return {
                   num: String(c.car_number || "").trim(),
                   pos: c.position || "-",
@@ -53,9 +59,9 @@ export function useLiveTiming(type: string = 'JSON') {
                   gap: formatGap(c.gaps),
                   lastLap: msToChrono(lapInfo.lap_time_ms),
                   bestLap: msToChrono(lapInfo.best_lap_ms),
-                  s1: lapInfo.s1_best_ms ? (lapInfo.s1_best_ms / 1000).toFixed(2) : "-",
-                  s2: lapInfo.s2_best_ms ? (lapInfo.s2_best_ms / 1000).toFixed(2) : "-",
-                  s3: lapInfo.s3_best_ms ? (lapInfo.s3_best_ms / 1000).toFixed(2) : "-",
+                  s1: s1_val ? (s1_val / 1000).toFixed(3) : "-",
+                  s2: s2_val ? (s2_val / 1000).toFixed(3) : "-",
+                  s3: s3_val ? (s3_val / 1000).toFixed(3) : "-",
                   car_state: lapInfo.car_state || c.car_state || c.state || 'RUN'
                 };
               });
