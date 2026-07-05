@@ -52,9 +52,11 @@ export default function VoitureDetailPage() {
   const carId = params.id as string;
   const { cars, status } = useLiveTiming('JSON');
   
+  // 🚀 AJOUT DES NOUVEAUX PARAMÈTRES (Pit décomposé et Alerte Pilote) 🚀
   const [config, setConfig] = useState({ 
     capaMax: 80, consoGreen: 1.7, timeGreenStr: "2:55.000", consoFcy: 0.7, timeFcyStr: "7:00.000",
-    alertOrangePct: 35, alertRedPct: 17, pitLossTime: 65, maxStintTime: 65 
+    alertOrangePct: 35, alertRedPct: 17, maxStintTime: 65,
+    pitBaseTime: 35, pitRefuelTime: 30, pitDriverTime: 15, stintAlertMin: 10
   });
   
   const [currentFuel, setCurrentFuel] = useState<number>(0);
@@ -69,7 +71,8 @@ export default function VoitureDetailPage() {
   const [aiInput, setAiInput] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [gapHistory, setGapHistory] = useState<any[]>([]);
-  const [pitMode, setPitMode] = useState<'DT' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
+  
+  const [pitMode, setPitMode] = useState<'DT' | 'REFUEL' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
   const [customPitTime, setCustomPitTime] = useState<number>(65);
   
   const lastLapRef = useRef<number | null>(null);
@@ -91,7 +94,11 @@ export default function VoitureDetailPage() {
         capaMax: parsedCapa, consoGreen: Number(parsed.consoGreen) || 1.7, timeGreenStr: parsed.timeGreenStr || "2:55.000", 
         consoFcy: Number(parsed.consoFcy) || 0.7, timeFcyStr: parsed.timeFcyStr || "7:00.000",
         alertOrangePct: Number(parsed.alertOrangePct) || 35, alertRedPct: Number(parsed.alertRedPct) || 17, 
-        pitLossTime: Number(parsed.pitLossTime) || 65, maxStintTime: Number(parsed.maxStintTime) || 65
+        maxStintTime: Number(parsed.maxStintTime) || 65,
+        pitBaseTime: Number(parsed.pitBaseTime) || 35,
+        pitRefuelTime: Number(parsed.pitRefuelTime) || 30,
+        pitDriverTime: Number(parsed.pitDriverTime) || 15,
+        stintAlertMin: Number(parsed.stintAlertMin) || 10
       });
     }
 
@@ -212,7 +219,9 @@ export default function VoitureDetailPage() {
   
   const activePilote = pilotes.find(p => p.statut === 'AU_VOLANT');
   const maxStintSec = config.maxStintTime * 60;
-  const isStintCritical = activePilote ? (maxStintSec - activePilote.stintActuel <= 180) : false;
+  
+  // 🚀 L'ALERTE PREND EN COMPTE LA VARIABLE 'stintAlertMin' 🚀
+  const isStintCritical = activePilote ? (maxStintSec - activePilote.stintActuel <= config.stintAlertMin * 60) : false;
   const mustPitNow = isFuelCritical || isStintCritical;
 
   const driverPace = useMemo(() => {
@@ -324,12 +333,14 @@ export default function VoitureDetailPage() {
     return result;
   }, [safeCars, liveCarData, carIndex]);
 
+  // 🚀 CALCULATEUR DU TEMPS DE PIT DYNAMIQUE BASÉ SUR LA NOUVELLE CONFIG 🚀
   const currentPitLoss = useMemo(() => {
-    if (pitMode === 'DT') return 25; 
-    if (pitMode === 'DRIVER') return 45; 
-    if (pitMode === 'FULL') return config.pitLossTime; 
+    if (pitMode === 'DT') return config.pitBaseTime; 
+    if (pitMode === 'REFUEL') return config.pitBaseTime + config.pitRefuelTime; 
+    if (pitMode === 'DRIVER') return config.pitBaseTime + config.pitDriverTime; 
+    if (pitMode === 'FULL') return config.pitBaseTime + config.pitRefuelTime + config.pitDriverTime; 
     return customPitTime; 
-  }, [pitMode, customPitTime, config.pitLossTime]);
+  }, [pitMode, customPitTime, config]);
 
   const predictorGroup = useMemo(() => {
     if (!liveCarData) return [];
@@ -358,18 +369,20 @@ export default function VoitureDetailPage() {
 
   const calculatedStints = useMemo(() => {
     let elapsedSec = 0; let currentLap = liveCarData?.laps || 0;
+    // On utilise le FULL PIT pour la planification
+    const defaultFullPitLoss = config.pitBaseTime + config.pitRefuelTime + config.pitDriverTime;
     return stints.map((stint) => {
       const startSec = elapsedSec;
       const duration = stint.laps * greenSeconds;
       const endSec = startSec + duration;
       const startLap = currentLap + 1;
       const endLap = currentLap + stint.laps;
-      elapsedSec = endSec + config.pitLossTime; 
+      elapsedSec = endSec + defaultFullPitLoss; 
       currentLap = endLap;
       const formatTime = (ts: number) => { const h = Math.floor(ts / 3600); const m = Math.floor((ts % 3600) / 60); return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; };
       return { ...stint, startTimeStr: formatTime(startSec), endTimeStr: formatTime(endSec), startLap, endLap };
     });
-  }, [stints, greenSeconds, config.pitLossTime, liveCarData?.laps]);
+  }, [stints, greenSeconds, config, liveCarData?.laps]);
 
   const uniqueDriversRIS = useMemo(() => {
     const drivers = new Set<string>();
@@ -486,8 +499,8 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
-    // 🚀 ROOT WRAPPER : Le fond de page noir recouvre tout, le contenu s'écarte du menu 🚀
-    <div className="min-h-screen bg-[#0B0C10] w-full pl-[320px] pt-[56px] relative overflow-x-hidden">
+    // 🚀 ROOT WRAPPER : padding gauche fixé à 100px selon ta demande ! 🚀
+    <div className="min-h-screen bg-[#0B0C10] w-full pl-[100px] pt-[56px] relative overflow-x-hidden">
       <div className={`p-6 font-sans transition-colors duration-500 min-h-[calc(100vh-56px)] ${mustPitNow ? 'bg-red-950/40' : 'bg-transparent'}`}>
         
         {mustPitNow && (
@@ -544,7 +557,7 @@ export default function VoitureDetailPage() {
                   {formatLiveTimer(activePilote?.stintActuel || 0)}
                 </p>
                 <p className="text-[10px] text-gray-500 mt-1 mb-2">
-                  Max Légal : {config.maxStintTime} min
+                  Max Légal : {config.maxStintTime} min | Alerte : -{config.stintAlertMin} min
                   {carStateRef.current === 'IN' && <span className="text-[#ffaa00] ml-1 animate-pulse">(PIT IN)</span>}
                 </p>
                 <div className="mt-auto pt-2 border-t border-gray-800/50">
@@ -566,7 +579,7 @@ export default function VoitureDetailPage() {
 
           <div className="bg-[#1F2833] p-4 rounded-lg border border-gray-700 shadow-xl flex flex-col">
             <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
-              <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase">👥 Pilotes & Config (Min)</h3>
+              <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase">👥 Pilotes & Config</h3>
               <div className="flex items-center space-x-2">
                 <span className="text-[9px] text-[#ffaa00] bg-gray-900 px-1 rounded border border-gray-700 font-bold">Max Stint: {config.maxStintTime}m</span>
                 <button onClick={addPilote} className="text-[10px] bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded">+ Ajouter</button>
@@ -671,9 +684,10 @@ export default function VoitureDetailPage() {
               <div className="flex items-center gap-2">
                 <select value={pitMode} onChange={e => setPitMode(e.target.value as any)} 
                         className="bg-[#0B0C10] border border-gray-700 text-xs text-white p-1 rounded outline-none font-bold">
-                  <option value="DT">Drive-Through (~25s)</option>
-                  <option value="DRIVER">Pit + Pilote (~45s)</option>
-                  <option value="FULL">Pit Complet (Config)</option>
+                  <option value="DT">Drive-Through ({config.pitBaseTime}s)</option>
+                  <option value="REFUEL">Pit + Fuel ({config.pitBaseTime + config.pitRefuelTime}s)</option>
+                  <option value="DRIVER">Pit + Pilote ({config.pitBaseTime + config.pitDriverTime}s)</option>
+                  <option value="FULL">Pit Complet ({config.pitBaseTime + config.pitRefuelTime + config.pitDriverTime}s)</option>
                   <option value="CUSTOM">Custom...</option>
                 </select>
                 {pitMode === 'CUSTOM' ? (
