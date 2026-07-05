@@ -1,0 +1,4580 @@
+{
+  "seq": 1783244803476,
+  "cars": [
+    {
+      "lap": {
+        "s1_ms": 49712,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:05.647234+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:13.390234+00:00",
+        "lap_number": 323,
+        "s1_best_ms": 33424,
+        "s2_best_ms": 75927,
+        "s3_best_ms": 44995,
+        "best_lap_ms": 171152,
+        "lap_end_xml": null,
+        "lap_time_ms": 172257,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 0,
+          "laps": 0
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 0,
+          "laps": 0
+        }
+      },
+      "team": "ORHES - RACELINK - CLOSSUR",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6270000,
+        "last_stop_duration_ms": 414000
+      },
+      "driver": "T.NOU",
+      "category": "EV3",
+      "position": 1,
+      "car_number": 545,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50874,
+        "s2_ms": 78863,
+        "s3_ms": 46787,
+        "lap_end": "2026-07-05T09:46:24.072757+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:27.548757+00:00",
+        "lap_number": 323,
+        "s1_best_ms": 33294,
+        "s2_best_ms": 75750,
+        "s3_best_ms": 45122,
+        "best_lap_ms": 170092,
+        "lap_end_xml": null,
+        "lap_time_ms": 176524,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 71789,
+          "laps": 0
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 71789,
+          "laps": null
+        }
+      },
+      "team": "No Limit Racing 506",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 6782000,
+        "last_stop_duration_ms": 422000
+      },
+      "driver": "B.HAN",
+      "category": "EV3",
+      "position": 2,
+      "car_number": 506,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 49735,
+        "s2_ms": 78799,
+        "s3_ms": 45846,
+        "lap_end": "2026-07-05T09:46:38.599806+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:44.219806+00:00",
+        "lap_number": 323,
+        "s1_best_ms": 33504,
+        "s2_best_ms": 76399,
+        "s3_best_ms": 45329,
+        "best_lap_ms": 171653,
+        "lap_end_xml": null,
+        "lap_time_ms": 174380,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 88800,
+          "laps": 0
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 17011,
+          "laps": null
+        }
+      },
+      "team": "Groupe Lemoine by M3M",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6241000,
+        "last_stop_duration_ms": 408000
+      },
+      "driver": "U.DWI",
+      "category": "EV3",
+      "position": 3,
+      "car_number": 424,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50763,
+        "s2_ms": 77285,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:31.025754+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:36.649754+00:00",
+        "lap_number": 321,
+        "s1_best_ms": 33548,
+        "s2_best_ms": 76177,
+        "s3_best_ms": 45401,
+        "best_lap_ms": 171643,
+        "lap_end_xml": null,
+        "lap_time_ms": 174376,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "team": "Michael Mazuin Sport",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6140000,
+        "last_stop_duration_ms": 409000
+      },
+      "driver": "G.MAZ",
+      "category": "EV3",
+      "position": 4,
+      "car_number": 514,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 142630,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:06.684230+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:11.696230+00:00",
+        "lap_number": 320,
+        "s1_best_ms": 33667,
+        "s2_best_ms": 75885,
+        "s3_best_ms": 45510,
+        "best_lap_ms": 171738,
+        "lap_end_xml": null,
+        "lap_time_ms": 174988,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 3
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Milo Sens",
+      "stops": {
+        "count": 19,
+        "total_time_ms": 6736000,
+        "last_stop_duration_ms": 113000
+      },
+      "driver": "L.DON",
+      "category": "EV3",
+      "position": 5,
+      "car_number": 280,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 49536,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:15.361975+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:20.254975+00:00",
+        "lap_number": 320,
+        "s1_best_ms": 37756,
+        "s2_best_ms": 77215,
+        "s3_best_ms": 45647,
+        "best_lap_ms": 172948,
+        "lap_end_xml": null,
+        "lap_time_ms": 175107,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 69118,
+          "laps": 3
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 69118,
+          "laps": null
+        }
+      },
+      "team": "Milo No Speed Limit",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 6298000,
+        "last_stop_duration_ms": 101000
+      },
+      "driver": "G.VER",
+      "category": "EV3",
+      "position": 6,
+      "car_number": 546,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 49438,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:40.097723+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:45.647723+00:00",
+        "lap_number": 320,
+        "s1_best_ms": 34047,
+        "s2_best_ms": 76893,
+        "s3_best_ms": 45715,
+        "best_lap_ms": 172149,
+        "lap_end_xml": null,
+        "lap_time_ms": 174450,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 96652,
+          "laps": 3
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 27534,
+          "laps": null
+        }
+      },
+      "team": "JMK Racing 1",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6455000,
+        "last_stop_duration_ms": 413000
+      },
+      "driver": "F.VDO",
+      "category": "EV3",
+      "position": 7,
+      "car_number": 399,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 49700,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:44.943726+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:50.268726+00:00",
+        "lap_number": 320,
+        "s1_best_ms": 37240,
+        "s2_best_ms": 76943,
+        "s3_best_ms": 45630,
+        "best_lap_ms": 172365,
+        "lap_end_xml": null,
+        "lap_time_ms": 174675,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 97638,
+          "laps": 3
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 986,
+          "laps": null
+        }
+      },
+      "team": "JMK Racing 2",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6272000,
+        "last_stop_duration_ms": 417000
+      },
+      "driver": "M.LEB",
+      "category": "EV3",
+      "position": 8,
+      "car_number": 439,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51398,
+        "s2_ms": 78785,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:16.106851+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:19.375851+00:00",
+        "lap_number": 318,
+        "s1_best_ms": 38706,
+        "s2_best_ms": 77250,
+        "s3_best_ms": 45947,
+        "best_lap_ms": 173907,
+        "lap_end_xml": null,
+        "lap_time_ms": 176731,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 5
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "team": "Academy by M3M 2",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6189000,
+        "last_stop_duration_ms": 429000
+      },
+      "driver": "N.DIE",
+      "category": "EV3",
+      "position": 9,
+      "car_number": 560,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50562,
+        "s2_ms": 79310,
+        "s3_ms": 47441,
+        "lap_end": "2026-07-05T09:46:33.612322+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:36.299322+00:00",
+        "lap_number": 318,
+        "s1_best_ms": 33264,
+        "s2_best_ms": 76272,
+        "s3_best_ms": 45345,
+        "best_lap_ms": 171718,
+        "lap_end_xml": null,
+        "lap_time_ms": 177313,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 137711,
+          "laps": 5
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 137711,
+          "laps": null
+        }
+      },
+      "team": "Baltisse Racing by Dupon",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6935000,
+        "last_stop_duration_ms": 476000
+      },
+      "driver": "S.PAL",
+      "category": "EV3",
+      "position": 10,
+      "car_number": 24,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 49806,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:55.524619+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:59.240619+00:00",
+        "lap_number": 317,
+        "s1_best_ms": 35102,
+        "s2_best_ms": 77068,
+        "s3_best_ms": 45656,
+        "best_lap_ms": 172653,
+        "lap_end_xml": null,
+        "lap_time_ms": 176284,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 6
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Milo Racing",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6550000,
+        "last_stop_duration_ms": 410000
+      },
+      "driver": "T.VIM",
+      "category": "EV3",
+      "position": 11,
+      "car_number": 480,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51209,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:25.033750+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:25.694750+00:00",
+        "lap_number": 317,
+        "s1_best_ms": 35310,
+        "s2_best_ms": 76889,
+        "s3_best_ms": 45346,
+        "best_lap_ms": 172349,
+        "lap_end_xml": null,
+        "lap_time_ms": 179339,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 30736,
+          "laps": 6
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 30736,
+          "laps": null
+        }
+      },
+      "team": "Ben Watches X Milo",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 7202000,
+        "last_stop_duration_ms": 420000
+      },
+      "driver": "L.SCH",
+      "category": "EV3",
+      "position": 12,
+      "car_number": 488,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51473,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:25.033927+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:28.202927+00:00",
+        "lap_number": 316,
+        "s1_best_ms": 33473,
+        "s2_best_ms": 77059,
+        "s3_best_ms": 45729,
+        "best_lap_ms": 172718,
+        "lap_end_xml": null,
+        "lap_time_ms": 176831,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 7
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "DEFI INTERSPORT",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 6726000,
+        "last_stop_duration_ms": 593000
+      },
+      "driver": "S.LEG",
+      "category": "EV3",
+      "position": 13,
+      "car_number": 438,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50255,
+        "s2_ms": 78426,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:43:56.861858+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:01.625858+00:00",
+        "lap_number": 315,
+        "s1_best_ms": 37428,
+        "s2_best_ms": 76689,
+        "s3_best_ms": 46425,
+        "best_lap_ms": 173167,
+        "lap_end_xml": null,
+        "lap_time_ms": 175236,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 8
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "DPW Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6412000,
+        "last_stop_duration_ms": 412000
+      },
+      "driver": "M.SIM",
+      "category": "EV3",
+      "position": 14,
+      "car_number": 254,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51135,
+        "s2_ms": 78618,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:16.107817+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:19.217817+00:00",
+        "lap_number": 315,
+        "s1_best_ms": 40724,
+        "s2_best_ms": 77113,
+        "s3_best_ms": 45972,
+        "best_lap_ms": 174062,
+        "lap_end_xml": null,
+        "lap_time_ms": 176890,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 21180,
+          "laps": 8
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 21180,
+          "laps": null
+        }
+      },
+      "team": "No Limit Racing",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6489000,
+        "last_stop_duration_ms": 428000
+      },
+      "driver": "G.SAV",
+      "category": "EV3",
+      "position": 15,
+      "car_number": 408,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50025,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:15.363468+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:20.312468+00:00",
+        "lap_number": 315,
+        "s1_best_ms": 34235,
+        "s2_best_ms": 76688,
+        "s3_best_ms": 45417,
+        "best_lap_ms": 172754,
+        "lap_end_xml": null,
+        "lap_time_ms": 175051,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 80724,
+          "laps": 8
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 59544,
+          "laps": null
+        }
+      },
+      "team": "Petrolheads by Dupon",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6628000,
+        "last_stop_duration_ms": 464000
+      },
+      "driver": "B.VER",
+      "category": "EV3",
+      "position": 16,
+      "car_number": 472,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 49982,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:15.363659+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:20.543659+00:00",
+        "lap_number": 314,
+        "s1_best_ms": 33576,
+        "s2_best_ms": 76682,
+        "s3_best_ms": 45406,
+        "best_lap_ms": 172700,
+        "lap_end_xml": null,
+        "lap_time_ms": 174820,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 9
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Clubsport Racing",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 8150000,
+        "last_stop_duration_ms": 410000
+      },
+      "driver": "P.OOM",
+      "category": "EV3",
+      "position": 17,
+      "car_number": 415,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50555,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:30.052521+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:33.597521+00:00",
+        "lap_number": 314,
+        "s1_best_ms": 49712,
+        "s2_best_ms": 77144,
+        "s3_best_ms": 46008,
+        "best_lap_ms": 173681,
+        "lap_end_xml": null,
+        "lap_time_ms": 176455,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 16702,
+          "laps": 9
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 16702,
+          "laps": null
+        }
+      },
+      "team": "Schumacher by AC Motorsport",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6974000,
+        "last_stop_duration_ms": 431000
+      },
+      "driver": "JL.VA",
+      "category": "EV3",
+      "position": 18,
+      "car_number": 414,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50021,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:44.945433+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:50.309433+00:00",
+        "lap_number": 314,
+        "s1_best_ms": 42967,
+        "s2_best_ms": 77938,
+        "s3_best_ms": 45874,
+        "best_lap_ms": 174636,
+        "lap_end_xml": null,
+        "lap_time_ms": 174636,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 30156,
+          "laps": 9
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 13454,
+          "laps": null
+        }
+      },
+      "team": "DPW Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6212000,
+        "last_stop_duration_ms": 434000
+      },
+      "driver": "S.WIL",
+      "category": "EV3",
+      "position": 19,
+      "car_number": 18,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51510,
+        "s2_ms": 78992,
+        "s3_ms": 47156,
+        "lap_end": "2026-07-05T09:46:19.271835+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:21.613835+00:00",
+        "lap_number": 314,
+        "s1_best_ms": 40319,
+        "s2_best_ms": 77750,
+        "s3_best_ms": 45857,
+        "best_lap_ms": 175047,
+        "lap_end_xml": null,
+        "lap_time_ms": 177658,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 63088,
+          "laps": 9
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 32932,
+          "laps": null
+        }
+      },
+      "team": "GDL AUS 4",
+      "stops": {
+        "count": 19,
+        "total_time_ms": 7802000,
+        "last_stop_duration_ms": 104000
+      },
+      "driver": "D.THO",
+      "category": "EV3",
+      "position": 20,
+      "car_number": 567,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50836,
+        "s2_ms": 78481,
+        "s3_ms": 46969,
+        "lap_end": "2026-07-05T09:46:43.480155+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:47.194155+00:00",
+        "lap_number": 313,
+        "s1_best_ms": 41162,
+        "s2_best_ms": 76885,
+        "s3_best_ms": 45479,
+        "best_lap_ms": 172508,
+        "lap_end_xml": null,
+        "lap_time_ms": 176286,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 10
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Vmax",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 7353000,
+        "last_stop_duration_ms": 787000
+      },
+      "driver": "A.LAV",
+      "category": "EV3",
+      "position": 21,
+      "car_number": 541,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51964,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:49.898729+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:45.051729+00:00",
+        "lap_number": 312,
+        "s1_best_ms": 35402,
+        "s2_best_ms": 76914,
+        "s3_best_ms": 45521,
+        "best_lap_ms": 172844,
+        "lap_end_xml": null,
+        "lap_time_ms": 184847,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 11
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "DPW-Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6134000,
+        "last_stop_duration_ms": 440000
+      },
+      "driver": "Z.MEU",
+      "category": "EV3",
+      "position": 22,
+      "car_number": 518,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50119,
+        "s2_ms": 79454,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:43:51.704414+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:40:55.040414+00:00",
+        "lap_number": 311,
+        "s1_best_ms": 41613,
+        "s2_best_ms": 78707,
+        "s3_best_ms": 46117,
+        "best_lap_ms": 176241,
+        "lap_end_xml": null,
+        "lap_time_ms": 176664,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 12
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "D2LA Racing by Comtoyou Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6012000,
+        "last_stop_duration_ms": 422000
+      },
+      "driver": "D.MDT",
+      "category": "EV3",
+      "position": 23,
+      "car_number": 486,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50882,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:30.053502+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:32.062502+00:00",
+        "lap_number": 311,
+        "s1_best_ms": 46167,
+        "s2_best_ms": 78684,
+        "s3_best_ms": 46266,
+        "best_lap_ms": 176202,
+        "lap_end_xml": null,
+        "lap_time_ms": 177991,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 98630,
+          "laps": 12
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 98630,
+          "laps": null
+        }
+      },
+      "team": "Clubsport Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6427000,
+        "last_stop_duration_ms": 819000
+      },
+      "driver": "A.COU",
+      "category": "EV3",
+      "position": 24,
+      "car_number": 505,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 49748,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:40.100484+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:46.376484+00:00",
+        "lap_number": 311,
+        "s1_best_ms": 35495,
+        "s2_best_ms": 76837,
+        "s3_best_ms": 46183,
+        "best_lap_ms": 173048,
+        "lap_end_xml": null,
+        "lap_time_ms": 173724,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 111887,
+          "laps": 12
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 13257,
+          "laps": null
+        }
+      },
+      "team": "Academy by M3M 1",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 7638000,
+        "last_stop_duration_ms": 412000
+      },
+      "driver": "A.DES",
+      "category": "EV3",
+      "position": 25,
+      "car_number": 544,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51738,
+        "s2_ms": 83196,
+        "s3_ms": 47902,
+        "lap_end": "2026-07-05T09:46:43.480904+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:40.644904+00:00",
+        "lap_number": 311,
+        "s1_best_ms": 38291,
+        "s2_best_ms": 77340,
+        "s3_best_ms": 46048,
+        "best_lap_ms": 173545,
+        "lap_end_xml": null,
+        "lap_time_ms": 182836,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 170134,
+          "laps": 12
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 58247,
+          "laps": null
+        }
+      },
+      "team": "Milo NFN",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6514000,
+        "last_stop_duration_ms": 442000
+      },
+      "driver": "J.CAL",
+      "category": "EV3",
+      "position": 26,
+      "car_number": 446,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52797,
+        "s2_ms": 80461,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:16.109645+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:14.696645+00:00",
+        "lap_number": 310,
+        "s1_best_ms": 41281,
+        "s2_best_ms": 77546,
+        "s3_best_ms": 45620,
+        "best_lap_ms": 173148,
+        "lap_end_xml": null,
+        "lap_time_ms": 181413,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 13
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "BH Motors",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6392000,
+        "last_stop_duration_ms": 442000
+      },
+      "driver": "B.HUY",
+      "category": "EV3",
+      "position": 27,
+      "car_number": 183,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50796,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:35.922067+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:38.885067+00:00",
+        "lap_number": 310,
+        "s1_best_ms": 50021,
+        "s2_best_ms": 77474,
+        "s3_best_ms": 45862,
+        "best_lap_ms": 173755,
+        "lap_end_xml": null,
+        "lap_time_ms": 177037,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 23291,
+          "laps": 13
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 23291,
+          "laps": null
+        }
+      },
+      "team": "No Limit Racing 440",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6700000,
+        "last_stop_duration_ms": 425000
+      },
+      "driver": "D.DRO",
+      "category": "EV3",
+      "position": 28,
+      "car_number": 440,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53116,
+        "s2_ms": 81826,
+        "s3_ms": 50057,
+        "lap_end": "2026-07-05T09:28:11.485259+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:25:06.486259+00:00",
+        "lap_number": 309,
+        "s1_best_ms": 39576,
+        "s2_best_ms": 76638,
+        "s3_best_ms": 46233,
+        "best_lap_ms": 173166,
+        "lap_end_xml": null,
+        "lap_time_ms": 184999,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 14
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Be GSL Racing By SRS",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6338000,
+        "last_stop_duration_ms": 401000
+      },
+      "driver": "L.GYS",
+      "category": "EV3",
+      "position": 29,
+      "car_number": 278,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50159,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:55.525657+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:58.516657+00:00",
+        "lap_number": 309,
+        "s1_best_ms": 40591,
+        "s2_best_ms": 77472,
+        "s3_best_ms": 45809,
+        "best_lap_ms": 174131,
+        "lap_end_xml": null,
+        "lap_time_ms": 177009,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 1005449,
+          "laps": 14
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 1005449,
+          "laps": null
+        }
+      },
+      "team": "Team BR 2",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 9221000,
+        "last_stop_duration_ms": 432000
+      },
+      "driver": "P.KLO",
+      "category": "EV3",
+      "position": 30,
+      "car_number": 432,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53405,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:35.045866+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:34.221866+00:00",
+        "lap_number": 309,
+        "s1_best_ms": 43277,
+        "s2_best_ms": 77975,
+        "s3_best_ms": 45851,
+        "best_lap_ms": 174337,
+        "lap_end_xml": null,
+        "lap_time_ms": 180824,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 1043595,
+          "laps": 14
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 38146,
+          "laps": null
+        }
+      },
+      "team": "Papa t abuses...",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6960000,
+        "last_stop_duration_ms": 474000
+      },
+      "driver": "V.DEH",
+      "category": "EV3",
+      "position": 31,
+      "car_number": 40,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51247,
+        "s2_ms": 82252,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:01.854961+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:40:59.587961+00:00",
+        "lap_number": 308,
+        "s1_best_ms": 37759,
+        "s2_best_ms": 78273,
+        "s3_best_ms": 46051,
+        "best_lap_ms": 174642,
+        "lap_end_xml": null,
+        "lap_time_ms": 182267,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 15
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Pyrat by AP Mecanics",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 7217000,
+        "last_stop_duration_ms": 420000
+      },
+      "driver": "P.BOV",
+      "category": "EV3",
+      "position": 32,
+      "car_number": 500,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52541,
+        "s2_ms": 83727,
+        "s3_ms": 48659,
+        "lap_end": "2026-07-05T09:46:14.408408+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:09.481408+00:00",
+        "lap_number": 308,
+        "s1_best_ms": 45147,
+        "s2_best_ms": 78131,
+        "s3_best_ms": 46103,
+        "best_lap_ms": 175284,
+        "lap_end_xml": null,
+        "lap_time_ms": 184927,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 125721,
+          "laps": 15
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 125721,
+          "laps": null
+        }
+      },
+      "team": "Redele Eurodatacar",
+      "stops": {
+        "count": 22,
+        "total_time_ms": 7599000,
+        "last_stop_duration_ms": 449000
+      },
+      "driver": "L.RED",
+      "category": "EV3",
+      "position": 33,
+      "car_number": 519,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51281,
+        "s2_ms": 79814,
+        "s3_ms": 48261,
+        "lap_end": "2026-07-05T09:46:19.272701+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:19.916701+00:00",
+        "lap_number": 308,
+        "s1_best_ms": 36685,
+        "s2_best_ms": 77002,
+        "s3_best_ms": 46370,
+        "best_lap_ms": 172859,
+        "lap_end_xml": null,
+        "lap_time_ms": 179356,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 133045,
+          "laps": 15
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 7324,
+          "laps": null
+        }
+      },
+      "team": "Eurodatacar",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 7725000,
+        "last_stop_duration_ms": 449000
+      },
+      "driver": "Pe.DEM",
+      "category": "EV3",
+      "position": 34,
+      "car_number": 172,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50637,
+        "s2_ms": 81217,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:43:51.705136+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:40:54.159136+00:00",
+        "lap_number": 307,
+        "s1_best_ms": 46062,
+        "s2_best_ms": 77841,
+        "s3_best_ms": 45786,
+        "best_lap_ms": 174364,
+        "lap_end_xml": null,
+        "lap_time_ms": 177546,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 16
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "No Limit Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6836000,
+        "last_stop_duration_ms": 430000
+      },
+      "driver": "S.DES",
+      "category": "EV3",
+      "position": 35,
+      "car_number": 468,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 54580,
+        "s2_ms": 82711,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:21.040895+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:13.370895+00:00",
+        "lap_number": 307,
+        "s1_best_ms": 50255,
+        "s2_best_ms": 78981,
+        "s3_best_ms": 46486,
+        "best_lap_ms": 176161,
+        "lap_end_xml": null,
+        "lap_time_ms": 187670,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 27456,
+          "laps": 16
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 27456,
+          "laps": null
+        }
+      },
+      "team": "ORHES - LASUITE - FREEM",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6454000,
+        "last_stop_duration_ms": 447000
+      },
+      "driver": "F.JEA",
+      "category": "EV3",
+      "position": 36,
+      "car_number": 483,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50934,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:40.814249+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:41.604249+00:00",
+        "lap_number": 307,
+        "s1_best_ms": 42187,
+        "s2_best_ms": 78333,
+        "s3_best_ms": 47054,
+        "best_lap_ms": 175099,
+        "lap_end_xml": null,
+        "lap_time_ms": 179210,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 47666,
+          "laps": 16
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 20210,
+          "laps": null
+        }
+      },
+      "team": "JMK Racing 3",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6982000,
+        "last_stop_duration_ms": 430000
+      },
+      "driver": "V.BAR",
+      "category": "EV3",
+      "position": 37,
+      "car_number": 434,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51506,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:40.102332+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:34:59.333332+00:00",
+        "lap_number": 307,
+        "s1_best_ms": 33741,
+        "s2_best_ms": 77180,
+        "s3_best_ms": 45421,
+        "best_lap_ms": 172756,
+        "lap_end_xml": null,
+        "lap_time_ms": 640769,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 106689,
+          "laps": 16
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 59023,
+          "laps": null
+        }
+      },
+      "team": "Mc Donalds Racing by Comtoyou",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 7883000,
+        "last_stop_duration_ms": 485000
+      },
+      "driver": "P.RAE",
+      "category": "EV3",
+      "position": 38,
+      "car_number": 260,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50106,
+        "s2_ms": 78727,
+        "s3_ms": 46582,
+        "lap_end": "2026-07-05T09:46:19.272981+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:23.857981+00:00",
+        "lap_number": 307,
+        "s1_best_ms": 34121,
+        "s2_best_ms": 77131,
+        "s3_best_ms": 45224,
+        "best_lap_ms": 172106,
+        "lap_end_xml": null,
+        "lap_time_ms": 175415,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 140612,
+          "laps": 16
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 33923,
+          "laps": null
+        }
+      },
+      "team": "East Kart by HSM",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 7924000,
+        "last_stop_duration_ms": 422000
+      },
+      "driver": "T.MAR",
+      "category": "EV3",
+      "position": 39,
+      "car_number": 543,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51122,
+        "s2_ms": 78347,
+        "s3_ms": 46798,
+        "lap_end": "2026-07-05T09:46:24.077782+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:27.810782+00:00",
+        "lap_number": 307,
+        "s1_best_ms": 38391,
+        "s2_best_ms": 77678,
+        "s3_best_ms": 46419,
+        "best_lap_ms": 174530,
+        "lap_end_xml": null,
+        "lap_time_ms": 176267,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 146371,
+          "laps": 16
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 5759,
+          "laps": null
+        }
+      },
+      "team": "JD Racing",
+      "stops": {
+        "count": 19,
+        "total_time_ms": 7559000,
+        "last_stop_duration_ms": 426000
+      },
+      "driver": "J.ADR",
+      "category": "EV3",
+      "position": 40,
+      "car_number": 400,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51050,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:45.584848+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:48.103848+00:00",
+        "lap_number": 306,
+        "s1_best_ms": 50128,
+        "s2_best_ms": 77946,
+        "s3_best_ms": 46366,
+        "best_lap_ms": 174542,
+        "lap_end_xml": null,
+        "lap_time_ms": 177481,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 17
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "No Limit Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6437000,
+        "last_stop_duration_ms": 424000
+      },
+      "driver": "M.PER",
+      "category": "EV3",
+      "position": 41,
+      "car_number": 298,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51318,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:49.899996+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:50.064996+00:00",
+        "lap_number": 306,
+        "s1_best_ms": 49860,
+        "s2_best_ms": 78179,
+        "s3_best_ms": 46370,
+        "best_lap_ms": 175094,
+        "lap_end_xml": null,
+        "lap_time_ms": 179835,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 63718,
+          "laps": 17
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 63718,
+          "laps": null
+        }
+      },
+      "team": "SGRT.be",
+      "stops": {
+        "count": 25,
+        "total_time_ms": 8559000,
+        "last_stop_duration_ms": 431000
+      },
+      "driver": "D.SME",
+      "category": "BI3",
+      "position": 42,
+      "car_number": 331,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 601392,
+        "s2_ms": 80490,
+        "s3_ms": 48228,
+        "lap_end": "2026-07-05T09:46:04.416892+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:33:54.306892+00:00",
+        "lap_number": 306,
+        "s1_best_ms": 39206,
+        "s2_best_ms": 78121,
+        "s3_best_ms": 46064,
+        "best_lap_ms": 176075,
+        "lap_end_xml": null,
+        "lap_time_ms": 730110,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 75525,
+          "laps": 17
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 11807,
+          "laps": null
+        }
+      },
+      "team": "_8KSW Racing 286",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 8134000,
+        "last_stop_duration_ms": 572000
+      },
+      "driver": "L.LOR",
+      "category": "EV3",
+      "position": 43,
+      "car_number": 286,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51765,
+        "s2_ms": 80352,
+        "s3_ms": 111788,
+        "lap_end": "2026-07-05T09:41:43.825361+00:00",
+        "car_state": "FUEL",
+        "lap_start": "2026-07-05T09:38:43.398361+00:00",
+        "lap_number": 305,
+        "s1_best_ms": 40049,
+        "s2_best_ms": 78092,
+        "s3_best_ms": 46004,
+        "best_lap_ms": 175655,
+        "lap_end_xml": null,
+        "lap_time_ms": 180427,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 18
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Mogan Team TDK by Comtoyou Rac",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 7105000,
+        "last_stop_duration_ms": 437000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 44,
+      "car_number": 507,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52209,
+        "s2_ms": 81645,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:01.856685+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:40:59.933685+00:00",
+        "lap_number": 305,
+        "s1_best_ms": 50770,
+        "s2_best_ms": 79239,
+        "s3_best_ms": 47436,
+        "best_lap_ms": 177125,
+        "lap_end_xml": null,
+        "lap_time_ms": 181923,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 139066,
+          "laps": 18
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 139066,
+          "laps": null
+        }
+      },
+      "team": "Team BR 1",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6357000,
+        "last_stop_duration_ms": 424000
+      },
+      "driver": "A.BAR",
+      "category": "EV3",
+      "position": 45,
+      "car_number": 559,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52961,
+        "s2_ms": 79423,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:16.112506+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:19.690506+00:00",
+        "lap_number": 305,
+        "s1_best_ms": 36392,
+        "s2_best_ms": 77410,
+        "s3_best_ms": 46079,
+        "best_lap_ms": 173602,
+        "lap_end_xml": null,
+        "lap_time_ms": 176422,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 155517,
+          "laps": 18
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 16451,
+          "laps": null
+        }
+      },
+      "team": "_8KSW Racing",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6672000,
+        "last_stop_duration_ms": 426000
+      },
+      "driver": "E.ZOR",
+      "category": "EV3",
+      "position": 46,
+      "car_number": 285,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53055,
+        "s2_ms": 80861,
+        "s3_ms": 47956,
+        "lap_end": "2026-07-05T09:46:38.603802+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:36.731802+00:00",
+        "lap_number": 305,
+        "s1_best_ms": 41190,
+        "s2_best_ms": 78029,
+        "s3_best_ms": 48403,
+        "best_lap_ms": 174833,
+        "lap_end_xml": null,
+        "lap_time_ms": 181872,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 293680,
+          "laps": 18
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 138163,
+          "laps": null
+        }
+      },
+      "team": "SGRT.BE",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 7700000,
+        "last_stop_duration_ms": 433000
+      },
+      "driver": "P.ENG",
+      "category": "EV3",
+      "position": 47,
+      "car_number": 499,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50007,
+        "s2_ms": 77896,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:43:51.705908+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:40:58.022908+00:00",
+        "lap_number": 304,
+        "s1_best_ms": 33365,
+        "s2_best_ms": 77180,
+        "s3_best_ms": 45533,
+        "best_lap_ms": 172615,
+        "lap_end_xml": null,
+        "lap_time_ms": 173683,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 19
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "CG Racing",
+      "stops": {
+        "count": 19,
+        "total_time_ms": 9583000,
+        "last_stop_duration_ms": 419000
+      },
+      "driver": "G.LIN",
+      "category": "EV3",
+      "position": 48,
+      "car_number": 219,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53154,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:45.586017+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:38.524017+00:00",
+        "lap_number": 304,
+        "s1_best_ms": 36316,
+        "s2_best_ms": 76992,
+        "s3_best_ms": 45849,
+        "best_lap_ms": 173569,
+        "lap_end_xml": null,
+        "lap_time_ms": 187062,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 57827,
+          "laps": 19
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 57827,
+          "laps": null
+        }
+      },
+      "team": "GDL AUS 2",
+      "stops": {
+        "count": 20,
+        "total_time_ms": 8689000,
+        "last_stop_duration_ms": 530000
+      },
+      "driver": "C.BAT",
+      "category": "EV3",
+      "position": 49,
+      "car_number": 421,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53230,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:00.461909+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:52.649909+00:00",
+        "lap_number": 303,
+        "s1_best_ms": 40503,
+        "s2_best_ms": 78553,
+        "s3_best_ms": 46241,
+        "best_lap_ms": 175098,
+        "lap_end_xml": null,
+        "lap_time_ms": 187812,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 20
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Venthone by Milo",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 7129000,
+        "last_stop_duration_ms": 437000
+      },
+      "driver": "A.PIR",
+      "category": "EV3",
+      "position": 50,
+      "car_number": 173,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50663,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:30.058032+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:32.217032+00:00",
+        "lap_number": 303,
+        "s1_best_ms": 49789,
+        "s2_best_ms": 77761,
+        "s3_best_ms": 45849,
+        "best_lap_ms": 174182,
+        "lap_end_xml": null,
+        "lap_time_ms": 177841,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 29099,
+          "laps": 20
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 29099,
+          "laps": null
+        }
+      },
+      "team": "Car Pass LRE by Comtoyou",
+      "stops": {
+        "count": 27,
+        "total_time_ms": 8697000,
+        "last_stop_duration_ms": 452000
+      },
+      "driver": "S.LEM",
+      "category": "BI3",
+      "position": 51,
+      "car_number": 365,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52731,
+        "s2_ms": 80494,
+        "s3_ms": 48150,
+        "lap_end": "2026-07-05T09:46:19.273733+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:17.898733+00:00",
+        "lap_number": 303,
+        "s1_best_ms": 46307,
+        "s2_best_ms": 78242,
+        "s3_best_ms": 45943,
+        "best_lap_ms": 176263,
+        "lap_end_xml": null,
+        "lap_time_ms": 181375,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 72690,
+          "laps": 20
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 43591,
+          "laps": null
+        }
+      },
+      "team": "Leader Kingpin USA",
+      "stops": {
+        "count": 18,
+        "total_time_ms": 7791000,
+        "last_stop_duration_ms": 442000
+      },
+      "driver": "C.STR",
+      "category": "EV3",
+      "position": 52,
+      "car_number": 498,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 49612,
+        "s2_ms": 79190,
+        "s3_ms": 50058,
+        "lap_end": "2026-07-05T09:46:38.604368+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:44.141368+00:00",
+        "lap_number": 303,
+        "s1_best_ms": 34748,
+        "s2_best_ms": 77068,
+        "s3_best_ms": 45736,
+        "best_lap_ms": 172979,
+        "lap_end_xml": null,
+        "lap_time_ms": 174463,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 94251,
+          "laps": 20
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 21561,
+          "laps": null
+        }
+      },
+      "team": "TFE by 4Race",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 7843000,
+        "last_stop_duration_ms": 445000
+      },
+      "driver": "C.DUB",
+      "category": "EV3",
+      "position": 53,
+      "car_number": 531,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53619,
+        "s2_ms": 86001,
+        "s3_ms": 52699,
+        "lap_end": "2026-07-05T09:43:32.281752+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T09:40:26.627752+00:00",
+        "lap_number": 302,
+        "s1_best_ms": 40986,
+        "s2_best_ms": 79325,
+        "s3_best_ms": 46348,
+        "best_lap_ms": 176608,
+        "lap_end_xml": null,
+        "lap_time_ms": 192319,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 21
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "LADC 431",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6772000,
+        "last_stop_duration_ms": 428000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 54,
+      "car_number": 431,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 54047,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:35.048754+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:22.156754+00:00",
+        "lap_number": 301,
+        "s1_best_ms": 38598,
+        "s2_best_ms": 78010,
+        "s3_best_ms": 46211,
+        "best_lap_ms": 175404,
+        "lap_end_xml": null,
+        "lap_time_ms": 192892,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 22
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "J-PAC By Icauna Racing",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 6854000,
+        "last_stop_duration_ms": 440000
+      },
+      "driver": "A.RUE",
+      "category": "EV3",
+      "position": 55,
+      "car_number": 530,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52139,
+        "s2_ms": 81521,
+        "s3_ms": 48988,
+        "lap_end": "2026-07-05T09:46:14.411885+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T09:43:11.763885+00:00",
+        "lap_number": 299,
+        "s1_best_ms": 50323,
+        "s2_best_ms": 79366,
+        "s3_best_ms": 46561,
+        "best_lap_ms": 176831,
+        "lap_end_xml": null,
+        "lap_time_ms": 182648,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 24
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "team": "_4D Motorsport by SGRT.be",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6827000,
+        "last_stop_duration_ms": 453000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 56,
+      "car_number": 268,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51022,
+        "s2_ms": 80639,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:43:46.864024+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:40:44.171024+00:00",
+        "lap_number": 298,
+        "s1_best_ms": 42900,
+        "s2_best_ms": 77964,
+        "s3_best_ms": 46168,
+        "best_lap_ms": 174668,
+        "lap_end_xml": null,
+        "lap_time_ms": 182693,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 25
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Milo Iceman",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 7971000,
+        "last_stop_duration_ms": 441000
+      },
+      "driver": "P.DUR",
+      "category": "EV3",
+      "position": 57,
+      "car_number": 494,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50800,
+        "s2_ms": 78667,
+        "s3_ms": 45637,
+        "lap_end": "2026-07-05T09:46:43.485638+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:47.058638+00:00",
+        "lap_number": 298,
+        "s1_best_ms": 49739,
+        "s2_best_ms": 77289,
+        "s3_best_ms": 45986,
+        "best_lap_ms": 173809,
+        "lap_end_xml": null,
+        "lap_time_ms": 176427,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 175049,
+          "laps": 25
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 175049,
+          "laps": null
+        }
+      },
+      "team": "DL Racing",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 10276000,
+        "last_stop_duration_ms": 433000
+      },
+      "driver": "L.SEG",
+      "category": "EV3",
+      "position": 58,
+      "car_number": 497,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50020,
+        "s2_ms": 77644,
+        "s3_ms": 46408,
+        "lap_end": "2026-07-05T09:46:43.485860+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:50.184860+00:00",
+        "lap_number": 298,
+        "s1_best_ms": 34993,
+        "s2_best_ms": 77221,
+        "s3_best_ms": 45575,
+        "best_lap_ms": 172844,
+        "lap_end_xml": null,
+        "lap_time_ms": 173301,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 176196,
+          "laps": 25
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 1147,
+          "laps": null
+        }
+      },
+      "team": "Herock Racing by Dupon",
+      "stops": {
+        "count": 22,
+        "total_time_ms": 10726000,
+        "last_stop_duration_ms": 423000
+      },
+      "driver": "G.LAN",
+      "category": "EV3",
+      "position": 59,
+      "car_number": 5,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51946,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:25.037045+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:24.634045+00:00",
+        "lap_number": 297,
+        "s1_best_ms": 51064,
+        "s2_best_ms": 79786,
+        "s3_best_ms": 47069,
+        "best_lap_ms": 178416,
+        "lap_end_xml": null,
+        "lap_time_ms": 180403,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 26
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Saja Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 7131000,
+        "last_stop_duration_ms": 474000
+      },
+      "driver": "A.HER",
+      "category": "EV3",
+      "position": 60,
+      "car_number": 570,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52707,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:31.031885+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:28.459885+00:00",
+        "lap_number": 296,
+        "s1_best_ms": 44475,
+        "s2_best_ms": 79382,
+        "s3_best_ms": 46370,
+        "best_lap_ms": 178778,
+        "lap_end_xml": null,
+        "lap_time_ms": 182572,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 27
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Team Work Motorsport 2",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 8323000,
+        "last_stop_duration_ms": 472000
+      },
+      "driver": "H.YAN",
+      "category": "EV3",
+      "position": 61,
+      "car_number": 477,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 425562,
+        "s2_ms": 82702,
+        "s3_ms": 48479,
+        "lap_end": "2026-07-05T09:46:04.420173+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:36:47.677173+00:00",
+        "lap_number": 296,
+        "s1_best_ms": 40025,
+        "s2_best_ms": 77580,
+        "s3_best_ms": 45846,
+        "best_lap_ms": 173442,
+        "lap_end_xml": null,
+        "lap_time_ms": 556743,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 90678,
+          "laps": 27
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 90678,
+          "laps": null
+        }
+      },
+      "team": "AP Mecanic s",
+      "stops": {
+        "count": 18,
+        "total_time_ms": 9186000,
+        "last_stop_duration_ms": 395000
+      },
+      "driver": "G.HOU",
+      "category": "EV3",
+      "position": 62,
+      "car_number": 536,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53194,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:10.474887+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:05.860887+00:00",
+        "lap_number": 295,
+        "s1_best_ms": 50655,
+        "s2_best_ms": 79137,
+        "s3_best_ms": 46670,
+        "best_lap_ms": 177168,
+        "lap_end_xml": null,
+        "lap_time_ms": 184614,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 28
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Well Fed by Comtoyou",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 8176000,
+        "last_stop_duration_ms": 462000
+      },
+      "driver": "W.RAF",
+      "category": "EV3",
+      "position": 63,
+      "car_number": 422,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53664,
+        "s2_ms": 84561,
+        "s3_ms": 49656,
+        "lap_end": "2026-07-05T09:46:38.605382+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:30.724382+00:00",
+        "lap_number": 295,
+        "s1_best_ms": 50781,
+        "s2_best_ms": 78860,
+        "s3_best_ms": 46653,
+        "best_lap_ms": 176751,
+        "lap_end_xml": null,
+        "lap_time_ms": 187881,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 84400,
+          "laps": 28
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 84400,
+          "laps": null
+        }
+      },
+      "team": "Grillos Racing 2",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 7425000,
+        "last_stop_duration_ms": 453000
+      },
+      "driver": "L.CRA",
+      "category": "EV3",
+      "position": 64,
+      "car_number": 534,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50183,
+        "s2_ms": 79095,
+        "s3_ms": 46778,
+        "lap_end": "2026-07-05T09:46:43.486759+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:47.430759+00:00",
+        "lap_number": 295,
+        "s1_best_ms": 46799,
+        "s2_best_ms": 78327,
+        "s3_best_ms": 46423,
+        "best_lap_ms": 175050,
+        "lap_end_xml": null,
+        "lap_time_ms": 176056,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 90575,
+          "laps": 28
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 6175,
+          "laps": null
+        }
+      },
+      "team": "AC Motorsport",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 9414000,
+        "last_stop_duration_ms": 654000
+      },
+      "driver": "J.WOO",
+      "category": "EV3",
+      "position": 65,
+      "car_number": 487,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52761,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:05.655096+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:57.746096+00:00",
+        "lap_number": 294,
+        "s1_best_ms": 51118,
+        "s2_best_ms": 80205,
+        "s3_best_ms": 47857,
+        "best_lap_ms": 180247,
+        "lap_end_xml": null,
+        "lap_time_ms": 187909,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 29
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Born To Race by Comtoyou",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 6700000,
+        "last_stop_duration_ms": 450000
+      },
+      "driver": "M.BAC",
+      "category": "EV3",
+      "position": 66,
+      "car_number": 292,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52164,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:17:13.076679+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T09:03:13.006679+00:00",
+        "lap_number": 292,
+        "s1_best_ms": 47020,
+        "s2_best_ms": 78681,
+        "s3_best_ms": 46149,
+        "best_lap_ms": 175852,
+        "lap_end_xml": null,
+        "lap_time_ms": 840070,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 31
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "team": "Comtoyou Racing 2",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 6596000,
+        "last_stop_duration_ms": 761000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 67,
+      "car_number": 521,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53174,
+        "s2_ms": 87653,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:43:32.282604+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:40:22.299604+00:00",
+        "lap_number": 292,
+        "s1_best_ms": 49905,
+        "s2_best_ms": 78237,
+        "s3_best_ms": 45975,
+        "best_lap_ms": 174528,
+        "lap_end_xml": null,
+        "lap_time_ms": 189983,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 1591187,
+          "laps": 31
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 1591187,
+          "laps": null
+        }
+      },
+      "team": "McDonald s Racing By Comtoyou",
+      "stops": {
+        "count": 25,
+        "total_time_ms": 9458000,
+        "last_stop_duration_ms": 592000
+      },
+      "driver": "A.COL",
+      "category": "BI3",
+      "position": 68,
+      "car_number": 315,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50085,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:55.528689+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:59.355689+00:00",
+        "lap_number": 292,
+        "s1_best_ms": 35104,
+        "s2_best_ms": 77137,
+        "s3_best_ms": 46781,
+        "best_lap_ms": 173416,
+        "lap_end_xml": null,
+        "lap_time_ms": 176173,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 1673350,
+          "laps": 31
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 82163,
+          "laps": null
+        }
+      },
+      "team": "Zosh - Projet 24",
+      "stops": {
+        "count": 13,
+        "total_time_ms": 9967000,
+        "last_stop_duration_ms": 4745000
+      },
+      "driver": "Jn.DF",
+      "category": "EV3",
+      "position": 69,
+      "car_number": 502,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51689,
+        "s2_ms": 83023,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:25.991170+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:24.889170+00:00",
+        "lap_number": 291,
+        "s1_best_ms": 50297,
+        "s2_best_ms": 78303,
+        "s3_best_ms": 46601,
+        "best_lap_ms": 176433,
+        "lap_end_xml": null,
+        "lap_time_ms": 181102,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 32
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Auriga Racing",
+      "stops": {
+        "count": 24,
+        "total_time_ms": 10979000,
+        "last_stop_duration_ms": 187000
+      },
+      "driver": "N.COR",
+      "category": "BI3",
+      "position": 70,
+      "car_number": 333,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51032,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:40.105808+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:42.295808+00:00",
+        "lap_number": 289,
+        "s1_best_ms": 50625,
+        "s2_best_ms": 78867,
+        "s3_best_ms": 46490,
+        "best_lap_ms": 176357,
+        "lap_end_xml": null,
+        "lap_time_ms": 177810,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 34
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "team": "Champion by AC",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 9728000,
+        "last_stop_duration_ms": 426000
+      },
+      "driver": "H.TSE",
+      "category": "EV3",
+      "position": 71,
+      "car_number": 188,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 192386,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:42:23.473147+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:39:17.644147+00:00",
+        "lap_number": 287,
+        "s1_best_ms": 40095,
+        "s2_best_ms": 77897,
+        "s3_best_ms": 46368,
+        "best_lap_ms": 175201,
+        "lap_end_xml": null,
+        "lap_time_ms": 185829,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 36
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "team": "Oeps Racing by Comtoyou",
+      "stops": {
+        "count": 19,
+        "total_time_ms": 12216000,
+        "last_stop_duration_ms": 162000
+      },
+      "driver": "R.HER",
+      "category": "EV3",
+      "position": 72,
+      "car_number": 274,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50016,
+        "s2_ms": 77833,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:43:56.866817+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:02.637817+00:00",
+        "lap_number": 287,
+        "s1_best_ms": 33874,
+        "s2_best_ms": 77223,
+        "s3_best_ms": 45542,
+        "best_lap_ms": 173105,
+        "lap_end_xml": null,
+        "lap_time_ms": 174229,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 92824,
+          "laps": 36
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 92824,
+          "laps": null
+        }
+      },
+      "team": "Knauf by Acome X SRS",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 12544000,
+        "last_stop_duration_ms": 428000
+      },
+      "driver": "X.KNF",
+      "category": "EV3",
+      "position": 73,
+      "car_number": 899,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 54398,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:35.924881+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:26.439881+00:00",
+        "lap_number": 286,
+        "s1_best_ms": 50651,
+        "s2_best_ms": 78819,
+        "s3_best_ms": 46669,
+        "best_lap_ms": 178016,
+        "lap_end_xml": null,
+        "lap_time_ms": 189485,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 37
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "AP Mecanic",
+      "stops": {
+        "count": 21,
+        "total_time_ms": 9702000,
+        "last_stop_duration_ms": 453000
+      },
+      "driver": "P.PON",
+      "category": "EV3",
+      "position": 74,
+      "car_number": 426,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 56638,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:15.370447+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:46.553447+00:00",
+        "lap_number": 285,
+        "s1_best_ms": 41446,
+        "s2_best_ms": 77686,
+        "s3_best_ms": 46011,
+        "best_lap_ms": 173730,
+        "lap_end_xml": null,
+        "lap_time_ms": 208817,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 38
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "United 4 Racing by Comtoyou",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 9849000,
+        "last_stop_duration_ms": 492000
+      },
+      "driver": "M.DET",
+      "category": "EV3",
+      "position": 75,
+      "car_number": 7,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53426,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:00.464786+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:52.335786+00:00",
+        "lap_number": 284,
+        "s1_best_ms": 41534,
+        "s2_best_ms": 78331,
+        "s3_best_ms": 46805,
+        "best_lap_ms": 175378,
+        "lap_end_xml": null,
+        "lap_time_ms": 188129,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 39
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Comtoyou Racing 1",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 9879000,
+        "last_stop_duration_ms": 442000
+      },
+      "driver": "R.BOI",
+      "category": "EV3",
+      "position": 76,
+      "car_number": 283,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52368,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:25.038005+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:18.743005+00:00",
+        "lap_number": 283,
+        "s1_best_ms": 40306,
+        "s2_best_ms": 77813,
+        "s3_best_ms": 45923,
+        "best_lap_ms": 174524,
+        "lap_end_xml": null,
+        "lap_time_ms": 186295,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 40
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Swiss Racers by Acome X SRS",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 10736000,
+        "last_stop_duration_ms": 456000
+      },
+      "driver": "D.HAU",
+      "category": "EV3",
+      "position": 77,
+      "car_number": 299,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52383,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:50.453036+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:48.287036+00:00",
+        "lap_number": 282,
+        "s1_best_ms": 43422,
+        "s2_best_ms": 78198,
+        "s3_best_ms": 47007,
+        "best_lap_ms": 174881,
+        "lap_end_xml": null,
+        "lap_time_ms": 182166,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 41
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "TFL Racing",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 10517000,
+        "last_stop_duration_ms": 446000
+      },
+      "driver": "T.QUA",
+      "category": "EV3",
+      "position": 78,
+      "car_number": 436,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51077,
+        "s2_ms": 135214,
+        "s3_ms": 113529,
+        "lap_end": "2026-07-05T09:24:42.756720+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T09:19:42.936720+00:00",
+        "lap_number": 272,
+        "s1_best_ms": 38005,
+        "s2_best_ms": 77346,
+        "s3_best_ms": 45375,
+        "best_lap_ms": 173464,
+        "lap_end_xml": null,
+        "lap_time_ms": 299820,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 51
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 10
+        }
+      },
+      "team": "Kinda Fast by AP Mecanic s",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 11862000,
+        "last_stop_duration_ms": 449000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 79,
+      "car_number": 496,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50671,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:44.953701+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:48.676701+00:00",
+        "lap_number": 272,
+        "s1_best_ms": 49962,
+        "s2_best_ms": 77654,
+        "s3_best_ms": 45787,
+        "best_lap_ms": 174061,
+        "lap_end_xml": null,
+        "lap_time_ms": 176277,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 1265824,
+          "laps": 51
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 1265824,
+          "laps": null
+        }
+      },
+      "team": "Heart of Racing by M3M",
+      "stops": {
+        "count": 37,
+        "total_time_ms": 15738000,
+        "last_stop_duration_ms": 482000
+      },
+      "driver": "E.BAR",
+      "category": "BI3",
+      "position": 80,
+      "car_number": 600,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52163,
+        "s2_ms": 79336,
+        "s3_ms": 47083,
+        "lap_end": "2026-07-05T09:45:05.656801+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T09:42:07.074801+00:00",
+        "lap_number": 268,
+        "s1_best_ms": 43014,
+        "s2_best_ms": 77787,
+        "s3_best_ms": 46129,
+        "best_lap_ms": 174543,
+        "lap_end_xml": null,
+        "lap_time_ms": 178582,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 55
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 4
+        }
+      },
+      "team": "GDL AUS 3",
+      "stops": {
+        "count": 21,
+        "total_time_ms": 16126000,
+        "last_stop_duration_ms": 623000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 81,
+      "car_number": 515,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52034,
+        "s2_ms": 82906,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:01.860467+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:01.126467+00:00",
+        "lap_number": 267,
+        "s1_best_ms": 50181,
+        "s2_best_ms": 78194,
+        "s3_best_ms": 46670,
+        "best_lap_ms": 175992,
+        "lap_end_xml": null,
+        "lap_time_ms": 180734,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 56
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "GDL JAP 2",
+      "stops": {
+        "count": 19,
+        "total_time_ms": 13234000,
+        "last_stop_duration_ms": 483000
+      },
+      "driver": "K.OIW",
+      "category": "EV3",
+      "position": 82,
+      "car_number": 450,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53878,
+        "s2_ms": 79421,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:21.047747+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:23.426747+00:00",
+        "lap_number": 266,
+        "s1_best_ms": 43303,
+        "s2_best_ms": 77847,
+        "s3_best_ms": 45762,
+        "best_lap_ms": 173909,
+        "lap_end_xml": null,
+        "lap_time_ms": 177621,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 57
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Team Work Motorsport 1",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 14816000,
+        "last_stop_duration_ms": 394000
+      },
+      "driver": "Y.WON",
+      "category": "EV3",
+      "position": 83,
+      "car_number": 478,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51628,
+        "s2_ms": 79417,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:11.541507+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:14.232507+00:00",
+        "lap_number": 265,
+        "s1_best_ms": 49535,
+        "s2_best_ms": 76191,
+        "s3_best_ms": 46079,
+        "best_lap_ms": 172466,
+        "lap_end_xml": null,
+        "lap_time_ms": 177309,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 58
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "UVio by STAG RACING",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 16294000,
+        "last_stop_duration_ms": 450000
+      },
+      "driver": "M.DEV",
+      "category": "EV3",
+      "position": 84,
+      "car_number": 539,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 1155086,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T07:44:17.679921+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T07:40:34.009921+00:00",
+        "lap_number": 264,
+        "s1_best_ms": 37765,
+        "s2_best_ms": 77407,
+        "s3_best_ms": 45814,
+        "best_lap_ms": 174120,
+        "lap_end_xml": null,
+        "lap_time_ms": 223670,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 59
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Why Not Config Racing",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 9923000,
+        "last_stop_duration_ms": 1124000
+      },
+      "driver": "J.COR",
+      "category": "EV3",
+      "position": 85,
+      "car_number": 485,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 438282,
+        "s2_ms": 87718,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:37:13.514179+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:25:24.288179+00:00",
+        "lap_number": 264,
+        "s1_best_ms": 52298,
+        "s2_best_ms": 81031,
+        "s3_best_ms": 47691,
+        "best_lap_ms": 181340,
+        "lap_end_xml": null,
+        "lap_time_ms": 709226,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 3172508,
+          "laps": 59
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 3172508,
+          "laps": null
+        }
+      },
+      "team": "Grillos Racing 1",
+      "stops": {
+        "count": 19,
+        "total_time_ms": 12156000,
+        "last_stop_duration_ms": 406000
+      },
+      "driver": "Y.SAV",
+      "category": "EV3",
+      "position": 86,
+      "car_number": 509,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50510,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:45:10.477730+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:42:16.376730+00:00",
+        "lap_number": 264,
+        "s1_best_ms": 39339,
+        "s2_best_ms": 77406,
+        "s3_best_ms": 45766,
+        "best_lap_ms": 174027,
+        "lap_end_xml": null,
+        "lap_time_ms": 174101,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 53029,
+          "laps": 59
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 0,
+          "laps": null
+        }
+      },
+      "team": "Hamm Racing",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 16517000,
+        "last_stop_duration_ms": 651000
+      },
+      "driver": "M.CAS",
+      "category": "EV3",
+      "position": 87,
+      "car_number": 277,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52556,
+        "s2_ms": 82183,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T07:44:27.494889+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T07:41:26.718889+00:00",
+        "lap_number": 262,
+        "s1_best_ms": 47523,
+        "s2_best_ms": 78531,
+        "s3_best_ms": 46336,
+        "best_lap_ms": 175883,
+        "lap_end_xml": null,
+        "lap_time_ms": 180776,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 61
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "team": "Milo Coca Cola",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 8509000,
+        "last_stop_duration_ms": 450000
+      },
+      "driver": "H.DLF",
+      "category": "EV3",
+      "position": 88,
+      "car_number": 404,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51263,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T08:12:46.145273+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T08:09:43.899273+00:00",
+        "lap_number": 262,
+        "s1_best_ms": 39757,
+        "s2_best_ms": 77659,
+        "s3_best_ms": 45906,
+        "best_lap_ms": 174447,
+        "lap_end_xml": null,
+        "lap_time_ms": 182246,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 1702656,
+          "laps": 61
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 1702656,
+          "laps": null
+        }
+      },
+      "team": "LADC 466",
+      "stops": {
+        "count": 17,
+        "total_time_ms": 9646000,
+        "last_stop_duration_ms": 426000
+      },
+      "driver": "T.CLA",
+      "category": "EV3",
+      "position": 89,
+      "car_number": 466,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51088,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T08:35:02.470994+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T08:32:05.649994+00:00",
+        "lap_number": 262,
+        "s1_best_ms": 33753,
+        "s2_best_ms": 76984,
+        "s3_best_ms": 45383,
+        "best_lap_ms": 172600,
+        "lap_end_xml": null,
+        "lap_time_ms": 176821,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 3037787,
+          "laps": 61
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 1335131,
+          "laps": null
+        }
+      },
+      "team": "ORHES - ETAM - ELEVEN CARS",
+      "stops": {
+        "count": 13,
+        "total_time_ms": 13443000,
+        "last_stop_duration_ms": 8057000
+      },
+      "driver": "L.MIL",
+      "category": "EV3",
+      "position": 90,
+      "car_number": 11,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 55564,
+        "s2_ms": 92309,
+        "s3_ms": 54867,
+        "lap_end": "2026-07-05T09:46:24.083874+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:43:01.343874+00:00",
+        "lap_number": 262,
+        "s1_best_ms": 39498,
+        "s2_best_ms": 77556,
+        "s3_best_ms": 46118,
+        "best_lap_ms": 174486,
+        "lap_end_xml": null,
+        "lap_time_ms": 202740,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": 115619,
+          "laps": 61
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": 0,
+          "laps": null
+        }
+      },
+      "team": "GDL JAP 1",
+      "stops": {
+        "count": 18,
+        "total_time_ms": 16015000,
+        "last_stop_duration_ms": 460000
+      },
+      "driver": "T.SHI",
+      "category": "EV3",
+      "position": 91,
+      "car_number": 406,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51075,
+        "s2_ms": 78545,
+        "s3_ms": 47334,
+        "lap_end": "2026-07-05T09:43:51.708467+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T09:40:54.754467+00:00",
+        "lap_number": 230,
+        "s1_best_ms": 39778,
+        "s2_best_ms": 77622,
+        "s3_best_ms": 45891,
+        "best_lap_ms": 174886,
+        "lap_end_xml": null,
+        "lap_time_ms": 176954,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 93
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 32
+        }
+      },
+      "team": "ERT Racing Team",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 23656000,
+        "last_stop_duration_ms": 474000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 92,
+      "car_number": 452,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51448,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:45.590998+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:47.521998+00:00",
+        "lap_number": 229,
+        "s1_best_ms": 35506,
+        "s2_best_ms": 77011,
+        "s3_best_ms": 45729,
+        "best_lap_ms": 172979,
+        "lap_end_xml": null,
+        "lap_time_ms": 178069,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 94
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "ORHES - MITI - MOTUL 300V",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 23692000,
+        "last_stop_duration_ms": 421000
+      },
+      "driver": "A.TSA",
+      "category": "EV3",
+      "position": 93,
+      "car_number": 551,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51429,
+        "s2_ms": 78791,
+        "s3_ms": 51753,
+        "lap_end": "2026-07-05T04:13:10.860905+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T04:10:08.887905+00:00",
+        "lap_number": 218,
+        "s1_best_ms": 33375,
+        "s2_best_ms": 77236,
+        "s3_best_ms": 45850,
+        "best_lap_ms": 173019,
+        "lap_end_xml": null,
+        "lap_time_ms": 181973,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 105
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 11
+        }
+      },
+      "team": "No Limit Racing",
+      "stops": {
+        "count": 12,
+        "total_time_ms": 6008000,
+        "last_stop_duration_ms": 874000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 94,
+      "car_number": 556,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50000,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T05:02:00.582195+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T04:45:52.889195+00:00",
+        "lap_number": 202,
+        "s1_best_ms": 37632,
+        "s2_best_ms": 77692,
+        "s3_best_ms": 45524,
+        "best_lap_ms": 173381,
+        "lap_end_xml": null,
+        "lap_time_ms": 967693,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 121
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 16
+        }
+      },
+      "team": "TRC By Comtoyou Racing",
+      "stops": {
+        "count": 14,
+        "total_time_ms": 11636000,
+        "last_stop_duration_ms": 493000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 95,
+      "car_number": 290,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53733,
+        "s2_ms": 94161,
+        "s3_ms": 50995,
+        "lap_end": "2026-07-05T02:25:05.523679+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T02:21:46.634679+00:00",
+        "lap_number": 197,
+        "s1_best_ms": 39251,
+        "s2_best_ms": 77882,
+        "s3_best_ms": 46215,
+        "best_lap_ms": 174080,
+        "lap_end_xml": null,
+        "lap_time_ms": 198889,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 126
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 5
+        }
+      },
+      "team": "Desimone by M3M",
+      "stops": {
+        "count": 13,
+        "total_time_ms": 4736000,
+        "last_stop_duration_ms": 152000
+      },
+      "driver": "F.SEN",
+      "category": "EV3",
+      "position": 96,
+      "car_number": 152,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51766,
+        "s2_ms": 84996,
+        "s3_ms": 50365,
+        "lap_end": "2026-07-05T02:25:10.403713+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T02:22:03.276713+00:00",
+        "lap_number": 191,
+        "s1_best_ms": 50420,
+        "s2_best_ms": 78917,
+        "s3_best_ms": 46596,
+        "best_lap_ms": 177247,
+        "lap_end_xml": null,
+        "lap_time_ms": 187127,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 132
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 6
+        }
+      },
+      "team": "Knauf for Fun by Acome by SRS",
+      "stops": {
+        "count": 11,
+        "total_time_ms": 5036000,
+        "last_stop_duration_ms": 440000
+      },
+      "driver": "A.BEA",
+      "category": "EV3",
+      "position": 97,
+      "car_number": 459,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 53808,
+        "s2_ms": 85477,
+        "s3_ms": 55024,
+        "lap_end": "2026-07-05T01:02:49.328150+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-05T00:59:35.019150+00:00",
+        "lap_number": 143,
+        "s1_best_ms": 50524,
+        "s2_best_ms": 78254,
+        "s3_best_ms": 46520,
+        "best_lap_ms": 175796,
+        "lap_end_xml": null,
+        "lap_time_ms": 194309,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 180
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 48
+        }
+      },
+      "team": "GDL AUS 1",
+      "stops": {
+        "count": 8,
+        "total_time_ms": 8905000,
+        "last_stop_duration_ms": 619000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 98,
+      "car_number": 532,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51522,
+        "s2_ms": 82431,
+        "s3_ms": null,
+        "lap_end": "2026-07-04T23:18:13.778662+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-04T22:54:31.870662+00:00",
+        "lap_number": 141,
+        "s1_best_ms": 49845,
+        "s2_best_ms": 78943,
+        "s3_best_ms": 46500,
+        "best_lap_ms": 175236,
+        "lap_end_xml": null,
+        "lap_time_ms": 1421908,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 182
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 2
+        }
+      },
+      "team": "Les Fous du Volant",
+      "stops": {
+        "count": 7,
+        "total_time_ms": 2795000,
+        "last_stop_duration_ms": 94000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 99,
+      "car_number": 156,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 55452,
+        "s2_ms": 84837,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T09:44:21.050629+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T09:41:15.034629+00:00",
+        "lap_number": 113,
+        "s1_best_ms": 50997,
+        "s2_best_ms": 78696,
+        "s3_best_ms": 46683,
+        "best_lap_ms": 178003,
+        "lap_end_xml": null,
+        "lap_time_ms": 186016,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 210
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 28
+        }
+      },
+      "team": "M3",
+      "stops": {
+        "count": 16,
+        "total_time_ms": 46328000,
+        "last_stop_duration_ms": 162000
+      },
+      "driver": "S.CHA",
+      "category": "BI3",
+      "position": 100,
+      "car_number": 316,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52264,
+        "s2_ms": 82313,
+        "s3_ms": 57883,
+        "lap_end": "2026-07-04T21:30:24.397988+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-04T21:27:18.050988+00:00",
+        "lap_number": 112,
+        "s1_best_ms": 50319,
+        "s2_best_ms": 78456,
+        "s3_best_ms": 47748,
+        "best_lap_ms": 176422,
+        "lap_end_xml": null,
+        "lap_time_ms": 186347,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 211
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 1
+        }
+      },
+      "team": "Circus Daily by Milo",
+      "stops": {
+        "count": 15,
+        "total_time_ms": 3584000,
+        "last_stop_duration_ms": 300000
+      },
+      "driver": "N.LEO",
+      "category": "BI3",
+      "position": 101,
+      "car_number": 394,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 54182,
+        "s2_ms": 83917,
+        "s3_ms": 53299,
+        "lap_end": "2026-07-04T22:24:38.955711+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-04T22:21:27.557711+00:00",
+        "lap_number": 108,
+        "s1_best_ms": 51434,
+        "s2_best_ms": 80172,
+        "s3_best_ms": 47428,
+        "best_lap_ms": 178930,
+        "lap_end_xml": null,
+        "lap_time_ms": 191398,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 215
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 4
+        }
+      },
+      "team": "VMax Motorsport",
+      "stops": {
+        "count": 23,
+        "total_time_ms": 6057000,
+        "last_stop_duration_ms": 537000
+      },
+      "driver": null,
+      "category": "BI3",
+      "position": 102,
+      "car_number": 392,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52790,
+        "s2_ms": 83513,
+        "s3_ms": 51839,
+        "lap_end": "2026-07-04T22:49:10.075871+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-04T22:46:01.933871+00:00",
+        "lap_number": 97,
+        "s1_best_ms": 50955,
+        "s2_best_ms": 80432,
+        "s3_best_ms": 47748,
+        "best_lap_ms": 177552,
+        "lap_end_xml": null,
+        "lap_time_ms": 188142,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 226
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 11
+        }
+      },
+      "team": "HSM Racing Events",
+      "stops": {
+        "count": 12,
+        "total_time_ms": 9175000,
+        "last_stop_duration_ms": 2741000
+      },
+      "driver": null,
+      "category": "BI3",
+      "position": 103,
+      "car_number": 368,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50845,
+        "s2_ms": 138499,
+        "s3_ms": 54312,
+        "lap_end": "2026-07-04T20:15:21.656173+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-04T20:10:26.965173+00:00",
+        "lap_number": 94,
+        "s1_best_ms": 36081,
+        "s2_best_ms": 77257,
+        "s3_best_ms": 45432,
+        "best_lap_ms": 173508,
+        "lap_end_xml": null,
+        "lap_time_ms": 294691,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 229
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 3
+        }
+      },
+      "team": "DDK Mega",
+      "stops": {
+        "count": 4,
+        "total_time_ms": 3193000,
+        "last_stop_duration_ms": 490000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 104,
+      "car_number": 517,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 50660,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-04T18:15:56.091957+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-04T18:00:29.407957+00:00",
+        "lap_number": 62,
+        "s1_best_ms": 35583,
+        "s2_best_ms": 77100,
+        "s3_best_ms": 45948,
+        "best_lap_ms": 173413,
+        "lap_end_xml": null,
+        "lap_time_ms": 926684,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 261
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 32
+        }
+      },
+      "team": "Dedicated by M3M",
+      "stops": {
+        "count": 4,
+        "total_time_ms": 1587000,
+        "last_stop_duration_ms": 419000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 105,
+      "car_number": 33,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 52696,
+        "s2_ms": 164732,
+        "s3_ms": 113658,
+        "lap_end": "2026-07-04T21:06:01.942371+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-04T21:00:30.856371+00:00",
+        "lap_number": 34,
+        "s1_best_ms": 50857,
+        "s2_best_ms": 81425,
+        "s3_best_ms": 47382,
+        "best_lap_ms": 180613,
+        "lap_end_xml": null,
+        "lap_time_ms": 331086,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 289
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 28
+        }
+      },
+      "team": "DPW Racing",
+      "stops": {
+        "count": 2,
+        "total_time_ms": 18547000,
+        "last_stop_duration_ms": 170000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 106,
+      "car_number": 390,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51154,
+        "s2_ms": 80588,
+        "s3_ms": 48890,
+        "lap_end": "2026-07-04T15:56:16.912241+00:00",
+        "car_state": "IN",
+        "lap_start": "2026-07-04T15:38:45.480241+00:00",
+        "lap_number": 23,
+        "s1_best_ms": 39176,
+        "s2_best_ms": 78291,
+        "s3_best_ms": 46419,
+        "best_lap_ms": 175147,
+        "lap_end_xml": null,
+        "lap_time_ms": 1051432,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 300
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 11
+        }
+      },
+      "team": "GDL KRC ASIA",
+      "stops": {
+        "count": 1,
+        "total_time_ms": 942000,
+        "last_stop_duration_ms": 942000
+      },
+      "driver": null,
+      "category": "EV3",
+      "position": 107,
+      "car_number": 526,
+      "manufacturer": "Fun Cup"
+    },
+    {
+      "lap": {
+        "s1_ms": 51506,
+        "s2_ms": null,
+        "s3_ms": null,
+        "lap_end": "2026-07-05T03:33:34.795278+00:00",
+        "car_state": "RUN",
+        "lap_start": "2026-07-05T03:30:15.787278+00:00",
+        "lap_number": 11,
+        "s1_best_ms": 50172,
+        "s2_best_ms": 78462,
+        "s3_best_ms": 46038,
+        "best_lap_ms": 175056,
+        "lap_end_xml": null,
+        "lap_time_ms": 179801,
+        "pit_in_time": null,
+        "pit_out_time": null
+      },
+      "gaps": {
+        "toLeader": {
+          "ms": null,
+          "laps": 312
+        }
+      },
+      "ints": {
+        "toAhead": {
+          "ms": null,
+          "laps": 12
+        }
+      },
+      "team": ".",
+      "stops": {
+        "count": null,
+        "total_time_ms": null,
+        "last_stop_duration_ms": null
+      },
+      "driver": "*",
+      "category": "10",
+      "position": 108,
+      "car_number": 631,
+      "manufacturer": "Fun Cup"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-07-05T09:46:43.476491+00:00",
+      "id": "dc1-msg",
+      "kind": "RC_MESSAGE",
+      "message": "N°280 - STOP AND GO - 30'' DEPASSEMENT EN TRACK LIMIT T4"
+    },
+    {
+      "at": "2026-07-05T09:46:43.476491+00:00",
+      "id": "dc2-msg",
+      "kind": "RC_MESSAGE",
+      "message": "N°551 - DRIVE THROUGH PENALTY - DEPASSEMENT EN TRACK LIMITE T4"
+    }
+  ],
+  "context": {
+    "race": {
+      "name": "No race name"
+    },
+    "season": {
+      "year": 2026
+    },
+    "series": {
+      "name": "25 Hours"
+    },
+    "session": {
+      "name": "25 Hours",
+      "clock": {
+        "start_at": null,
+        "elapsed_ms": 71580000,
+        "remaining_ms": 14820000
+      },
+      "status": "RUNNING",
+      "track_state": "GREEN",
+      "session_type": "RACE"
+    }
+  },
+  "provider": "RIS",
+  "generated_at": "2026-07-05T09:46:43.476384+00:00",
+  "schema_version": "1.0"
+}

@@ -10,13 +10,17 @@ interface Stint { id: number; driver: string; laps: number; tire: string; }
 interface AiMessage { role: 'user' | 'ai'; content: string; timestamp: string; }
 interface LapRecord { id: number; lapNumber: number; driverRIS: string; s1: string; s2: string; s3: string; lapTime: string; lapTimeMs: number; }
 
+// ROBUSTESSE ABSOLUE : Extraction pure des chiffres pour corriger le bug des "65s"
 const parseGapToSeconds = (gapStr?: string): number => {
   if (!gapStr) return 0;
   const str = String(gapStr);
-  if (str === "Leader") return 0;
-  if (str.includes("Laps") || str.includes("Lap") || str.includes("Trs")) return parseInt(str.replace(/[^0-9]/g, '')) * 135; 
-  if (str.includes("s")) return parseFloat(str.replace(/[^0-9.-]/g, ''));
-  return 0;
+  if (str === "Leader" || str === "-") return 0;
+  if (str.includes("Trs") || str.includes("Lap") || str.includes("Laps")) {
+    const match = str.match(/[0-9.]+/);
+    return match ? parseFloat(match[0]) * 135 : 0;
+  }
+  const match = str.match(/[0-9.]+/);
+  return match ? parseFloat(match[0]) : 0;
 };
 
 const parseLapToMs = (lapStr?: string): number => {
@@ -260,7 +264,6 @@ export default function VoitureDetailPage() {
   let battleGroup: any[] = [];
   if (carIndex !== -1) battleGroup = safeCars.slice(Math.max(0, carIndex - 2), Math.min(safeCars.length - 1, carIndex + 2) + 1);
 
-  // 🚀 SAUVEGARDE DE L'HISTORIQUE DES ÉCARTS (POUR LE GRAPHIQUE ET L'AWS) 🚀
   useEffect(() => {
     if (!liveCarData || battleGroup.length === 0) return;
     const currentLap = liveCarData.laps;
@@ -277,7 +280,7 @@ export default function VoitureDetailPage() {
     });
   }, [safeCars, liveCarData?.laps, carId]);
 
-  // 🚀 SUPER CALCULATEUR DE PRÉDICTION AWS (BASÉ UNIQUEMENT SUR L'ÉVOLUTION DU GAP) 🚀
+  // 🚀 SUPER CALCULATEUR DE PRÉDICTION AWS (GAP ÉVOLUTIF 3 ÉTATS) 🚀
   const overtakePredictions = useMemo(() => {
     if (!liveCarData || carIndex === -1 || safeCars.length === 0) return { attack: null, defend: null };
 
@@ -288,12 +291,14 @@ export default function VoitureDetailPage() {
       const history = gapHistory.filter(h => h[carKey] !== undefined);
       const hLen = history.length;
       
-      const currentAbsoluteGap = Math.abs(ourGapSec - parseGapToSeconds(targetCar.gap));
+      const targetGapSec = parseGapToSeconds(targetCar.gap);
+      const currentAbsoluteGap = Math.abs(ourGapSec - targetGapSec);
+      
       let deltaPerLap = 0;
       let valid = false;
       let calcMethod = "NO DATA";
 
-      // 1. MÉTHODE 1 : L'évolution de l'écart sur les 2 derniers tours (Moyenne)
+      // 1. MOYENNE LISSÉE SUR 2 TOURS (Priorité absolue)
       if (hLen >= 3) {
         const gapNow = Math.abs(history[hLen - 1][carKey]);
         const gapOld = Math.abs(history[hLen - 3][carKey]);
@@ -301,7 +306,7 @@ export default function VoitureDetailPage() {
         valid = true;
         calcMethod = "2-LAP GAP AVG";
       } 
-      // 2. MÉTHODE 2 : L'évolution de l'écart sur 1 tour
+      // 2. ÉVOLUTION SUR 1 TOUR (Repli)
       else if (hLen === 2) {
         const gapNow = Math.abs(history[hLen - 1][carKey]);
         const gapOld = Math.abs(history[0][carKey]);
@@ -309,39 +314,43 @@ export default function VoitureDetailPage() {
         valid = true;
         calcMethod = "1-LAP GAP DELTA";
       } 
-      // 3. PAS ASSEZ DE DONNÉES
+      // 3. PAS DE DONNÉES
       else {
         deltaPerLap = 0;
         valid = false;
         calcMethod = "GATHERING DATA";
       }
 
-      let isGood = false;
-      let statusText = "";
+      let trend: 'GOOD' | 'BAD' | 'STABLE' = 'STABLE';
+      let statusText = "GAP STABILIZED";
       let lapsToCatch = Infinity;
 
-      // Rappel mathématique : 
-      // Si deltaPerLap < 0, l'écart global DIMINUE (Les voitures se rapprochent)
-      // Si deltaPerLap > 0, l'écart global AUGMENTE (Les voitures s'éloignent)
+      // Logique Mathématique pure :
+      // - Si deltaPerLap est NEGATIF -> L'écart absolu se réduit (Les voitures se rapprochent)
+      // - Si deltaPerLap est POSITIF -> L'écart absolu s'agrandit (Les voitures s'éloignent)
+      // - Tolérance de 0.5s pour la "Stabilisation"
 
-      if (isAhead) {
-        // CIBLE DEVANT NOUS : On veut que l'écart DIMINUE (< 0)
-        isGood = deltaPerLap < 0; 
-        statusText = isGood ? 'CATCHING' : (deltaPerLap > 0 ? 'LOSING GROUND' : 'GAP STABILIZED');
-        if (deltaPerLap < 0) lapsToCatch = currentAbsoluteGap / Math.abs(deltaPerLap);
-      } else {
-        // CIBLE DERRIÈRE NOUS : On veut que l'écart AUGMENTE (> 0)
-        isGood = deltaPerLap > 0; 
-        statusText = isGood ? 'PULLING AWAY' : (deltaPerLap < 0 ? 'BEING CAUGHT' : 'GAP STABILIZED');
-        if (deltaPerLap < 0) lapsToCatch = currentAbsoluteGap / Math.abs(deltaPerLap);
+      if (valid) {
+        if (isAhead) {
+          // CIBLE DEVANT NOUS : On veut que l'écart se réduise (Négatif)
+          if (deltaPerLap < -0.5) { trend = 'GOOD'; statusText = 'CATCHING'; lapsToCatch = currentAbsoluteGap / Math.abs(deltaPerLap); }
+          else if (deltaPerLap > 0.5) { trend = 'BAD'; statusText = 'LOSING GROUND'; }
+          else { trend = 'STABLE'; statusText = 'GAP STABILIZED'; }
+        } else {
+          // CIBLE DERRIÈRE NOUS : On veut que l'écart grandisse (Positif)
+          if (deltaPerLap > 0.5) { trend = 'GOOD'; statusText = 'PULLING AWAY'; }
+          else if (deltaPerLap < -0.5) { trend = 'BAD'; statusText = 'BEING CAUGHT'; lapsToCatch = currentAbsoluteGap / Math.abs(deltaPerLap); }
+          else { trend = 'STABLE'; statusText = 'GAP STABILIZED'; }
+        }
       }
 
       return {
         type: isAhead ? 'ATTACK' : 'DEFEND',
         targetCar: targetCar.num,
         targetTeam: targetCar.team,
+        deltaPerLap: valid ? deltaPerLap : 0,
         paceAdvantageSec: valid ? Math.abs(deltaPerLap).toFixed(2) : "0.00",
-        isGood,
+        trend,
         statusText,
         calcMethod,
         gapSec: currentAbsoluteGap.toFixed(1),
@@ -440,7 +449,7 @@ export default function VoitureDetailPage() {
 
   const chartColors = ['#00ff66', '#ffaa00', '#ff3333', '#a855f7'];
 
-  // 🚀 Composant interne pour afficher une Box AWS (Design Horizontal F1) 🚀
+  // 🚀 Composant interne AWS BATTLE BOX (Design 3 États) 🚀
   const RenderAwsBox = ({ data }: { data: any }) => {
     if (!data) return (
       <div className="flex-1 flex items-center justify-center p-6 rounded-lg bg-[#0B0C10]/50 border border-gray-800 font-sans italic text-gray-600">
@@ -448,17 +457,22 @@ export default function VoitureDetailPage() {
       </div>
     );
 
+    // Définition des couleurs selon le Trend
+    const themeColor = data.trend === 'GOOD' ? '#00ff66' : (data.trend === 'BAD' ? '#ff3333' : '#ffaa00');
+    const bgGradient = data.trend === 'GOOD' ? 'from-[#003311]/80' : (data.trend === 'BAD' ? 'from-[#440000]/80' : 'from-[#442D00]/80');
+    
+    // Le signe d'évolution (+ ou -)
+    const deltaSign = data.deltaPerLap < 0 ? '-' : (data.deltaPerLap > 0 ? '+' : '±');
+
     return (
-      <div className={`flex-1 flex flex-col p-5 rounded-lg border backdrop-blur-sm shadow-xl transition-all duration-500 ${
-        data.isGood 
-          ? 'bg-gradient-to-r from-[#003311]/80 to-[#0B0C10] border-[#00ff66]/50 shadow-[0_0_15px_rgba(0,255,102,0.1)]' 
-          : 'bg-gradient-to-r from-[#440000]/80 to-[#0B0C10] border-[#ff3333]/50 shadow-[0_0_15px_rgba(255,51,51,0.1)]'
-      }`}>
+      <div className={`flex-1 flex flex-col p-5 rounded-lg border backdrop-blur-sm shadow-xl transition-all duration-500 bg-gradient-to-r ${bgGradient} to-[#0B0C10]`}
+           style={{ borderColor: `${themeColor}50`, boxShadow: `0 0 15px ${themeColor}15` }}>
+        
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{data.type === 'ATTACK' ? '🎯' : '🛡️'}</span>
             <div className="flex flex-col">
-              <span className={`font-black text-sm tracking-widest ${data.isGood ? 'text-[#00ff66]' : 'text-[#ff3333]'}`}>
+              <span className="font-black text-sm tracking-widest" style={{ color: themeColor }}>
                 {data.statusText}
               </span>
               <span className="text-white font-bold text-sm">#{data.targetCar} {data.targetTeam}</span>
@@ -474,37 +488,41 @@ export default function VoitureDetailPage() {
 
         <div className="flex justify-between items-end mt-2">
           {/* FLÈCHES ANIMÉES */}
-          {/* Si isGood (Vert) -> Les flèches vont vers l'avant. Si !isGood (Rouge) -> Les flèches reculent */}
           <div className="flex gap-1 ml-2">
-            {[0, 1, 2, 3, 4].map(idx => (
-              <svg key={idx} 
-                   className={data.isGood ? 'text-[#00ff66] aws-arrow-good' : 'text-[#ff3333] aws-arrow-bad'} 
-                   style={{ animationDelay: `${(data.isGood ? idx : 4 - idx) * 0.15}s` }} 
-                   width="16" height="26" viewBox="0 0 14 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <path d={data.isGood ? "M2 2L12 12L2 22" : "M12 2L2 12L12 22"}/>
-              </svg>
-            ))}
+            {[0, 1, 2, 3, 4].map(idx => {
+              let animDelay = '0s';
+              if (data.trend === 'GOOD') animDelay = `${idx * 0.15}s`;
+              else if (data.trend === 'BAD') animDelay = `${(4 - idx) * 0.15}s`;
+
+              return (
+                <svg key={idx} 
+                     className={data.trend === 'GOOD' ? 'aws-arrow-good' : (data.trend === 'BAD' ? 'aws-arrow-bad' : 'aws-arrow-stable')} 
+                     style={{ animationDelay: animDelay, color: themeColor }} 
+                     width="16" height="26" viewBox="0 0 14 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={data.trend === 'BAD' ? "M12 2L2 12L12 22" : "M2 2L12 12L2 22"}/>
+                </svg>
+              )
+            })}
           </div>
 
           <div className="flex flex-col items-center justify-center">
             <span className="text-[9px] text-gray-400 uppercase tracking-widest">Gap Trend / Lap</span>
-            <span className={`text-base font-black px-2 py-0.5 rounded border mt-1 ${
-              data.isGood ? 'bg-[#00ff66]/10 text-[#00ff66] border-[#00ff66]/30' : 'bg-[#ff3333]/10 text-[#ff3333] border-[#ff3333]/30'
-            }`}>
-              {data.isGood ? '↓' : '↑'}{data.paceAdvantageSec}s
+            <span className="text-base font-black px-2 py-0.5 rounded border mt-1"
+                  style={{ backgroundColor: `${themeColor}15`, color: themeColor, borderColor: `${themeColor}30` }}>
+              {deltaSign}{data.paceAdvantageSec}s
             </span>
           </div>
 
           {/* LAPS TO CATCH */}
           <div className="flex flex-col items-end">
             <span className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">
-              {data.isGood && data.type === 'ATTACK' ? 'STRIKING IN' : 
-               !data.isGood && data.type === 'DEFEND' ? 'BEING CAUGHT IN' : 'TIME TO SAFETY'}
+              {data.trend === 'GOOD' && data.type === 'ATTACK' ? 'STRIKING IN' : 
+               data.trend === 'BAD' && data.type === 'DEFEND' ? 'BEING CAUGHT IN' : 'DISTANCE MAINTAINED'}
             </span>
             <span className="text-3xl font-black text-white leading-none shadow-sm whitespace-nowrap">
               {data.lapsRemaining} <span className="text-sm text-gray-400 font-normal">Laps</span>
             </span>
-            <span className={`text-xs font-bold mt-1 ${data.isGood && data.type === 'ATTACK' ? 'text-[#00ff66]' : !data.isGood && data.type === 'DEFEND' ? 'text-[#ff3333]' : 'text-gray-500'}`}>
+            <span className="text-xs font-bold mt-1" style={{ color: data.trend === 'STABLE' ? '#888' : themeColor }}>
               Target Lap: {data.predictedLap}
             </span>
           </div>
@@ -673,16 +691,17 @@ export default function VoitureDetailPage() {
         </table>
       </div>
 
-      {/* 🚀 LE VRAI MODULE AWS OVERTAKE PREDICTION (PLEINE LARGEUR ET CÔTE-A-CÔTE) 🚀 */}
-      <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-6 rounded-lg border border-[#45A29E] shadow-[0_0_15px_rgba(69,162,158,0.15)] relative overflow-hidden mb-8">
-        <div className="absolute inset-0 opacity-5 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#45A29E_10px,#45A29E_20px)] pointer-events-none" />
+      {/* 🚀 LE VRAI MODULE AWS OVERTAKE PREDICTION (3 ÉTATS + FULL LARGEUR) 🚀 */}
+      <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-6 rounded-lg border border-gray-700 shadow-2xl relative overflow-hidden mb-8">
+        {/* Grille de fond AWS */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ffffff_10px,#ffffff_20px)] pointer-events-none" />
         
         <div className="flex justify-between items-center mb-6 relative z-10">
-          <h3 className="text-[#66FCF1] font-black text-lg tracking-wider uppercase flex items-center gap-2">
+          <h3 className="text-white font-black text-lg tracking-wider uppercase flex items-center gap-2">
             <span className="text-2xl">⚡</span> AWS BATTLE FORECAST
           </h3>
           <span className="text-xs bg-[#0B0C10] px-3 py-1.5 rounded font-mono text-gray-400 border border-gray-700 shadow-sm">
-            SMART PACE CALCULATOR (GAP EVOLUTION)
+            SMART PACE CALCULATOR
           </span>
         </div>
 
@@ -695,8 +714,13 @@ export default function VoitureDetailPage() {
               0%, 100% { opacity: 0.2; transform: translateX(3px) scale(0.9); filter: drop-shadow(0 0 0px transparent); }
               50% { opacity: 1; transform: translateX(-3px) scale(1.1); filter: drop-shadow(0 0 6px #ff3333); }
           }
-          .aws-arrow-good { animation: aws-wave-good 1.2s infinite; margin: 0 -3px; }
-          .aws-arrow-bad { animation: aws-wave-bad 1.2s infinite; margin: 0 -3px; }
+          @keyframes aws-pulse-stable {
+              0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 0px transparent); transform: scale(0.95); }
+              50% { opacity: 1; filter: drop-shadow(0 0 6px #ffaa00); transform: scale(1.05); }
+          }
+          .aws-arrow-good { animation: aws-wave-good 1s infinite; margin: 0 -3px; }
+          .aws-arrow-bad { animation: aws-wave-bad 1s infinite; margin: 0 -3px; }
+          .aws-arrow-stable { animation: aws-pulse-stable 1.5s infinite; margin: 0 -3px; }
         `}</style>
 
         <div className="flex flex-col xl:flex-row gap-6 font-mono relative z-10">
