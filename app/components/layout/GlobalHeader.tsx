@@ -4,15 +4,6 @@ import { useLiveTiming } from '../../hooks/useLiveTiming';
 
 const ROW_HEIGHT = 44;
 
-const formatRemainingTime = (ms: number | undefined) => {
-  if (ms === undefined || ms === null || isNaN(ms) || ms < 0) return "--:--:--";
-  const totalSeconds = Math.floor(ms / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-};
-
 const getStatusBadge = (state: string) => {
   const s = String(state || 'RUN').toUpperCase();
   if (s.includes('PIT') || s.includes('IN')) return <span className="text-[9px] font-black px-1.5 py-0.5 bg-yellow-900/80 text-[#ffaa00] border border-[#ffaa00]/50 rounded shadow-[0_0_5px_rgba(255,170,0,0.5)] animate-pulse">PIT</span>;
@@ -58,45 +49,29 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
 };
 
 export default function GlobalHeader() {
-  const { cars } = useLiveTiming('JSON'); // Toujours utiliser pour récupérer le classement
+  const { cars } = useLiveTiming('JSON'); // On utilise LiveTiming uniquement pour les voitures
+  
+  // 🚀 RETOUR DE TON API ORIGINALE POUR LA DIRECTION DE COURSE 🚀
+  const [status, setStatus] = useState("WAITING");
+  const [remain, setRemain] = useState("--:--:--");
+  const [msg, setMsg] = useState("");
 
-  const [trackStatus, setTrackStatus] = useState("WAITING");
-  const [remainStr, setRemainStr] = useState("--:--:--");
-  const [rcMessage, setRcMessage] = useState("");
-
-  // 🚀 FETCH EXTRACTION ROBUSTE DU JSON POUR LA DIRECTION DE COURSE 🚀
   useEffect(() => {
-    const fetchGlobalData = async () => {
+    const fetchMessages = async () => {
       try {
-        const res = await fetch('/api/timing'); // On tape directement sur ton extracteur Node.js !
+        const res = await fetch('/api/messages');
         if (res.ok) {
           const data = await res.json();
-          
-          // 1. Statut de la Piste
-          if (data.context?.session?.track_state) setTrackStatus(data.context.session.track_state);
-          else if (data.status) setTrackStatus(data.status);
-          
-          // 2. Temps Restant
-          if (data.context?.clock?.remaining_ms !== undefined) setRemainStr(formatRemainingTime(data.context.clock.remaining_ms));
-          else if (data.remain) setRemainStr(data.remain); 
-          
-          // 3. Dernier Message de Direction de Course
-          if (data.messages && data.messages.length > 0) {
-            const lastMsg = data.messages[data.messages.length - 1];
-            // Format fallback si c'est un object complexe de RIS Timing
-            const msgText = typeof lastMsg === 'string' ? lastMsg : (lastMsg.message || lastMsg.content || lastMsg.event || "");
-            setRcMessage(msgText);
-          } else if (data.message) {
-            setRcMessage(data.message);
-          }
+          setStatus(data.trackStatus || "WAITING");
+          setRemain(data.remain || "--:--:--");
+          setMsg(data.message || "");
         }
-      } catch (e) {
-        console.error("Erreur lecture data pour le header", e);
+      } catch (err) {
+        console.error("Erreur lecture flux messages");
       }
     };
-
-    fetchGlobalData();
-    const interval = setInterval(fetchGlobalData, 5000);
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -105,7 +80,7 @@ export default function GlobalHeader() {
   const containerHeight = maxRank * ROW_HEIGHT;
 
   let bgClass = "bg-[#1a1c23]"; let textClass = "text-white"; let dotClass = "bg-gray-500"; let pulse = false;
-  const s = trackStatus.toUpperCase();
+  const s = status.toUpperCase();
   
   if (s.includes("GREEN") || s.includes("RUN") || s.includes("RUNNING")) {
     bgClass = "bg-[#003311]"; textClass = "text-[#00ff66]"; dotClass = "bg-[#00ff66]";
@@ -162,15 +137,15 @@ export default function GlobalHeader() {
               <span className={`w-3 h-3 rounded-full mr-3 ${dotClass} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`}></span>
               TRACK STATUS: {s}
             </span>
-            {rcMessage && (
+            {msg && (
               <div className="border-l border-gray-700 pl-4 flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center gap-2">
                 <span className="text-[#ffaa00] font-bold text-[10px] uppercase bg-[#0B0C10] px-2 py-1 rounded border border-gray-700">⚠️ DIR. COURSE</span>
-                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{rcMessage}</span>
+                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{msg}</span>
               </div>
             )}
           </div>
           <div className="text-sm font-mono text-gray-400 shrink-0 ml-4">
-            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{remainStr}</span>
+            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{remain}</span>
           </div>
         </div>
 
