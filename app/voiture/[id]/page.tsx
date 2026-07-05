@@ -9,6 +9,8 @@ interface Pilote { id: number; nom: string; nomRIS: string; statut: 'AU_VOLANT' 
 interface Stint { id: number; driver: string; laps: number; tire: string; }
 interface AiMessage { role: 'user' | 'ai'; content: string; timestamp: string; }
 interface LapRecord { id: number; lapNumber: number; driverRIS: string; s1: string; s2: string; s3: string; lapTime: string; lapTimeMs: number; }
+interface PitStopRecord { id: number; lap: number; timeIn: string; durationSec: number; }
+interface RcMessage { time: string; msg: string; }
 
 const parseGapToSeconds = (gapStr?: string): number => {
   if (!gapStr) return 0;
@@ -52,28 +54,31 @@ export default function VoitureDetailPage() {
   const carId = params.id as string;
   const { cars, status } = useLiveTiming('JSON');
   
-  // 🚀 AJOUT DES NOUVEAUX PARAMÈTRES (Pit décomposé et Alerte Pilote) 🚀
   const [config, setConfig] = useState({ 
     capaMax: 80, consoGreen: 1.7, timeGreenStr: "2:55.000", consoFcy: 0.7, timeFcyStr: "7:00.000",
-    alertOrangePct: 35, alertRedPct: 17, maxStintTime: 65,
-    pitBaseTime: 35, pitRefuelTime: 30, pitDriverTime: 15, stintAlertMin: 10
+    alertOrangePct: 35, alertRedPct: 17, pitLossTime: 65, maxStintTime: 65, stintAlertMin: 10,
+    pitBaseTime: 35, pitRefuelTime: 30, pitDriverTime: 15
   });
   
   const [currentFuel, setCurrentFuel] = useState<number>(0);
   const [pilotes, setPilotes] = useState<Pilote[]>([]);
   const [stints, setStints] = useState<Stint[]>([]);
   const [lapHistory, setLapHistory] = useState<LapRecord[]>([]);
-  const [aiMessages, setAiMessages] = useState<AiMessage[]>([
-    { role: 'ai', content: `Terminal IA connecté sur la voiture #${carId}.`, timestamp: new Date().toLocaleTimeString() }
-  ]);
+  const [aiMessages, setAiMessages] = useState<AiMessage[]>([{ role: 'ai', content: `Terminal IA connecté.`, timestamp: new Date().toLocaleTimeString() }]);
   
   const [isLoaded, setIsLoaded] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [gapHistory, setGapHistory] = useState<any[]>([]);
-  
   const [pitMode, setPitMode] = useState<'DT' | 'REFUEL' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
   const [customPitTime, setCustomPitTime] = useState<number>(65);
+  
+  // 🚀 ETATS DU CHRONO PIT STOP & RACE CONTROL 🚀
+  const [pitStopsHistory, setPitStopsHistory] = useState<PitStopRecord[]>([]);
+  const [currentPitTimer, setCurrentPitTimer] = useState<number | null>(null);
+  const [rcHistory, setRcHistory] = useState<RcMessage[]>([]);
+  const pitEntryTimeRef = useRef<number | null>(null);
+  const prevPitStateRef = useRef<boolean>(false);
   
   const lastLapRef = useRef<number | null>(null);
   const carStateRef = useRef<string>('RUN'); 
@@ -90,26 +95,17 @@ export default function VoitureDetailPage() {
     if (savedConfig) {
       const parsed = JSON.parse(savedConfig);
       parsedCapa = Number(parsed.capaMax) || 80;
-      setConfig({
-        capaMax: parsedCapa, consoGreen: Number(parsed.consoGreen) || 1.7, timeGreenStr: parsed.timeGreenStr || "2:55.000", 
-        consoFcy: Number(parsed.consoFcy) || 0.7, timeFcyStr: parsed.timeFcyStr || "7:00.000",
-        alertOrangePct: Number(parsed.alertOrangePct) || 35, alertRedPct: Number(parsed.alertRedPct) || 17, 
-        maxStintTime: Number(parsed.maxStintTime) || 65,
-        pitBaseTime: Number(parsed.pitBaseTime) || 35,
-        pitRefuelTime: Number(parsed.pitRefuelTime) || 30,
-        pitDriverTime: Number(parsed.pitDriverTime) || 15,
-        stintAlertMin: Number(parsed.stintAlertMin) || 10
-      });
+      setConfig({ ...config, ...parsed });
     }
-
     const savedSession = localStorage.getItem(`car_session_${carId}`);
     if (savedSession) {
       try {
         const sess = JSON.parse(savedSession);
         if (sess.pilotes) setPilotes(sess.pilotes);
         if (sess.stints) setStints(sess.stints);
-        if (sess.aiMessages && sess.aiMessages.length > 0) setAiMessages(sess.aiMessages);
+        if (sess.aiMessages) setAiMessages(sess.aiMessages);
         if (sess.lapHistory) setLapHistory(sess.lapHistory);
+        if (sess.pitStopsHistory) setPitStopsHistory(sess.pitStopsHistory);
         if (sess.currentFuel !== undefined) setCurrentFuel(sess.currentFuel);
         else setCurrentFuel(parsedCapa);
       } catch (e) { setCurrentFuel(parsedCapa); }
@@ -118,8 +114,31 @@ export default function VoitureDetailPage() {
   }, [carId]);
 
   useEffect(() => {
-    if (isLoaded) localStorage.setItem(`car_session_${carId}`, JSON.stringify({ pilotes, stints, aiMessages, lapHistory, currentFuel }));
-  }, [pilotes, stints, aiMessages, lapHistory, currentFuel, isLoaded, carId]);
+    if (isLoaded) localStorage.setItem(`car_session_${carId}`, JSON.stringify({ pilotes, stints, aiMessages, lapHistory, pitStopsHistory, currentFuel }));
+  }, [pilotes, stints, aiMessages, lapHistory, pitStopsHistory, currentFuel, isLoaded, carId]);
+
+  // 🚀 FETCH RACE CONTROL MESSAGES 🚀
+  useEffect(() => {
+    const fetchRC = async () => {
+      try {
+        const res = await fetch('/api/messages');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.message) {
+            setRcHistory(prev => {
+              if (prev.length === 0 || prev[0].msg !== data.message) {
+                return [{ time: new Date().toLocaleTimeString(), msg: data.message }, ...prev].slice(0, 30);
+              }
+              return prev;
+            });
+          }
+        }
+      } catch (e) {}
+    };
+    fetchRC();
+    const int = setInterval(fetchRC, 5000);
+    return () => clearInterval(int);
+  }, []);
 
   useEffect(() => {
     const rawState = (liveCarData as any)?.lap?.car_state || (liveCarData as any)?.car_state || (liveCarData as any)?.state || 'RUN';
@@ -145,6 +164,7 @@ export default function VoitureDetailPage() {
     });
   }, [safeCars]);
 
+  // 🚀 BOUCLE PRINCIPALE (STINT & PIT CHRONO) 🚀
   useEffect(() => {
     const interval = setInterval(() => {
       const state = String(carStateRef.current || '');
@@ -160,6 +180,29 @@ export default function VoitureDetailPage() {
         return p;
       }));
       if (isFuel) setCurrentFuel(prev => prev < config.capaMax ? config.capaMax : prev);
+
+      // --- LOGIQUE CHRONOMÈTRE DE STANDS ---
+      if (isIn && !prevPitStateRef.current) {
+        // La voiture entre dans les stands
+        pitEntryTimeRef.current = Date.now();
+        setCurrentPitTimer(0);
+      } else if (!isIn && prevPitStateRef.current && pitEntryTimeRef.current) {
+        // La voiture sort des stands
+        const durationSec = Math.floor((Date.now() - pitEntryTimeRef.current) / 1000);
+        setPitStopsHistory(prev => [{
+          id: Date.now(),
+          lap: lastLapRef.current || 0,
+          timeIn: new Date().toLocaleTimeString(),
+          durationSec
+        }, ...prev].slice(0, 20)); // Garde les 20 derniers
+        pitEntryTimeRef.current = null;
+        setCurrentPitTimer(null);
+      } else if (isIn && pitEntryTimeRef.current) {
+        // La voiture est toujours dans les stands, on met à jour le chrono live
+        setCurrentPitTimer(Math.floor((Date.now() - pitEntryTimeRef.current) / 1000));
+      }
+      prevPitStateRef.current = isIn;
+
     }, 1000); 
     return () => clearInterval(interval);
   }, [config.capaMax]);
@@ -219,8 +262,6 @@ export default function VoitureDetailPage() {
   
   const activePilote = pilotes.find(p => p.statut === 'AU_VOLANT');
   const maxStintSec = config.maxStintTime * 60;
-  
-  // 🚀 L'ALERTE PREND EN COMPTE LA VARIABLE 'stintAlertMin' 🚀
   const isStintCritical = activePilote ? (maxStintSec - activePilote.stintActuel <= config.stintAlertMin * 60) : false;
   const mustPitNow = isFuelCritical || isStintCritical;
 
@@ -333,7 +374,6 @@ export default function VoitureDetailPage() {
     return result;
   }, [safeCars, liveCarData, carIndex]);
 
-  // 🚀 CALCULATEUR DU TEMPS DE PIT DYNAMIQUE BASÉ SUR LA NOUVELLE CONFIG 🚀
   const currentPitLoss = useMemo(() => {
     if (pitMode === 'DT') return config.pitBaseTime; 
     if (pitMode === 'REFUEL') return config.pitBaseTime + config.pitRefuelTime; 
@@ -369,7 +409,6 @@ export default function VoitureDetailPage() {
 
   const calculatedStints = useMemo(() => {
     let elapsedSec = 0; let currentLap = liveCarData?.laps || 0;
-    // On utilise le FULL PIT pour la planification
     const defaultFullPitLoss = config.pitBaseTime + config.pitRefuelTime + config.pitDriverTime;
     return stints.map((stint) => {
       const startSec = elapsedSec;
@@ -499,8 +538,28 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
-    // 🚀 ROOT WRAPPER : padding gauche fixé à 100px selon ta demande ! 🚀
+    // 🚀 ROOT WRAPPER : padding gauche fixé à 100px ! 🚀
     <div className="min-h-screen bg-[#0B0C10] w-full pl-[100px] pt-[56px] relative overflow-x-hidden">
+      
+      {/* 🚀 RÉTABLISSEMENT DU CSS D'ANIMATION POUR LE MODULE AWS 🚀 */}
+      <style>{`
+        @keyframes aws-wave-good {
+            0%, 100% { opacity: 0.2; transform: translateX(-3px) scale(0.9); filter: drop-shadow(0 0 0px transparent); }
+            50% { opacity: 1; transform: translateX(3px) scale(1.1); filter: drop-shadow(0 0 6px #00ff66); }
+        }
+        @keyframes aws-wave-bad {
+            0%, 100% { opacity: 0.2; transform: translateX(3px) scale(0.9); filter: drop-shadow(0 0 0px transparent); }
+            50% { opacity: 1; transform: translateX(-3px) scale(1.1); filter: drop-shadow(0 0 6px #ff3333); }
+        }
+        @keyframes aws-pulse-stable {
+            0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 0px transparent); transform: scale(0.95); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px #ffaa00); transform: scale(1.05); }
+        }
+        .aws-arrow-good { animation: aws-wave-good 1s infinite; margin: 0 -3px; }
+        .aws-arrow-bad { animation: aws-wave-bad 1s infinite; margin: 0 -3px; }
+        .aws-arrow-stable { animation: aws-pulse-stable 1.5s infinite; margin: 0 -3px; }
+      `}</style>
+
       <div className={`p-6 font-sans transition-colors duration-500 min-h-[calc(100vh-56px)] ${mustPitNow ? 'bg-red-950/40' : 'bg-transparent'}`}>
         
         {mustPitNow && (
@@ -521,7 +580,7 @@ export default function VoitureDetailPage() {
           <button onClick={() => router.push(`/voiture/${carId}/config`)} className="bg-[#1F2833] hover:bg-[#45A29E] hover:text-black text-[#66FCF1] font-bold py-2 px-4 rounded border border-gray-700 transition text-sm shadow">⚙️ PARAMÈTRES ET LIMITES</button>
         </div>
 
-        {/* 🚀 LE VRAI MODULE AWS OVERTAKE PREDICTION (PLEINE LARGEUR) 🚀 */}
+        {/* 🚀 MODULE AWS OVERTAKE PREDICTION 🚀 */}
         <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-6 rounded-lg border border-gray-700 shadow-2xl relative overflow-hidden mb-8">
           <div className="absolute inset-0 opacity-[0.03] bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ffffff_10px,#ffffff_20px)] pointer-events-none" />
           <div className="flex justify-between items-center mb-6 relative z-10">
@@ -551,14 +610,22 @@ export default function VoitureDetailPage() {
             </div>
             <div className="bg-[#1F2833] p-3 rounded-lg border border-gray-700 shadow-xl flex flex-col flex-1">
               <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2">⏱️ STINT EN COURS</h3>
-              <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
+              <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 relative ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
+                
+                {/* 🚀 OVERLAY CHRONOMÈTRE DE PIT EN DIRECT 🚀 */}
+                {currentPitTimer !== null && (
+                  <div className="absolute inset-0 bg-yellow-900/95 flex flex-col items-center justify-center rounded z-20 backdrop-blur-sm shadow-[0_0_30px_rgba(255,170,0,0.5)] border-2 border-[#ffaa00]">
+                    <span className="text-[#ffaa00] font-black text-sm tracking-widest animate-pulse mb-2 drop-shadow-md">⏱️ PIT STOP IN PROGRESS</span>
+                    <span className="text-6xl font-mono font-black text-white drop-shadow-[0_0_10px_#ffaa00]">{currentPitTimer}s</span>
+                  </div>
+                )}
+
                 <p className="text-[10px] text-gray-400 font-bold uppercase mb-1 truncate">{activePilote?.nom || 'AUCUN PILOTE DÉTECTÉ'}</p>
                 <p className={`text-4xl font-mono font-black tracking-wider ${isStintCritical ? 'text-red-500 animate-pulse' : 'text-[#66FCF1]'}`}>
                   {formatLiveTimer(activePilote?.stintActuel || 0)}
                 </p>
                 <p className="text-[10px] text-gray-500 mt-1 mb-2">
                   Max Légal : {config.maxStintTime} min | Alerte : -{config.stintAlertMin} min
-                  {carStateRef.current === 'IN' && <span className="text-[#ffaa00] ml-1 animate-pulse">(PIT IN)</span>}
                 </p>
                 <div className="mt-auto pt-2 border-t border-gray-800/50">
                   <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">Rythme Moyen (3 Trs)</p>
@@ -631,23 +698,48 @@ export default function VoitureDetailPage() {
           </div>
         </div>
 
-        <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl mb-8">
-          <h3 className="text-[#66FCF1] font-black text-base tracking-wider uppercase mb-4">📈 Évolution des Écarts (Deltas en Secondes)</h3>
-          <div className="h-[300px] w-full bg-[#0B0C10] rounded border border-gray-800 pt-4 pr-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={gapHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1F2833" />
-                <XAxis dataKey="lap" stroke="#555" tick={{ fill: '#888', fontSize: 10 }} />
-                <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 10 }} domain={['auto', 'auto']} />
-                <Tooltip contentStyle={{ backgroundColor: '#1a1c23', borderColor: '#45A29E', color: '#fff', borderRadius: '8px' }} itemStyle={{ fontWeight: 'bold' }} />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}/>
-                <ReferenceLine y={0} stroke="#66FCF1" strokeWidth={2} strokeDasharray="4 4" />
-                {battleGroup.filter(c => String(c?.num) !== String(carId)).map((c, index) => (
-                  <Line key={c.num} type="monotone" dataKey={`car_${c.num}`} name={`#${c.num} ${c.team}`} stroke={chartColors[index % chartColors.length]} strokeWidth={3} dot={{ r: 3, fill: '#0B0C10' }} activeDot={{ r: 6 }} isAnimationActive={false} />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+        {/* 🚀 BLOC HISTORIQUE DES MESSAGES & PIT STOPS (NOUVEAU) 🚀 */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+          
+          <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl flex flex-col max-h-[300px]">
+            <h3 className="text-[#ffaa00] font-black text-sm tracking-wider uppercase mb-4 flex items-center border-b border-gray-700 pb-2">
+              <span className="mr-2">⏱️</span> HISTORIQUE DES PIT STOPS
+            </h3>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2">
+              {pitStopsHistory.length === 0 ? (
+                <p className="text-xs text-gray-500 italic text-center py-4">Aucun arrêt aux stands enregistré.</p>
+              ) : (
+                pitStopsHistory.map(pit => (
+                  <div key={pit.id} className="flex justify-between items-center bg-[#0B0C10] p-3 rounded border border-gray-800">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-gray-500">Lap {pit.lap}</span>
+                      <span className="text-xs text-gray-400">@ {pit.timeIn}</span>
+                    </div>
+                    <span className="text-lg font-black text-[#ffaa00] font-mono">{pit.durationSec}s</span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
+
+          <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl flex flex-col max-h-[300px]">
+            <h3 className="text-[#ff3333] font-black text-sm tracking-wider uppercase mb-4 flex items-center border-b border-gray-700 pb-2">
+              <span className="mr-2">📢</span> RACE CONTROL MESSAGES
+            </h3>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2">
+              {rcHistory.length === 0 ? (
+                <p className="text-xs text-gray-500 italic text-center py-4">Aucun message de la direction de course.</p>
+              ) : (
+                rcHistory.map((rc, idx) => (
+                  <div key={idx} className="flex gap-3 bg-[#0B0C10] p-2.5 rounded border border-gray-800 items-start">
+                    <span className="text-[10px] text-gray-500 font-mono mt-0.5 whitespace-nowrap">[{rc.time}]</span>
+                    <span className="text-xs font-bold text-white uppercase">{rc.msg}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
         </div>
 
         {/* 🚀 BATAILLE DIRECTE ET PRÉDICTEUR DE STAND 🚀 */}

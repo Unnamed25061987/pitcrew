@@ -1,17 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
-import { useLiveTiming } from '../../hooks/useLiveTiming'; // Ajuste ce chemin si besoin
+import { useLiveTiming } from '../../hooks/useLiveTiming'; // Ajuste si nécessaire
 
 const ROW_HEIGHT = 44;
-
-const formatRemainingTime = (ms: number | undefined) => {
-  if (ms === undefined || ms === null || isNaN(ms) || ms < 0) return "--:--:--";
-  const totalSeconds = Math.floor(ms / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-};
 
 const getStatusBadge = (state: string) => {
   const s = String(state || 'RUN').toUpperCase();
@@ -50,9 +41,7 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
     >
       <div className={`w-6 font-black text-xs ${isOurCar || isOvertaking ? 'text-[#66FCF1]' : 'text-gray-500'}`}>{car.pos}</div>
       <div className={`w-8 font-bold text-xs ${isOurCar || isOvertaking ? 'text-white' : 'text-[#ffaa00]'}`}>#{car.num}</div>
-      <div className={`flex-1 truncate font-sans text-[11px] uppercase pr-2 ${isOurCar || isOvertaking ? 'text-[#66FCF1] font-black' : 'text-gray-200'}`}>
-        {car.team}
-      </div>
+      <div className={`flex-1 truncate font-sans text-[11px] uppercase pr-2 ${isOurCar || isOvertaking ? 'text-[#66FCF1] font-black' : 'text-gray-200'}`}>{car.team}</div>
       <div className="w-14 text-right font-mono text-[10px] text-gray-400 truncate pr-2">{car.gap}</div>
       <div className="w-8 text-right flex justify-end">{getStatusBadge(car.car_state)}</div>
     </div>
@@ -60,21 +49,38 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
 };
 
 export default function GlobalHeader() {
-  const { cars, status, context, messages } = useLiveTiming('JSON');
+  const { cars } = useLiveTiming('JSON'); // On utilise LiveTiming uniquement pour les voitures
   
-  const trackState = context?.session?.track_state || status || "WAITING";
-  const remainMs = context?.clock?.remaining_ms;
-  
-  const latestMessage = messages && messages.length > 0 
-    ? (messages[messages.length - 1].message || messages[messages.length - 1].content || messages[messages.length - 1].event) 
-    : "";
+  // 🚀 Ton API personnelle pour le statut 🚀
+  const [status, setStatus] = useState("WAITING");
+  const [remain, setRemain] = useState("--:--:--");
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch('/api/messages');
+        if (res.ok) {
+          const data = await res.json();
+          setStatus(data.trackStatus || "WAITING");
+          setRemain(data.remain || "--:--:--");
+          setMsg(data.message || "");
+        }
+      } catch (err) {
+        console.error("Erreur lecture flux messages");
+      }
+    };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000); 
+    return () => clearInterval(interval);
+  }, []);
 
   const safeCars = Array.isArray(cars) ? cars : [];
   const maxRank = Math.max(...safeCars.map(c => parseInt(c.pos) || 0), safeCars.length);
   const containerHeight = maxRank * ROW_HEIGHT;
 
   let bgClass = "bg-[#1a1c23]"; let textClass = "text-white"; let dotClass = "bg-gray-500"; let pulse = false;
-  const s = trackState.toUpperCase();
+  const s = status.toUpperCase();
   
   if (s.includes("GREEN") || s.includes("RUN") || s.includes("RUNNING")) {
     bgClass = "bg-[#003311]"; textClass = "text-[#00ff66]"; dotClass = "bg-[#00ff66]";
@@ -86,14 +92,14 @@ export default function GlobalHeader() {
     bgClass = "bg-gray-800"; textClass = "text-white"; dotClass = "bg-white"; pulse = true;
   }
 
-  // 🚀 DÉTECTION ET GESTION DE L'ANIMATION DU BANDEAU 🚀
+  // 🚀 GESTION DE L'ANIMATION GÉANTE DU BANDEAU 🚀
   const [showStatusAnim, setShowStatusAnim] = useState(false);
   const prevStatusRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (prevStatusRef.current !== null && prevStatusRef.current !== s && s !== "WAITING") {
       setShowStatusAnim(true);
-      const timer = setTimeout(() => setShowStatusAnim(false), 5000); // Reste géant pendant 5 secondes
+      const timer = setTimeout(() => setShowStatusAnim(false), 5000); // 5 secondes
       return () => clearTimeout(timer);
     }
     prevStatusRef.current = s;
@@ -106,8 +112,6 @@ export default function GlobalHeader() {
   return (
     <>
       <style>{`
-        .leaderboard-row { transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
-        
         @keyframes slide-right {
             0% { transform: translateX(-20px); opacity: 0; }
             50% { transform: translateX(0); opacity: 1; }
@@ -122,31 +126,30 @@ export default function GlobalHeader() {
         .anim-arrow-l { animation: slide-left 1.2s infinite; display: inline-block; }
       `}</style>
 
-      {/* 🏁 BANDEAU SUPÉRIEUR (GÉANT SI ANIMATION, NORMAL SINON) */}
+      {/* 🏁 BANDEAU SUPÉRIEUR (S'agrandit pendant l'animation) */}
       <header 
         className={`fixed top-0 left-0 right-0 z-[70] border-b border-gray-800 flex flex-col justify-center transition-all duration-700 ease-in-out overflow-hidden shadow-2xl ${bgClass}`}
         style={{ height: showStatusAnim ? '160px' : '56px' }}
       >
-        {/* BANDEAU NORMAL (S'efface pendant l'animation) */}
         <div className={`absolute top-0 left-0 w-full h-[56px] flex items-center justify-between px-6 transition-opacity duration-300 ${showStatusAnim ? 'opacity-0' : 'opacity-100'}`}>
           <div className="flex items-center space-x-4 flex-1 overflow-hidden">
             <span className={`flex items-center text-sm font-black tracking-widest shrink-0 ${textClass}`}>
               <span className={`w-3 h-3 rounded-full mr-3 ${dotClass} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`}></span>
               TRACK STATUS: {s}
             </span>
-            {latestMessage && (
+            {msg && (
               <div className="border-l border-gray-700 pl-4 flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center gap-2">
                 <span className="text-[#ffaa00] font-bold text-[10px] uppercase bg-[#0B0C10] px-2 py-1 rounded border border-gray-700">⚠️ DIR. COURSE</span>
-                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{latestMessage}</span>
+                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{msg}</span>
               </div>
             )}
           </div>
           <div className="text-sm font-mono text-gray-400 shrink-0 ml-4">
-            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{formatRemainingTime(remainMs)}</span>
+            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{remain}</span>
           </div>
         </div>
 
-        {/* 🎬 GRAND TITRE ANIMÉ AU CENTRE (S'affiche uniquement lors du changement de drapeau) */}
+        {/* 🎬 GRAND TITRE ANIMÉ AU CENTRE */}
         <div className={`absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none transition-opacity duration-700 delay-200 ${showStatusAnim ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-8 text-6xl font-black uppercase tracking-widest drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
             <div className={`flex gap-2 ${textClass} opacity-60`}>
@@ -154,9 +157,7 @@ export default function GlobalHeader() {
               <span className="anim-arrow-r" style={{ animationDelay: '200ms' }}>❯</span>
               <span className="anim-arrow-r" style={{ animationDelay: '400ms' }}>❯</span>
             </div>
-            
             <span className={`tracking-[0.2em] ${textClass} drop-shadow-[0_0_15px_currentColor]`}>{s}</span>
-            
             <div className={`flex gap-2 ${textClass} opacity-60`}>
               <span className="anim-arrow-l" style={{ animationDelay: '400ms' }}>❮</span>
               <span className="anim-arrow-l" style={{ animationDelay: '200ms' }}>❮</span>
@@ -169,13 +170,12 @@ export default function GlobalHeader() {
       {/* 📺 OVERLAY LEADERBOARD TV BROADCAST */}
       <div className="fixed left-0 top-14 bottom-0 w-[320px] bg-[#0B0C10] border-r border-gray-800 z-50 shadow-[10px_0_20px_rgba(0,0,0,0.5)] flex flex-col">
         <div className="bg-[#1F2833] p-3 border-b border-gray-800 text-center shadow-md shrink-0 flex justify-between items-center px-4">
-          <span className="text-xs font-bold text-gray-500">POS</span>
+          <span className="text-[10px] font-bold text-gray-500">POS</span>
           <h2 className="text-[#66FCF1] font-black tracking-widest text-xs uppercase flex items-center gap-1">
             <span className="text-base">🏆</span> LIVE
           </h2>
-          <span className="text-xs font-bold text-gray-500">INT</span>
+          <span className="text-[10px] font-bold text-gray-500">INT</span>
         </div>
-        
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide">
           <div className="relative w-full" style={{ height: `${containerHeight}px` }}>
             {safeCars.map((car) => {
