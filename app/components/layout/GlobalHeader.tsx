@@ -176,7 +176,7 @@ export default function GlobalHeader() {
           </div>
         </div>
 
-        {/* 🎬 GRAND TITRE ANIMÉ AU CENTRE AVEC DRAPEAU A DAMIER */}
+        {/* 🎬 GRAND TITRE ANIMÉ AU CENTRE AVEC DRAPEAU A DAMIER INCLUANT "FINISH" */}
         <div className={`absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none transition-opacity duration-700 delay-200 ${showStatusAnim ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-8 text-6xl font-black uppercase tracking-widest drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
             <div className={`flex gap-2 ${textClass} opacity-60`}>
@@ -186,7 +186,7 @@ export default function GlobalHeader() {
             </div>
             
             <span className={`tracking-[0.2em] ${textClass} drop-shadow-[0_0_15px_currentColor]`}>
-              {s.includes("CHEQUERED") || s.includes("CHECKERED") ? `🏁 ${s} 🏁` : s}
+              {s.includes("CHEQUERED") || s.includes("CHECKERED") || s.includes("FINISH") ? `🏁 ${s} 🏁` : s}
             </span>
             
             <div className={`flex gap-2 ${textClass} opacity-60`}>
