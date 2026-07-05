@@ -36,7 +36,7 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
-// 🚀 EXTRACTION PURE DU JSON 🚀
+// Extraction pure du JSON
 const getAbsoluteGapMs = (car: any) => {
   if (!car || !car.gaps || !car.gaps.toLeader) return Infinity;
   if (car.gaps.toLeader.laps > 0) return (car.gaps.toLeader.laps * 135000);
@@ -67,7 +67,6 @@ export default function VoitureDetailPage() {
   const [aiInput, setAiInput] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
   
-  // 🚀 VARIABLES MANQUANTES RÉINTÉGRÉES 🚀
   const [gapHistory, setGapHistory] = useState<any[]>([]);
   const chartColors = ['#00ff66', '#ffaa00', '#ff3333', '#a855f7'];
 
@@ -77,20 +76,34 @@ export default function VoitureDetailPage() {
   const [pitStopsHistory, setPitStopsHistory] = useState<PitStopRecord[]>([]);
   const [currentPitTimer, setCurrentPitTimer] = useState<number | null>(null);
   const [rcHistory, setRcHistory] = useState<RcMessage[]>([]);
+  
   const pitEntryTimeRef = useRef<number | null>(null);
   const prevPitStateRef = useRef<boolean>(false);
-  
   const lastLapRef = useRef<number | null>(null);
   const carStateRef = useRef<string>('RUN'); 
   const currentSectorsRef = useRef({ s1: '-', s2: '-', s3: '-' });
   const competitorsPaceRef = useRef<Record<string, Record<number, number>>>({});
 
-  const safeCars = Array.isArray(cars) ? cars : [];
-  const liveCarData = safeCars.find(c => String(c?.car_number || c?.num) === String(carId));
-  
-  const sortedCars = [...safeCars].sort((a, b) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999));
-  const carIndex = sortedCars.findIndex(c => String(c?.car_number || c?.num) === String(carId));
+  // 🚀 MÉMOS POUR ÉVITER LA BOUCLE INFINIE 🚀
+  const sortedCars = useMemo(() => {
+    const arr = Array.isArray(cars) ? cars : [];
+    return [...arr].sort((a, b) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999));
+  }, [cars]);
 
+  const carIndex = useMemo(() => {
+    return sortedCars.findIndex(c => String(c?.car_number || c?.num) === String(carId));
+  }, [sortedCars, carId]);
+
+  const liveCarData = useMemo(() => {
+    return carIndex !== -1 ? sortedCars[carIndex] : null;
+  }, [sortedCars, carIndex]);
+
+  const battleGroup = useMemo(() => {
+    if (carIndex === -1) return [];
+    return sortedCars.slice(Math.max(0, carIndex - 2), Math.min(sortedCars.length - 1, carIndex + 2) + 1);
+  }, [sortedCars, carIndex]);
+
+  // DOUBLE FALLBACK RACE CONTROL
   useEffect(() => {
     const fetchRC = async () => {
       try {
@@ -118,7 +131,7 @@ export default function VoitureDetailPage() {
     if (globalStatus === "WAITING" && context?.session?.track_state) {
       setGlobalStatus(context.session.track_state);
     }
-  }, [globalStatus, context]);
+  }, [globalStatus, context?.session?.track_state]);
 
   useEffect(() => {
     if (liveMessages && liveMessages.length > 0) {
@@ -164,14 +177,14 @@ export default function VoitureDetailPage() {
   useEffect(() => {
     const rawState = liveCarData?.lap?.car_state || 'RUN';
     carStateRef.current = String(rawState).toUpperCase();
-  }, [liveCarData]);
+  }, [liveCarData?.lap?.car_state]);
 
   useEffect(() => {
     if (!liveCarData?.lap) return;
     if (liveCarData.lap.s1_ms) currentSectorsRef.current.s1 = (liveCarData.lap.s1_ms / 1000).toFixed(3);
     if (liveCarData.lap.s2_ms) currentSectorsRef.current.s2 = (liveCarData.lap.s2_ms / 1000).toFixed(3);
     if (liveCarData.lap.s3_ms) currentSectorsRef.current.s3 = (liveCarData.lap.s3_ms / 1000).toFixed(3);
-  }, [liveCarData]);
+  }, [liveCarData?.lap?.s1_ms, liveCarData?.lap?.s2_ms, liveCarData?.lap?.s3_ms]);
 
   useEffect(() => {
     if (!safeCars) return;
@@ -301,10 +314,10 @@ export default function VoitureDetailPage() {
     return { avgStr: formatMsToLapTime(avgCurrentMs), trend, deltaStr };
   }, [lapHistory, activePilote]);
 
-  let battleGroup: any[] = [];
-  if (carIndex !== -1) battleGroup = sortedCars.slice(Math.max(0, carIndex - 2), Math.min(sortedCars.length - 1, carIndex + 2) + 1);
-
-  // 🚀 MISE À JOUR CORRECTE DU GAP HISTORY 🚀
+  // 🚀 SÉCURITÉ ANTI-BOUCLE INFINIE POUR GAP HISTORY 🚀
+  // On trigger la mise à jour uniquement quand l'écart du leader de NOTRE voiture change.
+  const ourGapToLeaderMs = liveCarData?.gaps?.toLeader?.ms;
+  
   useEffect(() => {
     if (!liveCarData || battleGroup.length === 0) return;
     const currentLap = liveCarData.lap?.lap_number || 0;
@@ -325,7 +338,7 @@ export default function VoitureDetailPage() {
         const updated = [...prev]; updated[existingIdx] = { ...updated[existingIdx], ...newData }; return updated;
       } else return [...prev, newData].slice(-15);
     });
-  }, [sortedCars, liveCarData, carId]);
+  }, [ourGapToLeaderMs]); // <-- Le secret est là !
 
   const overtakePredictions = useMemo(() => {
     if (!liveCarData || carIndex === -1 || sortedCars.length === 0) return { attack: null, defend: null };
@@ -564,7 +577,7 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
-    // 🚀 PADDING SÉCURISÉ POUR L'OVERLAY (pl-[100px]) 🚀
+    // 🚀 PADDING GAUCHE FIXÉ À 100px 🚀
     <div className="min-h-screen bg-[#0B0C10] w-full pl-[100px] pt-[56px] relative overflow-x-hidden">
       
       {/* 🚀 CSS D'ANIMATION AWS 🚀 */}
