@@ -73,28 +73,6 @@ export default function GlobalHeader() {
   const [apiStatus, setApiStatus] = useState("WAITING");
   const [apiRemain, setApiRemain] = useState("--:--:--");
   const [apiMsg, setApiMsg] = useState("");
-  
-  // 🚀 OVERRIDE MANUEL DU STATUT DE COURSE 🚀
-  const [manualStatus, setManualStatus] = useState("AUTO");
-
-  useEffect(() => {
-    const stored = localStorage.getItem('manual_track_status');
-    if (stored) setManualStatus(stored);
-    
-    const handleCustomEvent = () => {
-      const updated = localStorage.getItem('manual_track_status');
-      if (updated) setManualStatus(updated);
-    };
-    
-    window.addEventListener('manual_status_change', handleCustomEvent);
-    return () => window.removeEventListener('manual_status_change', handleCustomEvent);
-  }, []);
-
-  const changeManualStatus = (statusCode: string) => {
-    setManualStatus(statusCode);
-    localStorage.setItem('manual_track_status', statusCode);
-    window.dispatchEvent(new Event('manual_status_change'));
-  };
 
   // FETCH API 
   useEffect(() => {
@@ -114,11 +92,7 @@ export default function GlobalHeader() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🚀 RÉSOLUTION DU STATUT FINAL (Manuel > API > JSON) 🚀
-  const contextTrackState = context?.session?.track_state;
-  const rawDataStatus = apiStatus !== "WAITING" ? apiStatus : (contextTrackState || "WAITING");
-  
-  const trackState = manualStatus !== "AUTO" ? manualStatus : rawDataStatus;
+  const trackState = apiStatus !== "WAITING" ? apiStatus : (context?.session?.track_state || "WAITING");
   const remainingTimeStr = apiRemain !== "--:--:--" ? apiRemain : (context?.clock?.remaining_ms !== undefined ? formatRemainingTime(context.clock.remaining_ms) : "--:--:--");
   
   const rcEvents = Array.isArray(liveMessages) ? liveMessages.filter((e:any) => e.kind === "RC_MESSAGE") : [];
@@ -144,7 +118,7 @@ export default function GlobalHeader() {
   } else if (s.includes("RED") || s.includes("ROUGE")) {
     bgClass = "bg-[#440000]"; textClass = "text-[#ff3333]"; dotClass = "bg-[#ff3333]"; pulse = true;
   } else if (s.includes("CHECKERED") || s.includes("CHEQUERED") || s.includes("FINISH")) {
-    bgClass = "bg-gray-200"; textClass = "text-black"; dotClass = "bg-black"; pulse = true; // Blanc pour le damier
+    bgClass = "bg-gray-200"; textClass = "text-black"; dotClass = "bg-black"; pulse = true;
   }
 
   const [showStatusAnim, setShowStatusAnim] = useState(false);
@@ -153,7 +127,6 @@ export default function GlobalHeader() {
   useEffect(() => {
     if (prevStatusRef.current !== null && prevStatusRef.current !== s && s !== "WAITING") {
       setShowStatusAnim(true);
-      // Correction ici : On passe bien 'false' (la valeur boolean) après 5000 ms
       const timer = setTimeout(() => setShowStatusAnim(false), 5000); 
       return () => clearTimeout(timer);
     }
@@ -198,21 +171,8 @@ export default function GlobalHeader() {
               </div>
             )}
           </div>
-          
-          <div className="flex items-center shrink-0">
-            <div className="text-sm font-mono text-gray-400 mr-6">
-              REMAINING: <span className={`${textClass} font-bold text-xl ml-2 tracking-widest`}>{remainingTimeStr}</span>
-            </div>
-            
-            {/* 🚀 CONTRÔLES D'URGENCE DU STATUT 🚀 */}
-            <div className="flex items-center gap-1 border-l border-gray-700 pl-6">
-              <span className="text-[9px] text-gray-500 uppercase tracking-widest mr-2 font-bold">Override</span>
-              <button onClick={() => changeManualStatus('AUTO')} className={`px-2 py-1 text-[10px] font-black rounded transition ${manualStatus === 'AUTO' ? 'bg-[#45A29E] text-black shadow-[0_0_10px_#45A29E]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>AUTO</button>
-              <button onClick={() => changeManualStatus('GREEN')} className={`px-2 py-1 text-[10px] font-black rounded transition ${manualStatus === 'GREEN' ? 'bg-[#00ff66] text-black shadow-[0_0_10px_#00ff66]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>🟢</button>
-              <button onClick={() => changeManualStatus('FCY')} className={`px-2 py-1 text-[10px] font-black rounded transition ${manualStatus === 'FCY' ? 'bg-[#ffaa00] text-black shadow-[0_0_10px_#ffaa00]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>🟡</button>
-              <button onClick={() => changeManualStatus('RED')} className={`px-2 py-1 text-[10px] font-black rounded transition ${manualStatus === 'RED' ? 'bg-[#ff3333] text-black shadow-[0_0_10px_#ff3333]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>🔴</button>
-              <button onClick={() => changeManualStatus('CHEQUERED')} className={`px-2 py-1 text-[10px] font-black rounded transition ${manualStatus === 'CHEQUERED' ? 'bg-white text-black shadow-[0_0_10px_white]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>🏁</button>
-            </div>
+          <div className="text-sm font-mono text-gray-400 shrink-0 ml-4">
+            REMAINING: <span className={`${textClass} font-bold text-xl ml-2 tracking-widest`}>{remainingTimeStr}</span>
           </div>
         </div>
 

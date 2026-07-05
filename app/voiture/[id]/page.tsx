@@ -38,7 +38,6 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
-// 🚀 NOUVEAU FORMATEUR DE TEMPS DE PIT INTELLIGENT (Bascule en Minutes si > 120s) 🚀
 const formatPitDuration = (sec: number | null) => {
   if (sec === null || isNaN(sec)) return "0s";
   if (sec > 120) {
@@ -73,9 +72,13 @@ export default function VoitureDetailPage() {
   const carId = params.id as string;
   const { cars, context, messages: liveMessages } = useLiveTiming('JSON'); 
   
-  const [apiStatus, setApiStatus] = useState("WAITING");
-  const [manualStatus, setManualStatus] = useState("AUTO");
+  const [globalStatus, setGlobalStatus] = useState("WAITING");
   
+  // 🚀 ÉTAT D'OVERRIDE DU PIT / STINT MANUEL 🚀
+  const [manualCarState, setManualCarState] = useState<'AUTO' | 'RUN' | 'PIT'>('AUTO');
+  const manualCarStateRef = useRef(manualCarState);
+  useEffect(() => { manualCarStateRef.current = manualCarState; }, [manualCarState]);
+
   const [config, setConfig] = useState({ 
     capaMax: 80, consoGreen: 1.7, timeGreenStr: "2:55.000", consoFcy: 0.7, timeFcyStr: "7:00.000",
     alertOrangePct: 35, alertRedPct: 17, pitLossTime: 65, maxStintTime: 65, stintAlertMin: 10,
@@ -117,27 +120,13 @@ export default function VoitureDetailPage() {
     return sortedCars.slice(Math.max(0, carIndex - 2), Math.min(sortedCars.length - 1, carIndex + 2) + 1);
   }, [sortedCars, carIndex]);
 
-  // RÉCUPÉRATION DU STATUT OVERRIDE
-  useEffect(() => {
-    const stored = localStorage.getItem('manual_track_status');
-    if (stored) setManualStatus(stored);
-    
-    const handleCustomEvent = () => {
-      const updated = localStorage.getItem('manual_track_status');
-      if (updated) setManualStatus(updated);
-    };
-    
-    window.addEventListener('manual_status_change', handleCustomEvent);
-    return () => window.removeEventListener('manual_status_change', handleCustomEvent);
-  }, []);
-
   useEffect(() => {
     const fetchRC = async () => {
       try {
         const res = await fetch('/api/messages');
         if (res.ok) {
           const data = await res.json();
-          if (data.trackStatus) setApiStatus(data.trackStatus);
+          if (data.trackStatus) setGlobalStatus(data.trackStatus);
           if (data.message) {
             setRcHistory(prev => {
               if (prev.length === 0 || prev[0].msg !== data.message) {
@@ -154,8 +143,11 @@ export default function VoitureDetailPage() {
     return () => clearInterval(int);
   }, []);
 
-  // LE VRAI STATUT COMBINÉ
-  const globalStatus = manualStatus !== "AUTO" ? manualStatus : (apiStatus !== "WAITING" ? apiStatus : (context?.session?.track_state || "WAITING"));
+  useEffect(() => {
+    if (globalStatus === "WAITING" && context?.session?.track_state) {
+      setGlobalStatus(context.session.track_state);
+    }
+  }, [globalStatus, context?.session?.track_state]);
 
   useEffect(() => {
     if (liveMessages && liveMessages.length > 0) {
@@ -223,12 +215,21 @@ export default function VoitureDetailPage() {
     });
   }, [safeCars]);
 
+  // 🚀 BOUCLE PRINCIPALE AVEC OVERRIDE SÉCURISÉ 🚀
   useEffect(() => {
     const interval = setInterval(() => {
-      const state = String(carStateRef.current || '');
-      const isRun = state === 'RUN' || state === 'TRACK' || (!state.includes('IN') && !state.includes('FUEL') && state !== 'PIT');
-      const isIn = state === 'IN' || state === 'PITIN' || state === 'PIT' || state === 'FUEL';
-      const isFuel = state === 'FUEL' || state === 'REFUEL';
+      const rawState = String(carStateRef.current || '');
+      
+      let isRun = rawState === 'RUN' || rawState === 'TRACK' || (!rawState.includes('IN') && !rawState.includes('FUEL') && rawState !== 'PIT');
+      let isIn = rawState === 'IN' || rawState === 'PITIN' || rawState === 'PIT' || rawState === 'FUEL';
+      const isFuel = rawState === 'FUEL' || rawState === 'REFUEL';
+
+      // Application de l'Override
+      if (manualCarStateRef.current === 'RUN') {
+        isRun = true; isIn = false;
+      } else if (manualCarStateRef.current === 'PIT') {
+        isRun = false; isIn = true;
+      }
 
       setPilotes(prev => prev.map((p: Pilote) => {
         if (p.statut === 'AU_VOLANT') {
@@ -237,7 +238,9 @@ export default function VoitureDetailPage() {
         }
         return p;
       }));
-      if (isFuel) setCurrentFuel(prev => prev < config.capaMax ? config.capaMax : prev);
+      if (isFuel || (isIn && manualCarStateRef.current === 'PIT')) {
+        setCurrentFuel(prev => prev < config.capaMax ? config.capaMax : prev);
+      }
 
       // --- CHRONO PIT STOP ---
       if (isIn && !prevPitStateRef.current) {
@@ -656,10 +659,18 @@ export default function VoitureDetailPage() {
               </div>
             </div>
             <div className="bg-[#1F2833] p-3 rounded-lg border border-gray-700 shadow-xl flex flex-col flex-1">
-              <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2">⏱️ STINT EN COURS</h3>
+              {/* 🚀 PANNEAU DE CONTRÔLE MANUEL INTÉGRÉ AU TITRE 🚀 */}
+              <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2 relative z-30">
+                <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase">⏱️ STINT EN COURS</h3>
+                <div className="flex bg-[#0B0C10] rounded border border-gray-600 overflow-hidden shadow-sm">
+                  <button onClick={() => setManualCarState('AUTO')} className={`px-2 py-0.5 text-[9px] font-bold transition ${manualCarState === 'AUTO' ? 'bg-gray-500 text-white' : 'text-gray-500 hover:bg-gray-800'}`}>AUTO</button>
+                  <button onClick={() => setManualCarState('RUN')} className={`px-2 py-0.5 text-[9px] font-bold transition border-l border-gray-600 ${manualCarState === 'RUN' ? 'bg-[#00ff66] text-black shadow-[0_0_10px_#00ff66]' : 'text-gray-500 hover:bg-gray-800'}`}>TRACK</button>
+                  <button onClick={() => setManualCarState('PIT')} className={`px-2 py-0.5 text-[9px] font-bold transition border-l border-gray-600 ${manualCarState === 'PIT' ? 'bg-[#ffaa00] text-black shadow-[0_0_10px_#ffaa00]' : 'text-gray-500 hover:bg-gray-800'}`}>PIT</button>
+                </div>
+              </div>
+              
               <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 relative ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
                 
-                {/* 🚀 COMPTEUR DE STAND 🚀 */}
                 {currentPitTimer !== null && (
                   <div className="absolute inset-0 bg-yellow-900/95 flex flex-col items-center justify-center rounded z-20 backdrop-blur-sm shadow-[0_0_30px_rgba(255,170,0,0.5)] border-2 border-[#ffaa00]">
                     <span className="text-[#ffaa00] font-black text-sm tracking-widest animate-pulse mb-2 drop-shadow-md">⏱️ PIT STOP IN PROGRESS</span>
