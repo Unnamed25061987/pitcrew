@@ -21,7 +21,6 @@ const getStatusBadge = (state: string) => {
   return <span className="text-[9px] font-black px-1.5 py-0.5 bg-gray-800 text-gray-300 border border-gray-600 rounded">{s.substring(0, 3)}</span>;
 };
 
-// Extrait formaté des Intervalles (Int)
 const formatInt = (ints: any) => {
   if (!ints || !ints.toAhead) return "-";
   if (ints.toAhead.laps > 0) return `+${ints.toAhead.laps}L`;
@@ -29,7 +28,6 @@ const formatInt = (ints: any) => {
   return "-";
 };
 
-// 🚀 COMPOSANT LIGNE ANIMÉE (EFFET DÉPASSEMENT F1) 🚀
 const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition: number, isOurCar: boolean }) => {
   const [isOvertaking, setIsOvertaking] = useState(false);
   const prevTopRef = useRef(topPosition);
@@ -72,7 +70,6 @@ export default function GlobalHeader() {
   const [remain, setRemain] = useState("--:--:--");
   const [msg, setMsg] = useState("");
 
-  // FETCH API AVEC GESTION DES ERREURS 500
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -83,41 +80,32 @@ export default function GlobalHeader() {
           if (data.remain) setRemain(data.remain);
           if (data.message) setMsg(data.message);
         }
-      } catch (err) {
-        // L'API a craché (Erreur 500), le fallback prendra le relais
-      }
+      } catch (err) {}
     };
     fetchMessages();
     const interval = setInterval(fetchMessages, 5000); 
     return () => clearInterval(interval);
   }, []);
 
-  // 🚀 FALLBACK ANTI-CRASH : Utilise les variables primitives pour éviter les boucles infinies
   const contextTrackState = context?.session?.track_state;
   const contextRemainingMs = context?.clock?.remaining_ms;
 
   useEffect(() => {
-    if (status === "WAITING" && contextTrackState) {
-      setStatus(contextTrackState);
-    }
-    if (remain === "--:--:--" && contextRemainingMs !== undefined) {
-      setRemain(formatRemainingTime(contextRemainingMs));
-    }
+    if (status === "WAITING" && contextTrackState) setStatus(contextTrackState);
+    if (remain === "--:--:--" && contextRemainingMs !== undefined) setRemain(formatRemainingTime(contextRemainingMs));
     if (msg === "" && liveMessages && liveMessages.length > 0) {
       const rcEvents = liveMessages.filter((e:any) => e.kind === "RC_MESSAGE");
-      if (rcEvents.length > 0) {
-        setMsg(rcEvents[rcEvents.length - 1].message);
-      }
+      if (rcEvents.length > 0) setMsg(rcEvents[rcEvents.length - 1].message);
     }
-  }, [contextTrackState, contextRemainingMs, liveMessages]); // Dépendances strictes
+  }, [contextTrackState, contextRemainingMs, liveMessages]); 
 
-  // Calcul du classement sans boucle infinie grâce à useMemo
   const sortedCars = useMemo(() => {
     const arr = Array.isArray(cars) ? cars : [];
-    return [...arr].sort((a, b) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999));
+    return [...arr].sort((a: any, b: any) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999));
   }, [cars]);
 
-  const maxRank = Math.max(...sortedCars.map(c => parseInt(c.position) || 0), sortedCars.length);
+  // TYPAGE STRICT ICI
+  const maxRank = Math.max(...sortedCars.map((c: any) => parseInt(c.position) || 0), sortedCars.length);
   const containerHeight = maxRank * ROW_HEIGHT;
 
   let bgClass = "bg-[#1a1c23]"; let textClass = "text-white"; let dotClass = "bg-gray-500"; let pulse = false;
@@ -195,9 +183,7 @@ export default function GlobalHeader() {
               <span className="anim-arrow-r" style={{ animationDelay: '200ms' }}>❯</span>
               <span className="anim-arrow-r" style={{ animationDelay: '400ms' }}>❯</span>
             </div>
-            
             <span className={`tracking-[0.2em] ${textClass} drop-shadow-[0_0_15px_currentColor]`}>{s}</span>
-            
             <div className={`flex gap-2 ${textClass} opacity-60`}>
               <span className="anim-arrow-l" style={{ animationDelay: '400ms' }}>❮</span>
               <span className="anim-arrow-l" style={{ animationDelay: '200ms' }}>❮</span>
@@ -218,7 +204,7 @@ export default function GlobalHeader() {
         
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide">
           <div className="relative w-full" style={{ height: `${containerHeight}px` }}>
-            {sortedCars.map((car) => {
+            {sortedCars.map((car: any) => {
               const positionRank = parseInt(car.position) || 999;
               const topPosition = (positionRank - 1) * ROW_HEIGHT;
               const isOurCar = String(car.car_number || car.num) === String(watchedCarId);

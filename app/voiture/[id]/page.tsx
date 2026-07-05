@@ -12,6 +12,9 @@ interface LapRecord { id: number; lapNumber: number; driverRIS: string; s1: stri
 interface PitStopRecord { id: number; lap: number; timeIn: string; durationSec: number; }
 interface RcMessage { time: string; msg: string; }
 
+// COULEURS DU GRAPHIQUE FIXÉES À L'EXTÉRIEUR
+const chartColors = ['#00ff66', '#ffaa00', '#ff3333', '#a855f7', '#00ffff'];
+
 const parseLapToMs = (lapStr?: string): number => {
   if (!lapStr) return Infinity;
   const str = String(lapStr);
@@ -36,7 +39,6 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
-// Extraction pure du JSON
 const getAbsoluteGapMs = (car: any) => {
   if (!car || !car.gaps || !car.gaps.toLeader) return Infinity;
   if (car.gaps.toLeader.laps > 0) return (car.gaps.toLeader.laps * 135000);
@@ -68,7 +70,6 @@ export default function VoitureDetailPage() {
   const [isAiTyping, setIsAiTyping] = useState(false);
   
   const [gapHistory, setGapHistory] = useState<any[]>([]);
-  const chartColors = ['#00ff66', '#ffaa00', '#ff3333', '#a855f7'];
 
   const [pitMode, setPitMode] = useState<'DT' | 'REFUEL' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
   const [customPitTime, setCustomPitTime] = useState<number>(65);
@@ -76,34 +77,24 @@ export default function VoitureDetailPage() {
   const [pitStopsHistory, setPitStopsHistory] = useState<PitStopRecord[]>([]);
   const [currentPitTimer, setCurrentPitTimer] = useState<number | null>(null);
   const [rcHistory, setRcHistory] = useState<RcMessage[]>([]);
-  
   const pitEntryTimeRef = useRef<number | null>(null);
   const prevPitStateRef = useRef<boolean>(false);
+  
   const lastLapRef = useRef<number | null>(null);
   const carStateRef = useRef<string>('RUN'); 
   const currentSectorsRef = useRef({ s1: '-', s2: '-', s3: '-' });
   const competitorsPaceRef = useRef<Record<string, Record<number, number>>>({});
 
-  // 🚀 MÉMOS POUR ÉVITER LA BOUCLE INFINIE 🚀
-  const sortedCars = useMemo(() => {
-    const arr = Array.isArray(cars) ? cars : [];
-    return [...arr].sort((a, b) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999));
-  }, [cars]);
-
-  const carIndex = useMemo(() => {
-    return sortedCars.findIndex(c => String(c?.car_number || c?.num) === String(carId));
-  }, [sortedCars, carId]);
-
-  const liveCarData = useMemo(() => {
-    return carIndex !== -1 ? sortedCars[carIndex] : null;
-  }, [sortedCars, carIndex]);
-
+  // 🚀 VARIABLES CARS SÉCURISÉES ET STRICTEMENT TYPÉES 🚀
+  const safeCars = useMemo(() => Array.isArray(cars) ? cars : [], [cars]);
+  const sortedCars = useMemo(() => [...safeCars].sort((a: any, b: any) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999)), [safeCars]);
+  const carIndex = useMemo(() => sortedCars.findIndex((c: any) => String(c?.car_number || c?.num) === String(carId)), [sortedCars, carId]);
+  const liveCarData = useMemo(() => carIndex !== -1 ? sortedCars[carIndex] : null, [sortedCars, carIndex]);
   const battleGroup = useMemo(() => {
     if (carIndex === -1) return [];
     return sortedCars.slice(Math.max(0, carIndex - 2), Math.min(sortedCars.length - 1, carIndex + 2) + 1);
   }, [sortedCars, carIndex]);
 
-  // DOUBLE FALLBACK RACE CONTROL
   useEffect(() => {
     const fetchRC = async () => {
       try {
@@ -188,7 +179,7 @@ export default function VoitureDetailPage() {
 
   useEffect(() => {
     if (!safeCars) return;
-    safeCars.forEach(c => {
+    safeCars.forEach((c: any) => {
       const ms = c.lap?.lap_time_ms;
       const lapNum = c.lap?.lap_number;
       if (ms && lapNum) {
@@ -206,7 +197,7 @@ export default function VoitureDetailPage() {
       const isIn = state === 'IN' || state === 'PITIN' || state === 'PIT' || state === 'FUEL';
       const isFuel = state === 'FUEL' || state === 'REFUEL';
 
-      setPilotes(prev => prev.map(p => {
+      setPilotes(prev => prev.map((p: Pilote) => {
         if (p.statut === 'AU_VOLANT') {
           if (isRun) return { ...p, stintActuel: p.stintActuel + 1, totalRoulé: p.totalRoulé + 1 };
           if (isIn) return { ...p, stintActuel: 0 };
@@ -238,7 +229,7 @@ export default function VoitureDetailPage() {
   useEffect(() => {
     if (liveCarData?.driver) {
       const risName = String(liveCarData.driver || '').trim().toLowerCase();
-      setPilotes(prevPilotes => prevPilotes.map(p => {
+      setPilotes(prevPilotes => prevPilotes.map((p: Pilote) => {
         const isMatch = p.nomRIS && String(p.nomRIS || '').trim().toLowerCase() === risName;
         if (isMatch) return { ...p, statut: 'AU_VOLANT', stintActuel: p.statut !== 'AU_VOLANT' ? 0 : p.stintActuel };
         return { ...p, statut: 'REPOS' };
@@ -295,7 +286,7 @@ export default function VoitureDetailPage() {
 
   const driverPace = useMemo(() => {
     if (!activePilote || !activePilote.nomRIS) return null;
-    const driverLaps = lapHistory.filter(l => String(l.driverRIS || '').toLowerCase() === String(activePilote.nomRIS || '').toLowerCase() && l.lapTimeMs !== Infinity);
+    const driverLaps = lapHistory.filter((l: LapRecord) => String(l.driverRIS || '').toLowerCase() === String(activePilote.nomRIS || '').toLowerCase() && l.lapTimeMs !== Infinity);
     if (driverLaps.length < 3) return null; 
     
     const current3Laps = driverLaps.slice(0, 3);
@@ -314,8 +305,6 @@ export default function VoitureDetailPage() {
     return { avgStr: formatMsToLapTime(avgCurrentMs), trend, deltaStr };
   }, [lapHistory, activePilote]);
 
-  // 🚀 SÉCURITÉ ANTI-BOUCLE INFINIE POUR GAP HISTORY 🚀
-  // On trigger la mise à jour uniquement quand l'écart du leader de NOTRE voiture change.
   const ourGapToLeaderMs = liveCarData?.gaps?.toLeader?.ms;
   
   useEffect(() => {
@@ -327,7 +316,7 @@ export default function VoitureDetailPage() {
       const newData: any = { lap: currentLap };
       const ourGapSec = getAbsoluteGapMs(liveCarData) / 1000;
       
-      battleGroup.forEach(c => {
+      battleGroup.forEach((c: any) => {
         if (String(c.car_number || c.num) !== String(carId)) {
           const competitorGapSec = getAbsoluteGapMs(c) / 1000;
           newData[`car_${c.car_number || c.num}`] = parseFloat((ourGapSec - competitorGapSec).toFixed(2));
@@ -338,7 +327,7 @@ export default function VoitureDetailPage() {
         const updated = [...prev]; updated[existingIdx] = { ...updated[existingIdx], ...newData }; return updated;
       } else return [...prev, newData].slice(-15);
     });
-  }, [ourGapToLeaderMs]); // <-- Le secret est là !
+  }, [ourGapToLeaderMs]); 
 
   const overtakePredictions = useMemo(() => {
     if (!liveCarData || carIndex === -1 || sortedCars.length === 0) return { attack: null, defend: null };
@@ -423,7 +412,7 @@ export default function VoitureDetailPage() {
     const ourAbsoluteMs = getAbsoluteGapMs(liveCarData);
     const estimatedExitMs = ourAbsoluteMs + (currentPitLoss * 1000);
     
-    const carsWithGaps = sortedCars.map(c => ({ 
+    const carsWithGaps = sortedCars.map((c: any) => ({ 
       ...c, absoluteMs: getAbsoluteGapMs(c), isGhost: false 
     })); 
     
@@ -433,16 +422,16 @@ export default function VoitureDetailPage() {
     };
     
     const carsWithGhost = [...carsWithGaps, ghostCar].sort((a: any, b: any) => a.absoluteMs - b.absoluteMs);
-    const ghostIndex = carsWithGhost.findIndex(c => c.isGhost);
+    const ghostIndex = carsWithGhost.findIndex((c: any) => c.isGhost);
     return carsWithGhost.slice(Math.max(0, ghostIndex - 2), Math.min(carsWithGhost.length - 1, ghostIndex + 2) + 1);
   }, [sortedCars, liveCarData, currentPitLoss]);
 
   const addPilote = () => setPilotes([...pilotes, { id: Date.now(), nom: `Pilote ${pilotes.length + 1}`, nomRIS: '', statut: pilotes.length === 0 ? 'AU_VOLANT' : 'REPOS', stintActuel: 0, totalRoulé: 0, totalMax: 120 }]);
-  const updatePilote = (id: number, field: string, value: any) => setPilotes(pilotes.map(p => p.id === id ? { ...p, [field]: value } : p));
-  const setPiloteAuVolant = (id: number) => setPilotes(pilotes.map(p => ({ ...p, statut: p.id === id ? 'AU_VOLANT' : 'REPOS' })));
+  const updatePilote = (id: number, field: string, value: any) => setPilotes(pilotes.map((p: Pilote) => p.id === id ? { ...p, [field]: value } : p));
+  const setPiloteAuVolant = (id: number) => setPilotes(pilotes.map((p: Pilote) => ({ ...p, statut: p.id === id ? 'AU_VOLANT' : 'REPOS' })));
   const addStint = () => setStints([...stints, { id: Date.now(), driver: '', laps: 15, tire: 'Slick' }]);
-  const updateStint = (id: number, field: string, value: any) => setStints(stints.map(s => s.id === id ? { ...s, [field]: value } : s));
-  const removeStint = (id: number) => setStints(stints.filter(s => s.id !== id));
+  const updateStint = (id: number, field: string, value: any) => setStints(stints.map((s: Stint) => s.id === id ? { ...s, [field]: value } : s));
+  const removeStint = (id: number) => setStints(stints.filter((s: Stint) => s.id !== id));
 
   const greenSeconds = useMemo(() => {
     const parts = String(config.timeGreenStr || '').split(':');
@@ -452,7 +441,7 @@ export default function VoitureDetailPage() {
   const calculatedStints = useMemo(() => {
     let elapsedSec = 0; let currentLap = liveCarData?.lap?.lap_number || 0;
     const defaultFullPitLoss = config.pitBaseTime + config.pitRefuelTime + config.pitDriverTime;
-    return stints.map((stint) => {
+    return stints.map((stint: Stint) => {
       const startSec = elapsedSec;
       const duration = stint.laps * greenSeconds;
       const endSec = startSec + duration;
@@ -467,13 +456,13 @@ export default function VoitureDetailPage() {
 
   const uniqueDriversRIS = useMemo(() => {
     const drivers = new Set<string>();
-    lapHistory.forEach(l => drivers.add(l.driverRIS));
+    lapHistory.forEach((l: LapRecord) => drivers.add(l.driverRIS));
     return Array.from(drivers);
   }, [lapHistory]);
 
   const bestLapsPerDriver = useMemo(() => {
     const bestLapsMap = new Map<string, { driverRIS: string, bestTimeStr: string, bestTimeMs: number }>();
-    lapHistory.forEach(lap => {
+    lapHistory.forEach((lap: LapRecord) => {
       if (lap.lapTimeMs !== Infinity) {
         const existing = bestLapsMap.get(lap.driverRIS);
         if (!existing || lap.lapTimeMs < existing.bestTimeMs) {
@@ -485,7 +474,7 @@ export default function VoitureDetailPage() {
   }, [lapHistory]);
 
   const getDriverName = (risName: string) => {
-    const matched = pilotes.find(p => String(p.nomRIS || '').toLowerCase() === String(risName || '').toLowerCase());
+    const matched = pilotes.find((p: Pilote) => String(p.nomRIS || '').toLowerCase() === String(risName || '').toLowerCase());
     return matched ? matched.nom : String(risName || '');
   };
 
@@ -577,10 +566,8 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
-    // 🚀 PADDING GAUCHE FIXÉ À 100px 🚀
     <div className="min-h-screen bg-[#0B0C10] w-full pl-[100px] pt-[56px] relative overflow-x-hidden">
       
-      {/* 🚀 CSS D'ANIMATION AWS 🚀 */}
       <style>{`
         @keyframes aws-wave-good {
             0%, 100% { opacity: 0.2; transform: translateX(-3px) scale(0.9); filter: drop-shadow(0 0 0px transparent); }
@@ -619,7 +606,6 @@ export default function VoitureDetailPage() {
           <button onClick={() => router.push(`/voiture/${carId}/config`)} className="bg-[#1F2833] hover:bg-[#45A29E] hover:text-black text-[#66FCF1] font-bold py-2 px-4 rounded border border-gray-700 transition text-sm shadow">⚙️ PARAMÈTRES ET LIMITES</button>
         </div>
 
-        {/* 🚀 MODULE AWS OVERTAKE PREDICTION 🚀 */}
         <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-6 rounded-lg border border-gray-700 shadow-2xl relative overflow-hidden mb-8">
           <div className="absolute inset-0 opacity-[0.03] bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ffffff_10px,#ffffff_20px)] pointer-events-none" />
           <div className="flex justify-between items-center mb-6 relative z-10">
@@ -651,7 +637,6 @@ export default function VoitureDetailPage() {
               <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2">⏱️ STINT EN COURS</h3>
               <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 relative ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
                 
-                {/* 🚀 OVERLAY CHRONOMÈTRE DE PIT EN DIRECT 🚀 */}
                 {currentPitTimer !== null && (
                   <div className="absolute inset-0 bg-yellow-900/95 flex flex-col items-center justify-center rounded z-20 backdrop-blur-sm shadow-[0_0_30px_rgba(255,170,0,0.5)] border-2 border-[#ffaa00]">
                     <span className="text-[#ffaa00] font-black text-sm tracking-widest animate-pulse mb-2 drop-shadow-md">⏱️ PIT STOP IN PROGRESS</span>
@@ -737,7 +722,6 @@ export default function VoitureDetailPage() {
           </div>
         </div>
 
-        {/* 🚀 BLOC HISTORIQUE DES MESSAGES & PIT STOPS 🚀 */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
           
           <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl flex flex-col max-h-[300px]">
@@ -792,7 +776,7 @@ export default function VoitureDetailPage() {
                 <Tooltip contentStyle={{ backgroundColor: '#1a1c23', borderColor: '#45A29E', color: '#fff', borderRadius: '8px' }} itemStyle={{ fontWeight: 'bold' }} />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}/>
                 <ReferenceLine y={0} stroke="#66FCF1" strokeWidth={2} strokeDasharray="4 4" />
-                {battleGroup.filter(c => String(c?.car_number || c?.num) !== String(carId)).map((c, index) => (
+                {battleGroup.filter((c: any) => String(c?.car_number || c?.num) !== String(carId)).map((c: any, index: number) => (
                   <Line key={c.car_number || c.num} type="monotone" dataKey={`car_${c.car_number || c.num}`} name={`#${c.car_number || c.num} ${c.team}`} stroke={chartColors[index % chartColors.length]} strokeWidth={3} dot={{ r: 3, fill: '#0B0C10' }} activeDot={{ r: 6 }} isAnimationActive={false} />
                 ))}
               </LineChart>
@@ -800,7 +784,6 @@ export default function VoitureDetailPage() {
           </div>
         </div>
 
-        {/* 🚀 BATAILLE DIRECTE ET PRÉDICTEUR DE STAND 🚀 */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
           
           <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
@@ -812,7 +795,7 @@ export default function VoitureDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800 text-sm">
-                {battleGroup.map(c => {
+                {battleGroup.map((c: any) => {
                   const isUs = String(c?.car_number || c?.num) === String(carId);
                   
                   let intStr = "-";
@@ -893,7 +876,7 @@ export default function VoitureDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800 text-sm font-mono">
-                  {calculatedStints.map((stint, index) => (
+                  {calculatedStints.map((stint: any, index: number) => (
                     <tr key={stint.id} className="hover:bg-[#1F2833]">
                       <td className="p-2 font-sans font-bold text-gray-400">R{index + 1}</td>
                       <td className="p-2">
