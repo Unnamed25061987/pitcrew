@@ -12,7 +12,6 @@ interface LapRecord { id: number; lapNumber: number; driverRIS: string; s1: stri
 interface PitStopRecord { id: number; lap: number; timeIn: string; durationSec: number; }
 interface RcMessage { time: string; msg: string; }
 
-// COULEURS DU GRAPHIQUE FIXÉES À L'EXTÉRIEUR
 const chartColors = ['#00ff66', '#ffaa00', '#ff3333', '#a855f7', '#00ffff'];
 
 const parseLapToMs = (lapStr?: string): number => {
@@ -39,10 +38,24 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
+// 🚀 EXTRACTION PURE DU GAP AU LEADER 🚀
 const getAbsoluteGapMs = (car: any) => {
-  if (!car || !car.gaps || !car.gaps.toLeader) return Infinity;
-  if (car.gaps.toLeader.laps > 0) return (car.gaps.toLeader.laps * 135000);
-  return car.gaps.toLeader.ms || 0;
+  if (!car || !car.gaps || !car.gaps.toLeader) return 0;
+  const laps = car.gaps.toLeader.laps;
+  const ms = car.gaps.toLeader.ms;
+  if (laps !== null && laps !== undefined && Number(laps) > 0) return Number(laps) * 135000;
+  if (ms !== null && ms !== undefined && Number(ms) > 0) return Number(ms);
+  return 0;
+};
+
+// 🚀 FONCTION GLOBALE POUR FORMATER LES INTERS 🚀
+const formatInt = (ints: any) => {
+  if (!ints || !ints.toAhead) return "Leader";
+  const laps = ints.toAhead.laps;
+  const ms = ints.toAhead.ms;
+  if (laps !== null && laps !== undefined && Number(laps) > 0) return `+${laps}L`;
+  if (ms !== null && ms !== undefined && Number(ms) > 0) return `+${(Number(ms) / 1000).toFixed(3)}s`;
+  return "Leader";
 };
 
 export default function VoitureDetailPage() {
@@ -85,7 +98,6 @@ export default function VoitureDetailPage() {
   const currentSectorsRef = useRef({ s1: '-', s2: '-', s3: '-' });
   const competitorsPaceRef = useRef<Record<string, Record<number, number>>>({});
 
-  // 🚀 VARIABLES CARS SÉCURISÉES ET STRICTEMENT TYPÉES 🚀
   const safeCars = useMemo(() => Array.isArray(cars) ? cars : [], [cars]);
   const sortedCars = useMemo(() => [...safeCars].sort((a: any, b: any) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999)), [safeCars]);
   const carIndex = useMemo(() => sortedCars.findIndex((c: any) => String(c?.car_number || c?.num) === String(carId)), [sortedCars, carId]);
@@ -329,6 +341,7 @@ export default function VoitureDetailPage() {
     });
   }, [ourGapToLeaderMs]); 
 
+  // 🚀 AWS BATTLE FORECAST : UTILISATION SÉCURISÉE DES INTS 🚀
   const overtakePredictions = useMemo(() => {
     if (!liveCarData || carIndex === -1 || sortedCars.length === 0) return { attack: null, defend: null };
 
@@ -349,11 +362,15 @@ export default function VoitureDetailPage() {
       
       let currentAbsoluteGapMs = Infinity;
       if (isAhead && liveCarData.ints?.toAhead) {
-        if (liveCarData.ints.toAhead.laps > 0) currentAbsoluteGapMs = liveCarData.ints.toAhead.laps * 135000;
-        else currentAbsoluteGapMs = liveCarData.ints.toAhead.ms;
+        const laps = liveCarData.ints.toAhead.laps;
+        const ms = liveCarData.ints.toAhead.ms;
+        if (laps !== null && laps !== undefined && Number(laps) > 0) currentAbsoluteGapMs = Number(laps) * 135000;
+        else if (ms !== null && ms !== undefined && Number(ms) > 0) currentAbsoluteGapMs = Number(ms);
       } else if (!isAhead && targetCar.ints?.toAhead) {
-        if (targetCar.ints.toAhead.laps > 0) currentAbsoluteGapMs = targetCar.ints.toAhead.laps * 135000;
-        else currentAbsoluteGapMs = targetCar.ints.toAhead.ms;
+        const laps = targetCar.ints.toAhead.laps;
+        const ms = targetCar.ints.toAhead.ms;
+        if (laps !== null && laps !== undefined && Number(laps) > 0) currentAbsoluteGapMs = Number(laps) * 135000;
+        else if (ms !== null && ms !== undefined && Number(ms) > 0) currentAbsoluteGapMs = Number(ms);
       }
 
       let paceAdvantageSec = 0;
@@ -566,8 +583,10 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
+    // 🚀 PADDING GAUCHE FIXÉ À 100px 🚀
     <div className="min-h-screen bg-[#0B0C10] w-full pl-[100px] pt-[56px] relative overflow-x-hidden">
       
+      {/* 🚀 CSS D'ANIMATION AWS 🚀 */}
       <style>{`
         @keyframes aws-wave-good {
             0%, 100% { opacity: 0.2; transform: translateX(-3px) scale(0.9); filter: drop-shadow(0 0 0px transparent); }
@@ -606,6 +625,7 @@ export default function VoitureDetailPage() {
           <button onClick={() => router.push(`/voiture/${carId}/config`)} className="bg-[#1F2833] hover:bg-[#45A29E] hover:text-black text-[#66FCF1] font-bold py-2 px-4 rounded border border-gray-700 transition text-sm shadow">⚙️ PARAMÈTRES ET LIMITES</button>
         </div>
 
+        {/* 🚀 MODULE AWS OVERTAKE PREDICTION 🚀 */}
         <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-6 rounded-lg border border-gray-700 shadow-2xl relative overflow-hidden mb-8">
           <div className="absolute inset-0 opacity-[0.03] bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ffffff_10px,#ffffff_20px)] pointer-events-none" />
           <div className="flex justify-between items-center mb-6 relative z-10">
@@ -637,6 +657,7 @@ export default function VoitureDetailPage() {
               <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2">⏱️ STINT EN COURS</h3>
               <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 relative ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
                 
+                {/* 🚀 OVERLAY CHRONOMÈTRE DE PIT EN DIRECT 🚀 */}
                 {currentPitTimer !== null && (
                   <div className="absolute inset-0 bg-yellow-900/95 flex flex-col items-center justify-center rounded z-20 backdrop-blur-sm shadow-[0_0_30px_rgba(255,170,0,0.5)] border-2 border-[#ffaa00]">
                     <span className="text-[#ffaa00] font-black text-sm tracking-widest animate-pulse mb-2 drop-shadow-md">⏱️ PIT STOP IN PROGRESS</span>
@@ -722,6 +743,7 @@ export default function VoitureDetailPage() {
           </div>
         </div>
 
+        {/* 🚀 BLOC HISTORIQUE DES MESSAGES & PIT STOPS 🚀 */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
           
           <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl flex flex-col max-h-[300px]">
@@ -784,6 +806,7 @@ export default function VoitureDetailPage() {
           </div>
         </div>
 
+        {/* 🚀 BATAILLE DIRECTE ET PRÉDICTEUR DE STAND 🚀 */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
           
           <div className="bg-[#1a1c23] p-5 rounded-lg border border-gray-800 shadow-xl">
@@ -797,19 +820,12 @@ export default function VoitureDetailPage() {
               <tbody className="divide-y divide-gray-800 text-sm">
                 {battleGroup.map((c: any) => {
                   const isUs = String(c?.car_number || c?.num) === String(carId);
-                  
-                  let intStr = "-";
-                  if (c.ints?.toAhead) {
-                    if (c.ints.toAhead.laps > 0) intStr = `+${c.ints.toAhead.laps}L`;
-                    else if (c.ints.toAhead.ms > 0) intStr = `+${(c.ints.toAhead.ms / 1000).toFixed(3)}s`;
-                  }
-
                   return (
                     <tr key={c.car_number || c.num} className={isUs ? 'bg-[#153035] font-bold border-l-4 border-[#66FCF1]' : 'hover:bg-[#1F2833]'}>
                       <td className="p-3 text-gray-400">P{c.position || c.pos}</td>
                       <td className="p-3 text-[#ffaa00]">#{c.car_number || c.num}</td>
                       <td className="p-3 font-sans text-white text-sm truncate max-w-[200px]">{c.team}</td>
-                      <td className="p-3 text-gray-300">{intStr}</td>
+                      <td className="p-3 text-gray-300">{formatInt(c.ints)}</td>
                     </tr>
                   );
                 })}

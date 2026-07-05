@@ -21,11 +21,25 @@ const getStatusBadge = (state: string) => {
   return <span className="text-[9px] font-black px-1.5 py-0.5 bg-gray-800 text-gray-300 border border-gray-600 rounded">{s.substring(0, 3)}</span>;
 };
 
+// 🚀 NOUVEAU PARSEUR D'INTERVALLE ULTRA ROBUSTE (Gère null, undefined, et 0) 🚀
 const formatInt = (ints: any) => {
-  if (!ints || !ints.toAhead) return "-";
-  if (ints.toAhead.laps > 0) return `+${ints.toAhead.laps}L`;
-  if (ints.toAhead.ms > 0) return `+${(ints.toAhead.ms / 1000).toFixed(3)}s`;
-  return "-";
+  if (!ints || !ints.toAhead) return "Leader";
+  
+  const laps = ints.toAhead.laps;
+  const ms = ints.toAhead.ms;
+
+  // Si on a des tours d'écart valides
+  if (laps !== null && laps !== undefined && Number(laps) > 0) {
+    return `+${laps}L`;
+  }
+  
+  // Si on a des millisecondes valides
+  if (ms !== null && ms !== undefined && Number(ms) > 0) {
+    return `+${(Number(ms) / 1000).toFixed(3)}s`;
+  }
+
+  // S'il n'y a ni tour ni ms (ou qu'ils sont à 0), c'est le leader
+  return "Leader";
 };
 
 const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition: number, isOurCar: boolean }) => {
@@ -104,7 +118,6 @@ export default function GlobalHeader() {
     return [...arr].sort((a: any, b: any) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999));
   }, [cars]);
 
-  // TYPAGE STRICT ICI
   const maxRank = Math.max(...sortedCars.map((c: any) => parseInt(c.position) || 0), sortedCars.length);
   const containerHeight = maxRank * ROW_HEIGHT;
 
