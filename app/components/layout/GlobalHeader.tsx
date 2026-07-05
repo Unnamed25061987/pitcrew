@@ -21,16 +21,18 @@ const getStatusBadge = (state: string) => {
   return <span className="text-[9px] font-black px-1.5 py-0.5 bg-gray-800 text-gray-300 border border-gray-600 rounded">{s.substring(0, 3)}</span>;
 };
 
-// 🚀 RETOUR AU GAP TO LEADER 🚀
+// 🚀 PARSEUR DE GAP ULTRA ROBUSTE (Zéro crash) 🚀
 const formatGap = (gaps: any) => {
   if (!gaps || !gaps.toLeader) return "Leader";
   const laps = gaps.toLeader.laps;
   const ms = gaps.toLeader.ms;
   if (laps !== null && laps !== undefined && Number(laps) > 0) return `+${laps}L`;
   if (ms !== null && ms !== undefined && Number(ms) > 0) return `+${(Number(ms) / 1000).toFixed(3)}s`;
+  if (laps === 0 && ms === 0) return "Leader";
   return "Leader";
 };
 
+// 🚀 LIGNE D'OVERLAY ANIMÉE 🚀
 const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition: number, isOurCar: boolean }) => {
   const [isOvertaking, setIsOvertaking] = useState(false);
   const prevTopRef = useRef(topPosition);
@@ -57,11 +59,11 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
         transform: isOvertaking ? 'scale(1.05)' : 'scale(1)'
       }}
     >
-      <div className={`w-6 font-black text-xs ${isOurCar || isOvertaking ? 'text-[#66FCF1]' : 'text-gray-500'}`}>{car.position}</div>
+      <div className={`w-6 font-black text-xs ${isOurCar || isOvertaking ? 'text-[#66FCF1]' : 'text-gray-500'}`}>{car.position || car.pos}</div>
       <div className={`w-8 font-bold text-xs ${isOurCar || isOvertaking ? 'text-white' : 'text-[#ffaa00]'}`}>#{car.car_number || car.num}</div>
       <div className={`flex-1 truncate font-sans text-[11px] uppercase pr-2 ${isOurCar || isOvertaking ? 'text-[#66FCF1] font-black' : 'text-gray-200'}`}>{car.team}</div>
       <div className="w-16 text-right font-mono text-[10px] text-gray-400 truncate pr-2">{formatGap(car.gaps)}</div>
-      <div className="w-8 text-right flex justify-end">{getStatusBadge(car.lap?.car_state)}</div>
+      <div className="w-8 text-right flex justify-end">{getStatusBadge(car.lap?.car_state || car.car_state)}</div>
     </div>
   );
 };
@@ -69,49 +71,51 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
 export default function GlobalHeader() {
   const { cars, context, messages: liveMessages } = useLiveTiming('JSON'); 
   
-  const [status, setStatus] = useState("WAITING");
-  const [remain, setRemain] = useState("--:--:--");
-  const [msg, setMsg] = useState("");
+  const [apiStatus, setApiStatus] = useState("WAITING");
+  const [apiRemain, setApiRemain] = useState("--:--:--");
+  const [apiMsg, setApiMsg] = useState("");
 
+  // FETCH DE TON API (Protégé contre les erreurs 500)
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const res = await fetch('/api/messages');
         if (res.ok) {
           const data = await res.json();
-          if (data.trackStatus) setStatus(data.trackStatus);
-          if (data.remain) setRemain(data.remain);
-          if (data.message) setMsg(data.message);
+          if (data.trackStatus) setApiStatus(data.trackStatus);
+          if (data.remain) setApiRemain(data.remain);
+          if (data.message) setApiMsg(data.message);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error("API /api/messages injoignable, passage sur fallback");
+      }
     };
     fetchMessages();
     const interval = setInterval(fetchMessages, 5000); 
     return () => clearInterval(interval);
   }, []);
 
-  const contextTrackState = context?.session?.track_state;
-  const contextRemainingMs = context?.clock?.remaining_ms;
+  // 🚀 DÉRIVATION PURE DU STATUT (Anti Boucle Infinie absolue) 🚀
+  const trackState = apiStatus !== "WAITING" ? apiStatus : (context?.session?.track_state || "WAITING");
+  const remainingTimeStr = apiRemain !== "--:--:--" ? apiRemain : (context?.clock?.remaining_ms !== undefined ? formatRemainingTime(context.clock.remaining_ms) : "--:--:--");
+  
+  const rcEvents = Array.isArray(liveMessages) ? liveMessages.filter((e:any) => e.kind === "RC_MESSAGE") : [];
+  const fallbackMsg = rcEvents.length > 0 ? rcEvents[rcEvents.length - 1].message : "";
+  const raceMessage = apiMsg || fallbackMsg;
 
-  useEffect(() => {
-    if (status === "WAITING" && contextTrackState) setStatus(contextTrackState);
-    if (remain === "--:--:--" && contextRemainingMs !== undefined) setRemain(formatRemainingTime(contextRemainingMs));
-    if (msg === "" && liveMessages && liveMessages.length > 0) {
-      const rcEvents = liveMessages.filter((e:any) => e.kind === "RC_MESSAGE");
-      if (rcEvents.length > 0) setMsg(rcEvents[rcEvents.length - 1].message);
-    }
-  }, [contextTrackState, contextRemainingMs, liveMessages, status, remain, msg]); 
-
+  // CLASSEMENT SÉCURISÉ
   const sortedCars = useMemo(() => {
     const arr = Array.isArray(cars) ? cars : [];
-    return [...arr].sort((a: any, b: any) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999));
+    return [...arr].sort((a: any, b: any) => (parseInt(a.position || a.pos) || 999) - (parseInt(b.position || b.pos) || 999));
   }, [cars]);
 
-  const maxRank = Math.max(...sortedCars.map((c: any) => parseInt(c.position) || 0), sortedCars.length);
+  const ranks = sortedCars.map((c: any) => parseInt(c.position || c.pos) || 0);
+  const maxRank = ranks.length > 0 ? Math.max(...ranks) : 0;
   const containerHeight = maxRank * ROW_HEIGHT;
 
+  // COULEURS DYNAMIQUES
   let bgClass = "bg-[#1a1c23]"; let textClass = "text-white"; let dotClass = "bg-gray-500"; let pulse = false;
-  const s = status.toUpperCase();
+  const s = trackState.toUpperCase();
   
   if (s.includes("GREEN") || s.includes("RUN") || s.includes("RUNNING")) {
     bgClass = "bg-[#003311]"; textClass = "text-[#00ff66]"; dotClass = "bg-[#00ff66]";
@@ -123,6 +127,7 @@ export default function GlobalHeader() {
     bgClass = "bg-gray-800"; textClass = "text-white"; dotClass = "bg-white"; pulse = true;
   }
 
+  // ANIMATION GÉANTE DU STATUT
   const [showStatusAnim, setShowStatusAnim] = useState(false);
   const prevStatusRef = useRef<string | null>(null);
 
@@ -156,6 +161,7 @@ export default function GlobalHeader() {
         .anim-arrow-l { animation: slide-left 1.2s infinite; display: inline-block; }
       `}</style>
 
+      {/* 🏁 BANDEAU SUPÉRIEUR (GÉANT SI ANIMATION) */}
       <header 
         className={`fixed top-0 left-0 right-0 z-[70] border-b border-gray-800 flex flex-col justify-center transition-all duration-700 ease-in-out overflow-hidden shadow-2xl ${bgClass}`}
         style={{ height: showStatusAnim ? '160px' : '56px' }}
@@ -166,18 +172,19 @@ export default function GlobalHeader() {
               <span className={`w-3 h-3 rounded-full mr-3 ${dotClass} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`}></span>
               TRACK STATUS: {s}
             </span>
-            {msg && (
+            {raceMessage && (
               <div className="border-l border-gray-700 pl-4 flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center gap-2">
                 <span className="text-[#ffaa00] font-bold text-[10px] uppercase bg-[#0B0C10] px-2 py-1 rounded border border-gray-700">⚠️ DIR. COURSE</span>
-                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{msg}</span>
+                <span className="text-white text-xs font-bold uppercase tracking-wide truncate">{raceMessage}</span>
               </div>
             )}
           </div>
           <div className="text-sm font-mono text-gray-400 shrink-0 ml-4">
-            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{remain}</span>
+            REMAINING: <span className="text-white font-bold text-xl ml-2 tracking-widest">{remainingTimeStr}</span>
           </div>
         </div>
 
+        {/* 🎬 GRAND TITRE ANIMÉ AU CENTRE */}
         <div className={`absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none transition-opacity duration-700 delay-200 ${showStatusAnim ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-8 text-6xl font-black uppercase tracking-widest drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
             <div className={`flex gap-2 ${textClass} opacity-60`}>
@@ -195,7 +202,8 @@ export default function GlobalHeader() {
         </div>
       </header>
 
-      <div className="fixed left-0 top-14 bottom-0 w-[320px] bg-[#0B0C10] border-r border-gray-800 z-50 shadow-[10px_0_20px_rgba(0,0,0,0.5)] flex flex-col">
+      {/* 📺 OVERLAY LEADERBOARD TV BROADCAST (z-[100] pour forcer l'affichage) */}
+      <div className="fixed left-0 top-14 bottom-0 w-[320px] bg-[#0B0C10] border-r border-gray-800 z-[100] shadow-[10px_0_20px_rgba(0,0,0,0.5)] flex flex-col">
         <div className="bg-[#1F2833] p-3 border-b border-gray-800 text-center shadow-md shrink-0 flex justify-between items-center px-4">
           <span className="text-[10px] font-bold text-gray-500">POS</span>
           <h2 className="text-[#66FCF1] font-black tracking-widest text-xs uppercase flex items-center gap-1">
@@ -207,7 +215,7 @@ export default function GlobalHeader() {
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide">
           <div className="relative w-full" style={{ height: `${containerHeight}px` }}>
             {sortedCars.map((car: any) => {
-              const positionRank = parseInt(car.position) || 999;
+              const positionRank = parseInt(car.position || car.pos) || 999;
               const topPosition = (positionRank - 1) * ROW_HEIGHT;
               const isOurCar = String(car.car_number || car.num) === String(watchedCarId);
               return <LeaderboardRow key={car.car_number || car.num} car={car} topPosition={topPosition} isOurCar={isOurCar} />;

@@ -38,17 +38,16 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
-// 🚀 EXTRACTION PURE DU GAP AU LEADER (Robuste pour les mathématiques) 🚀
+// 🚀 EXTRACTION PURE DU GAP AU LEADER 🚀
 const getAbsoluteGapMs = (car: any) => {
   if (!car || !car.gaps || !car.gaps.toLeader) return 0;
   const laps = car.gaps.toLeader.laps;
   const ms = car.gaps.toLeader.ms;
-  if (laps !== null && laps !== undefined && Number(laps) > 0) return Number(laps) * 135000; // Estime 1 tour = 135s si pas de chrono
+  if (laps !== null && laps !== undefined && Number(laps) > 0) return Number(laps) * 135000;
   if (ms !== null && ms !== undefined && Number(ms) > 0) return Number(ms);
   return 0;
 };
 
-// 🚀 FORMATAGE DU GAP POUR L'AFFICHAGE 🚀
 const formatGap = (gaps: any) => {
   if (!gaps || !gaps.toLeader) return "Leader";
   const laps = gaps.toLeader.laps;
@@ -64,7 +63,8 @@ export default function VoitureDetailPage() {
   const carId = params.id as string;
   const { cars, context, messages: liveMessages } = useLiveTiming('JSON'); 
   
-  const [globalStatus, setGlobalStatus] = useState("WAITING");
+  const [apiStatus, setApiStatus] = useState("WAITING");
+  const [apiMsg, setApiMsg] = useState("");
   
   const [config, setConfig] = useState({ 
     capaMax: 80, consoGreen: 1.7, timeGreenStr: "2:55.000", consoFcy: 0.7, timeFcyStr: "7:00.000",
@@ -77,11 +77,9 @@ export default function VoitureDetailPage() {
   const [stints, setStints] = useState<Stint[]>([]);
   const [lapHistory, setLapHistory] = useState<LapRecord[]>([]);
   const [aiMessages, setAiMessages] = useState<AiMessage[]>([{ role: 'ai', content: `Terminal IA connecté.`, timestamp: new Date().toLocaleTimeString() }]);
-  
   const [isLoaded, setIsLoaded] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
-  
   const [gapHistory, setGapHistory] = useState<any[]>([]);
 
   const [pitMode, setPitMode] = useState<'DT' | 'REFUEL' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
@@ -99,7 +97,7 @@ export default function VoitureDetailPage() {
   const competitorsPaceRef = useRef<Record<string, Record<number, number>>>({});
 
   const safeCars = useMemo(() => Array.isArray(cars) ? cars : [], [cars]);
-  const sortedCars = useMemo(() => [...safeCars].sort((a: any, b: any) => (parseInt(a.position) || 999) - (parseInt(b.position) || 999)), [safeCars]);
+  const sortedCars = useMemo(() => [...safeCars].sort((a: any, b: any) => (parseInt(a.position || a.pos) || 999) - (parseInt(b.position || b.pos) || 999)), [safeCars]);
   const carIndex = useMemo(() => sortedCars.findIndex((c: any) => String(c?.car_number || c?.num) === String(carId)), [sortedCars, carId]);
   const liveCarData = useMemo(() => carIndex !== -1 ? sortedCars[carIndex] : null, [sortedCars, carIndex]);
   const battleGroup = useMemo(() => {
@@ -107,21 +105,15 @@ export default function VoitureDetailPage() {
     return sortedCars.slice(Math.max(0, carIndex - 2), Math.min(sortedCars.length - 1, carIndex + 2) + 1);
   }, [sortedCars, carIndex]);
 
+  // DERIVED GLOBAL STATUS
   useEffect(() => {
     const fetchRC = async () => {
       try {
         const res = await fetch('/api/messages');
         if (res.ok) {
           const data = await res.json();
-          if (data.trackStatus) setGlobalStatus(data.trackStatus);
-          if (data.message) {
-            setRcHistory(prev => {
-              if (prev.length === 0 || prev[0].msg !== data.message) {
-                return [{ time: new Date().toLocaleTimeString(), msg: data.message }, ...prev].slice(0, 30);
-              }
-              return prev;
-            });
-          }
+          if (data.trackStatus) setApiStatus(data.trackStatus);
+          if (data.message) setApiMsg(data.message);
         }
       } catch (e) {}
     };
@@ -130,24 +122,21 @@ export default function VoitureDetailPage() {
     return () => clearInterval(int);
   }, []);
 
-  useEffect(() => {
-    if (globalStatus === "WAITING" && context?.session?.track_state) {
-      setGlobalStatus(context.session.track_state);
-    }
-  }, [globalStatus, context?.session?.track_state]);
+  const globalStatus = apiStatus !== "WAITING" ? apiStatus : (context?.session?.track_state || "WAITING");
+  const rcEvents = Array.isArray(liveMessages) ? liveMessages.filter((e:any) => e.kind === "RC_MESSAGE") : [];
+  const fallbackMsg = rcEvents.length > 0 ? rcEvents[rcEvents.length - 1].message : "";
+  const raceMessage = apiMsg || fallbackMsg;
 
   useEffect(() => {
-    if (liveMessages && liveMessages.length > 0) {
-      const rcEvents = liveMessages.filter((e:any) => e.kind === "RC_MESSAGE");
-      if (rcEvents.length > 0) {
-        const msg = rcEvents[rcEvents.length - 1].message;
-        setRcHistory(prev => {
-          if (prev.length === 0 || prev[0].msg !== msg) return [{ time: new Date().toLocaleTimeString(), msg }, ...prev].slice(0, 30);
-          return prev;
-        });
-      }
+    if (raceMessage) {
+      setRcHistory(prev => {
+        if (prev.length === 0 || prev[0].msg !== raceMessage) {
+          return [{ time: new Date().toLocaleTimeString(), msg: raceMessage }, ...prev].slice(0, 30);
+        }
+        return prev;
+      });
     }
-  }, [liveMessages]);
+  }, [raceMessage]);
 
   useEffect(() => {
     const savedConfig = localStorage.getItem(`car_config_${carId}`);
@@ -178,16 +167,16 @@ export default function VoitureDetailPage() {
   }, [pilotes, stints, aiMessages, lapHistory, pitStopsHistory, currentFuel, isLoaded, carId]);
 
   useEffect(() => {
-    const rawState = liveCarData?.lap?.car_state || 'RUN';
+    const rawState = liveCarData?.lap?.car_state || liveCarData?.car_state || 'RUN';
     carStateRef.current = String(rawState).toUpperCase();
-  }, [liveCarData?.lap?.car_state]);
+  }, [liveCarData]);
 
   useEffect(() => {
     if (!liveCarData?.lap) return;
     if (liveCarData.lap.s1_ms) currentSectorsRef.current.s1 = (liveCarData.lap.s1_ms / 1000).toFixed(3);
     if (liveCarData.lap.s2_ms) currentSectorsRef.current.s2 = (liveCarData.lap.s2_ms / 1000).toFixed(3);
     if (liveCarData.lap.s3_ms) currentSectorsRef.current.s3 = (liveCarData.lap.s3_ms / 1000).toFixed(3);
-  }, [liveCarData?.lap?.s1_ms, liveCarData?.lap?.s2_ms, liveCarData?.lap?.s3_ms]);
+  }, [liveCarData]);
 
   useEffect(() => {
     if (!safeCars) return;
@@ -218,7 +207,6 @@ export default function VoitureDetailPage() {
       }));
       if (isFuel) setCurrentFuel(prev => prev < config.capaMax ? config.capaMax : prev);
 
-      // --- CHRONO PIT STOP ---
       if (isIn && !prevPitStateRef.current) {
         pitEntryTimeRef.current = Date.now();
         setCurrentPitTimer(0);
@@ -249,43 +237,66 @@ export default function VoitureDetailPage() {
     }
   }, [liveCarData?.driver]);
 
+  // 🚀 RÉSOLUTION DE L'INFINITE LOOP GAPHISTORY 🚀
+  // Le graphique s'enregistre uniquement quand le tour de la voiture change !
   useEffect(() => {
-    if (liveCarData?.lap && liveCarData.lap.lap_number > 0) {
-      if (lastLapRef.current === null) {
-        lastLapRef.current = liveCarData.lap.lap_number;
-      } else if (liveCarData.lap.lap_number > lastLapRef.current) {
-        const lapsDone = liveCarData.lap.lap_number - lastLapRef.current;
-        const lapTimeMs = liveCarData.lap.lap_time_ms;
-        const greenMs = parseLapToMs(config.timeGreenStr) || 175000;
-        const fcyMs = parseLapToMs(config.timeFcyStr) || 420000;
-        
-        let lapConso = config.consoGreen;
-        if (lapTimeMs && lapTimeMs > 0) {
-          if (lapTimeMs <= greenMs) lapConso = config.consoGreen; 
-          else if (lapTimeMs >= fcyMs) lapConso = config.consoFcy; 
-          else {
-            const ratio = (lapTimeMs - greenMs) / (fcyMs - greenMs);
-            lapConso = config.consoGreen - (ratio * (config.consoGreen - config.consoFcy));
-          }
-        } else {
-          const safeStatus = String(globalStatus || '').toUpperCase();
-          lapConso = safeStatus.includes('FCY') || safeStatus.includes('YELLOW') ? config.consoFcy : config.consoGreen;
+    if (!liveCarData || battleGroup.length === 0) return;
+    const currentLap = liveCarData.lap?.lap_number;
+    if (!currentLap || currentLap === 0) return;
+
+    if (lastLapRef.current === null) {
+      lastLapRef.current = currentLap;
+    } else if (currentLap > lastLapRef.current) {
+      // 1. GESTION DU FUEL & TOURS
+      const lapsDone = currentLap - lastLapRef.current;
+      const lapTimeMs = liveCarData.lap.lap_time_ms;
+      const greenMs = parseLapToMs(config.timeGreenStr) || 175000;
+      const fcyMs = parseLapToMs(config.timeFcyStr) || 420000;
+      
+      let lapConso = config.consoGreen;
+      if (lapTimeMs && lapTimeMs > 0) {
+        if (lapTimeMs <= greenMs) lapConso = config.consoGreen; 
+        else if (lapTimeMs >= fcyMs) lapConso = config.consoFcy; 
+        else {
+          const ratio = (lapTimeMs - greenMs) / (fcyMs - greenMs);
+          lapConso = config.consoGreen - (ratio * (config.consoGreen - config.consoFcy));
         }
-
-        setCurrentFuel(prev => parseFloat(Math.max(0, prev - (lapsDone * lapConso)).toFixed(2)));
-        
-        const newLap: LapRecord = {
-          id: Date.now(), lapNumber: lastLapRef.current, driverRIS: String(liveCarData.driver || 'Inconnu'),
-          s1: currentSectorsRef.current.s1, s2: currentSectorsRef.current.s2, s3: currentSectorsRef.current.s3,
-          lapTime: formatMsToLapTime(lapTimeMs), lapTimeMs: lapTimeMs || Infinity
-        };
-
-        setLapHistory(prev => [newLap, ...prev].slice(0, 1000));
-        lastLapRef.current = liveCarData.lap.lap_number;
-        currentSectorsRef.current = { s1: '-', s2: '-', s3: '-' };
+      } else {
+        const safeStatus = String(globalStatus || '').toUpperCase();
+        lapConso = safeStatus.includes('FCY') || safeStatus.includes('YELLOW') ? config.consoFcy : config.consoGreen;
       }
+
+      setCurrentFuel(prev => parseFloat(Math.max(0, prev - (lapsDone * lapConso)).toFixed(2)));
+      
+      const newLap: LapRecord = {
+        id: Date.now(), lapNumber: lastLapRef.current, driverRIS: String(liveCarData.driver || 'Inconnu'),
+        s1: currentSectorsRef.current.s1, s2: currentSectorsRef.current.s2, s3: currentSectorsRef.current.s3,
+        lapTime: formatMsToLapTime(lapTimeMs), lapTimeMs: lapTimeMs || Infinity
+      };
+
+      setLapHistory(prev => [newLap, ...prev].slice(0, 1000));
+
+      // 2. GESTION DU GAP HISTORY (1 point par tour maximum)
+      const ourGapSec = getAbsoluteGapMs(liveCarData) / 1000;
+      const newData: any = { lap: currentLap };
+      
+      battleGroup.forEach((c: any) => {
+        if (String(c.car_number || c.num) !== String(carId)) {
+          const competitorGapSec = getAbsoluteGapMs(c) / 1000;
+          newData[`car_${c.car_number || c.num}`] = parseFloat((ourGapSec - competitorGapSec).toFixed(2));
+        }
+      });
+
+      setGapHistory(prev => {
+        // Anti-doublon strict
+        if (prev.length > 0 && prev[prev.length - 1].lap === currentLap) return prev;
+        return [...prev, newData].slice(-15);
+      });
+
+      lastLapRef.current = currentLap;
+      currentSectorsRef.current = { s1: '-', s2: '-', s3: '-' };
     }
-  }, [liveCarData?.lap?.lap_number, globalStatus, config.consoGreen, config.consoFcy, config.timeGreenStr, config.timeFcyStr, liveCarData?.lap?.lap_time_ms, liveCarData?.driver]);
+  }, [liveCarData?.lap?.lap_number, globalStatus, config, liveCarData, battleGroup, carId]);
 
   const fuelPct = config.capaMax > 0 ? (currentFuel / config.capaMax) * 100 : 0;
   const isFuelWarning = fuelPct <= config.alertOrangePct && fuelPct > config.alertRedPct;
@@ -317,31 +328,6 @@ export default function VoitureDetailPage() {
     return { avgStr: formatMsToLapTime(avgCurrentMs), trend, deltaStr };
   }, [lapHistory, activePilote]);
 
-  const ourGapToLeaderMs = liveCarData?.gaps?.toLeader?.ms;
-  
-  useEffect(() => {
-    if (!liveCarData || battleGroup.length === 0) return;
-    const currentLap = liveCarData.lap?.lap_number || 0;
-    
-    setGapHistory(prev => {
-      const existingIdx = prev.findIndex(item => item.lap === currentLap);
-      const newData: any = { lap: currentLap };
-      const ourGapSec = getAbsoluteGapMs(liveCarData) / 1000;
-      
-      battleGroup.forEach((c: any) => {
-        if (String(c.car_number || c.num) !== String(carId)) {
-          const competitorGapSec = getAbsoluteGapMs(c) / 1000;
-          newData[`car_${c.car_number || c.num}`] = parseFloat((ourGapSec - competitorGapSec).toFixed(2));
-        }
-      });
-      
-      if (existingIdx >= 0) {
-        const updated = [...prev]; updated[existingIdx] = { ...updated[existingIdx], ...newData }; return updated;
-      } else return [...prev, newData].slice(-15);
-    });
-  }, [ourGapToLeaderMs]); 
-
-  // 🚀 AWS BATTLE FORECAST (UTILISE LE GAP TO LEADER ABSOLU) 🚀
   const overtakePredictions = useMemo(() => {
     if (!liveCarData || carIndex === -1 || sortedCars.length === 0) return { attack: null, defend: null };
 
@@ -362,7 +348,6 @@ export default function VoitureDetailPage() {
       const targetPaceData = getAveragePace(String(targetCar.car_number || targetCar.num));
       const targetAbsoluteMs = getAbsoluteGapMs(targetCar);
       
-      // On calcule l'écart direct en ms entre les 2 voitures depuis le Leader
       const currentAbsoluteGapMs = Math.abs(ourAbsoluteMs - targetAbsoluteMs) || 100;
 
       let paceAdvantageSec = 0;
