@@ -1,6 +1,6 @@
 "use client";
-import React from 'react';
-import { useLiveTiming } from '../../hooks/useLiveTiming'; // 👈 Modifie ce chemin si besoin selon où est rangé ton GlobalHeader
+import React, { useState, useEffect, useRef } from 'react';
+import { useLiveTiming } from '../../hooks/useLiveTiming'; // Ajuste ce chemin si besoin
 
 const ROW_HEIGHT = 44;
 
@@ -15,20 +15,63 @@ const formatRemainingTime = (ms: number | undefined) => {
 
 const getStatusBadge = (state: string) => {
   const s = String(state || 'RUN').toUpperCase();
-  if (s.includes('PIT') || s.includes('IN')) return <span className="text-[10px] font-black px-1.5 py-0.5 bg-yellow-900/80 text-[#ffaa00] border border-[#ffaa00]/50 rounded shadow-[0_0_5px_rgba(255,170,0,0.5)] animate-pulse">PIT</span>;
-  if (s.includes('OUT') || s.includes('STOP')) return <span className="text-[10px] font-black px-1.5 py-0.5 bg-red-900/80 text-[#ff3333] border border-[#ff3333]/50 rounded shadow-[0_0_5px_rgba(255,51,51,0.5)]">OUT</span>;
-  if (s.includes('RUN') || s.includes('TRACK')) return <span className="text-[10px] font-black px-1.5 py-0.5 bg-green-900/30 text-[#00ff66] border border-[#00ff66]/30 rounded">RUN</span>;
-  return <span className="text-[10px] font-black px-1.5 py-0.5 bg-gray-800 text-gray-300 border border-gray-600 rounded">{s.substring(0, 3)}</span>;
+  if (s.includes('PIT') || s.includes('IN')) return <span className="text-[9px] font-black px-1.5 py-0.5 bg-yellow-900/80 text-[#ffaa00] border border-[#ffaa00]/50 rounded shadow-[0_0_5px_rgba(255,170,0,0.5)] animate-pulse">PIT</span>;
+  if (s.includes('OUT') || s.includes('STOP')) return <span className="text-[9px] font-black px-1.5 py-0.5 bg-red-900/80 text-[#ff3333] border border-[#ff3333]/50 rounded shadow-[0_0_5px_rgba(255,51,51,0.5)]">OUT</span>;
+  if (s.includes('RUN') || s.includes('TRACK')) return <span className="text-[9px] font-black px-1.5 py-0.5 bg-green-900/30 text-[#00ff66] border border-[#00ff66]/30 rounded">RUN</span>;
+  return <span className="text-[9px] font-black px-1.5 py-0.5 bg-gray-800 text-gray-300 border border-gray-600 rounded">{s.substring(0, 3)}</span>;
+};
+
+// 🚀 COMPOSANT LIGNE ANIMÉE (EFFET DÉPASSEMENT F1) 🚀
+const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition: number, isOurCar: boolean }) => {
+  const [isOvertaking, setIsOvertaking] = useState(false);
+  const prevTopRef = useRef(topPosition);
+
+  useEffect(() => {
+    // Si la position change, on déclenche l'animation d'agrandissement pendant le mouvement
+    if (prevTopRef.current !== topPosition) {
+      setIsOvertaking(true);
+      const timer = setTimeout(() => setIsOvertaking(false), 1500); // Durée de l'effet d'agrandissement (1.5s)
+      prevTopRef.current = topPosition;
+      return () => clearTimeout(timer);
+    }
+  }, [topPosition]);
+
+  return (
+    <div 
+      className={`absolute left-0 right-0 flex items-center px-4 py-2 border-b border-gray-800/50 ${
+        isOvertaking 
+          ? 'bg-[#153035] shadow-[0_15px_30px_rgba(102,252,241,0.3)] z-50 border-l-4 border-l-[#66FCF1]' 
+          : (isOurCar ? 'bg-[#1a383b] border-l-4 border-l-[#66FCF1] z-40' : 'bg-[#0B0C10] hover:bg-[#1a1c23] z-10')
+      }`}
+      style={{ 
+        top: `${topPosition}px`, 
+        height: `${ROW_HEIGHT}px`,
+        // Transition CSS de 1.5s pour la hauteur et l'échelle
+        transition: 'top 1.5s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s ease-in-out, background-color 0.5s',
+        transform: isOvertaking ? 'scale(1.05)' : 'scale(1)'
+      }}
+    >
+      <div className={`w-6 font-black text-xs ${isOurCar || isOvertaking ? 'text-[#66FCF1]' : 'text-gray-500'}`}>{car.pos}</div>
+      <div className={`w-8 font-bold text-xs ${isOurCar || isOvertaking ? 'text-white' : 'text-[#ffaa00]'}`}>#{car.num}</div>
+      <div className={`flex-1 truncate font-sans text-[11px] uppercase pr-2 ${isOurCar || isOvertaking ? 'text-[#66FCF1] font-black' : 'text-gray-200'}`}>
+        {car.team}
+      </div>
+      <div className="w-14 text-right font-mono text-[10px] text-gray-400 truncate pr-2">
+        {car.gap}
+      </div>
+      <div className="w-8 text-right flex justify-end">
+        {getStatusBadge(car.car_state)}
+      </div>
+    </div>
+  );
 };
 
 export default function GlobalHeader() {
-  // 🔥 On utilise notre Hook blindé pour récupérer absolument toutes les données globales
   const { cars, status, context, messages } = useLiveTiming('JSON');
   
   const trackState = context?.session?.track_state || status || "WAITING";
   const remainMs = context?.clock?.remaining_ms;
   
-  // On récupère le dernier message de la direction de course s'il existe
   const latestMessage = messages && messages.length > 0 
     ? (messages[messages.length - 1].message || messages[messages.length - 1].content || messages[messages.length - 1].event) 
     : "";
@@ -48,13 +91,13 @@ export default function GlobalHeader() {
     bgClass = "bg-[#440000]"; textClass = "text-[#ff3333]"; dotClass = "bg-[#ff3333]"; pulse = true;
   }
 
+  // Idéalement, récupère l'ID de la voiture surveillée depuis l'URL si possible
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const carIdMatch = currentPath.match(/\/voiture\/(\d+)/);
+  const watchedCarId = carIdMatch ? carIdMatch[1] : null;
+
   return (
     <>
-      <style>{`
-        /* L'animation CSS magique pour faire glisser les voitures */
-        .leaderboard-row { transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
-      `}</style>
-
       {/* 🏁 BANDEAU SUPÉRIEUR (Track Status, RC Message, Remaining Time) */}
       <header className={`fixed top-0 left-0 right-0 h-14 border-b border-gray-800 flex items-center justify-between px-6 z-[60] transition-colors duration-300 ${bgClass}`}>
         <div className="flex items-center space-x-4 flex-1 overflow-hidden">
@@ -77,12 +120,14 @@ export default function GlobalHeader() {
         </div>
       </header>
 
-      {/* 📺 OVERLAY LEADERBOARD TV BROADCAST (MENU GAUCHE ANIMÉ) */}
+      {/* 📺 OVERLAY LEADERBOARD TV BROADCAST */}
       <div className="fixed left-0 top-14 bottom-0 w-[320px] bg-[#0B0C10] border-r border-gray-800 z-50 shadow-[10px_0_20px_rgba(0,0,0,0.5)] flex flex-col">
-        <div className="bg-[#1F2833] p-3 border-b border-gray-800 text-center shadow-md shrink-0">
-          <h2 className="text-[#66FCF1] font-black tracking-widest text-xs flex items-center justify-center gap-2 uppercase">
-            <span className="text-base">🏆</span> LIVE CLASSIFICATION
+        <div className="bg-[#1F2833] p-3 border-b border-gray-800 text-center shadow-md shrink-0 flex justify-between items-center px-4">
+          <span className="text-xs font-bold text-gray-500">POS</span>
+          <h2 className="text-[#66FCF1] font-black tracking-widest text-xs uppercase flex items-center gap-1">
+            <span className="text-base">🏆</span> LIVE
           </h2>
+          <span className="text-xs font-bold text-gray-500">INT</span>
         </div>
         
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide">
@@ -90,15 +135,10 @@ export default function GlobalHeader() {
             {safeCars.map((car) => {
               const positionRank = parseInt(car.pos) || 999;
               const topPosition = (positionRank - 1) * ROW_HEIGHT;
+              const isOurCar = String(car.num) === String(watchedCarId);
               
               return (
-                <div key={car.num} className="leaderboard-row absolute left-0 right-0 flex items-center px-4 py-2 border-b border-gray-800/50 bg-[#0B0C10] hover:bg-[#1a1c23]"
-                     style={{ top: `${topPosition}px`, height: `${ROW_HEIGHT}px` }}>
-                  <div className="w-8 font-black text-sm text-gray-500">P{car.pos}</div>
-                  <div className="w-10 font-bold text-sm text-[#ffaa00]">#{car.num}</div>
-                  <div className="flex-1 truncate font-sans text-xs uppercase pr-2 text-white font-bold">{car.team}</div>
-                  <div className="w-10 text-right flex justify-end">{getStatusBadge(car.car_state)}</div>
-                </div>
+                <LeaderboardRow key={car.num} car={car} topPosition={topPosition} isOurCar={isOurCar} />
               );
             })}
           </div>
