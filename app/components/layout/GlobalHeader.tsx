@@ -21,24 +21,13 @@ const getStatusBadge = (state: string) => {
   return <span className="text-[9px] font-black px-1.5 py-0.5 bg-gray-800 text-gray-300 border border-gray-600 rounded">{s.substring(0, 3)}</span>;
 };
 
-// 🚀 NOUVEAU PARSEUR D'INTERVALLE ULTRA ROBUSTE (Gère null, undefined, et 0) 🚀
-const formatInt = (ints: any) => {
-  if (!ints || !ints.toAhead) return "Leader";
-  
-  const laps = ints.toAhead.laps;
-  const ms = ints.toAhead.ms;
-
-  // Si on a des tours d'écart valides
-  if (laps !== null && laps !== undefined && Number(laps) > 0) {
-    return `+${laps}L`;
-  }
-  
-  // Si on a des millisecondes valides
-  if (ms !== null && ms !== undefined && Number(ms) > 0) {
-    return `+${(Number(ms) / 1000).toFixed(3)}s`;
-  }
-
-  // S'il n'y a ni tour ni ms (ou qu'ils sont à 0), c'est le leader
+// 🚀 RETOUR AU GAP TO LEADER 🚀
+const formatGap = (gaps: any) => {
+  if (!gaps || !gaps.toLeader) return "Leader";
+  const laps = gaps.toLeader.laps;
+  const ms = gaps.toLeader.ms;
+  if (laps !== null && laps !== undefined && Number(laps) > 0) return `+${laps}L`;
+  if (ms !== null && ms !== undefined && Number(ms) > 0) return `+${(Number(ms) / 1000).toFixed(3)}s`;
   return "Leader";
 };
 
@@ -71,7 +60,7 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
       <div className={`w-6 font-black text-xs ${isOurCar || isOvertaking ? 'text-[#66FCF1]' : 'text-gray-500'}`}>{car.position}</div>
       <div className={`w-8 font-bold text-xs ${isOurCar || isOvertaking ? 'text-white' : 'text-[#ffaa00]'}`}>#{car.car_number || car.num}</div>
       <div className={`flex-1 truncate font-sans text-[11px] uppercase pr-2 ${isOurCar || isOvertaking ? 'text-[#66FCF1] font-black' : 'text-gray-200'}`}>{car.team}</div>
-      <div className="w-16 text-right font-mono text-[10px] text-gray-400 truncate pr-2">{formatInt(car.ints)}</div>
+      <div className="w-16 text-right font-mono text-[10px] text-gray-400 truncate pr-2">{formatGap(car.gaps)}</div>
       <div className="w-8 text-right flex justify-end">{getStatusBadge(car.lap?.car_state)}</div>
     </div>
   );
@@ -111,7 +100,7 @@ export default function GlobalHeader() {
       const rcEvents = liveMessages.filter((e:any) => e.kind === "RC_MESSAGE");
       if (rcEvents.length > 0) setMsg(rcEvents[rcEvents.length - 1].message);
     }
-  }, [contextTrackState, contextRemainingMs, liveMessages]); 
+  }, [contextTrackState, contextRemainingMs, liveMessages, status, remain, msg]); 
 
   const sortedCars = useMemo(() => {
     const arr = Array.isArray(cars) ? cars : [];
@@ -212,7 +201,7 @@ export default function GlobalHeader() {
           <h2 className="text-[#66FCF1] font-black tracking-widest text-xs uppercase flex items-center gap-1">
             <span className="text-base">🏆</span> LIVE
           </h2>
-          <span className="text-[10px] font-bold text-gray-500">INT</span>
+          <span className="text-[10px] font-bold text-gray-500">GAP</span>
         </div>
         
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide">

@@ -38,21 +38,21 @@ const formatLiveTimer = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 };
 
-// 🚀 EXTRACTION PURE DU GAP AU LEADER 🚀
+// 🚀 EXTRACTION PURE DU GAP AU LEADER (Robuste pour les mathématiques) 🚀
 const getAbsoluteGapMs = (car: any) => {
   if (!car || !car.gaps || !car.gaps.toLeader) return 0;
   const laps = car.gaps.toLeader.laps;
   const ms = car.gaps.toLeader.ms;
-  if (laps !== null && laps !== undefined && Number(laps) > 0) return Number(laps) * 135000;
+  if (laps !== null && laps !== undefined && Number(laps) > 0) return Number(laps) * 135000; // Estime 1 tour = 135s si pas de chrono
   if (ms !== null && ms !== undefined && Number(ms) > 0) return Number(ms);
   return 0;
 };
 
-// 🚀 FONCTION GLOBALE POUR FORMATER LES INTERS 🚀
-const formatInt = (ints: any) => {
-  if (!ints || !ints.toAhead) return "Leader";
-  const laps = ints.toAhead.laps;
-  const ms = ints.toAhead.ms;
+// 🚀 FORMATAGE DU GAP POUR L'AFFICHAGE 🚀
+const formatGap = (gaps: any) => {
+  if (!gaps || !gaps.toLeader) return "Leader";
+  const laps = gaps.toLeader.laps;
+  const ms = gaps.toLeader.ms;
   if (laps !== null && laps !== undefined && Number(laps) > 0) return `+${laps}L`;
   if (ms !== null && ms !== undefined && Number(ms) > 0) return `+${(Number(ms) / 1000).toFixed(3)}s`;
   return "Leader";
@@ -341,7 +341,7 @@ export default function VoitureDetailPage() {
     });
   }, [ourGapToLeaderMs]); 
 
-  // 🚀 AWS BATTLE FORECAST : UTILISATION SÉCURISÉE DES INTS 🚀
+  // 🚀 AWS BATTLE FORECAST (UTILISE LE GAP TO LEADER ABSOLU) 🚀
   const overtakePredictions = useMemo(() => {
     if (!liveCarData || carIndex === -1 || sortedCars.length === 0) return { attack: null, defend: null };
 
@@ -356,22 +356,14 @@ export default function VoitureDetailPage() {
     };
 
     const ourPaceData = getAveragePace(String(carId));
+    const ourAbsoluteMs = getAbsoluteGapMs(liveCarData);
 
     const getPrediction = (targetCar: any, isAhead: boolean) => {
       const targetPaceData = getAveragePace(String(targetCar.car_number || targetCar.num));
+      const targetAbsoluteMs = getAbsoluteGapMs(targetCar);
       
-      let currentAbsoluteGapMs = Infinity;
-      if (isAhead && liveCarData.ints?.toAhead) {
-        const laps = liveCarData.ints.toAhead.laps;
-        const ms = liveCarData.ints.toAhead.ms;
-        if (laps !== null && laps !== undefined && Number(laps) > 0) currentAbsoluteGapMs = Number(laps) * 135000;
-        else if (ms !== null && ms !== undefined && Number(ms) > 0) currentAbsoluteGapMs = Number(ms);
-      } else if (!isAhead && targetCar.ints?.toAhead) {
-        const laps = targetCar.ints.toAhead.laps;
-        const ms = targetCar.ints.toAhead.ms;
-        if (laps !== null && laps !== undefined && Number(laps) > 0) currentAbsoluteGapMs = Number(laps) * 135000;
-        else if (ms !== null && ms !== undefined && Number(ms) > 0) currentAbsoluteGapMs = Number(ms);
-      }
+      // On calcule l'écart direct en ms entre les 2 voitures depuis le Leader
+      const currentAbsoluteGapMs = Math.abs(ourAbsoluteMs - targetAbsoluteMs) || 100;
 
       let paceAdvantageSec = 0;
       let valid = false;
@@ -403,7 +395,7 @@ export default function VoitureDetailPage() {
         targetTeam: targetCar.team,
         paceAdvantageSec: valid ? Math.abs(paceAdvantageSec).toFixed(2) : "0.00",
         trend, statusText, calcMethod, 
-        gapSec: currentAbsoluteGapMs !== Infinity ? (currentAbsoluteGapMs / 1000).toFixed(3) : "-",
+        gapSec: (currentAbsoluteGapMs / 1000).toFixed(3),
         lapsRemaining: lapsToCatch !== Infinity && lapsToCatch < 999 && valid ? Math.ceil(lapsToCatch) : '-',
         predictedLap: lapsToCatch !== Infinity && lapsToCatch < 999 && valid ? ((liveCarData.lap?.lap_number || 0) + Math.ceil(lapsToCatch)) : '-'
       };
@@ -435,7 +427,7 @@ export default function VoitureDetailPage() {
     
     const ghostCar = {
       isGhost: true, num: "GHOST", position: "-", team: "📍 NOTRE SORTIE STAND", driver: "Simulation", 
-      absoluteMs: estimatedExitMs, gap: `+${(estimatedExitMs/1000).toFixed(1)}s`
+      absoluteMs: estimatedExitMs, gaps: { toLeader: { laps: 0, ms: estimatedExitMs }}
     };
     
     const carsWithGhost = [...carsWithGaps, ghostCar].sort((a: any, b: any) => a.absoluteMs - b.absoluteMs);
@@ -539,7 +531,7 @@ export default function VoitureDetailPage() {
             </div>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-[9px] bg-black/50 px-2 py-0.5 rounded text-gray-400 border border-gray-700">Int: <strong className="text-white">{data.gapSec}s</strong></span>
+            <span className="text-[9px] bg-black/50 px-2 py-0.5 rounded text-gray-400 border border-gray-700">Gap: <strong className="text-white">{data.gapSec}s</strong></span>
             <span className="text-[8px] text-gray-500 mt-1 uppercase">Via {data.calcMethod}</span>
           </div>
         </div>
@@ -583,10 +575,8 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
-    // 🚀 PADDING GAUCHE FIXÉ À 100px 🚀
     <div className="min-h-screen bg-[#0B0C10] w-full pl-[100px] pt-[56px] relative overflow-x-hidden">
       
-      {/* 🚀 CSS D'ANIMATION AWS 🚀 */}
       <style>{`
         @keyframes aws-wave-good {
             0%, 100% { opacity: 0.2; transform: translateX(-3px) scale(0.9); filter: drop-shadow(0 0 0px transparent); }
@@ -625,7 +615,6 @@ export default function VoitureDetailPage() {
           <button onClick={() => router.push(`/voiture/${carId}/config`)} className="bg-[#1F2833] hover:bg-[#45A29E] hover:text-black text-[#66FCF1] font-bold py-2 px-4 rounded border border-gray-700 transition text-sm shadow">⚙️ PARAMÈTRES ET LIMITES</button>
         </div>
 
-        {/* 🚀 MODULE AWS OVERTAKE PREDICTION 🚀 */}
         <div className="bg-gradient-to-b from-[#1a1c23] to-[#0B0C10] p-6 rounded-lg border border-gray-700 shadow-2xl relative overflow-hidden mb-8">
           <div className="absolute inset-0 opacity-[0.03] bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ffffff_10px,#ffffff_20px)] pointer-events-none" />
           <div className="flex justify-between items-center mb-6 relative z-10">
@@ -657,7 +646,6 @@ export default function VoitureDetailPage() {
               <h3 className="text-[#00ff66] font-bold text-sm tracking-wider uppercase mb-2 border-b border-gray-700 pb-2">⏱️ STINT EN COURS</h3>
               <div className={`bg-[#0B0C10] p-3 rounded text-center border shadow-inner flex flex-col justify-center flex-1 relative ${isStintCritical ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-gray-800'}`}>
                 
-                {/* 🚀 OVERLAY CHRONOMÈTRE DE PIT EN DIRECT 🚀 */}
                 {currentPitTimer !== null && (
                   <div className="absolute inset-0 bg-yellow-900/95 flex flex-col items-center justify-center rounded z-20 backdrop-blur-sm shadow-[0_0_30px_rgba(255,170,0,0.5)] border-2 border-[#ffaa00]">
                     <span className="text-[#ffaa00] font-black text-sm tracking-widest animate-pulse mb-2 drop-shadow-md">⏱️ PIT STOP IN PROGRESS</span>
@@ -814,7 +802,7 @@ export default function VoitureDetailPage() {
             <table className="w-full text-left border-collapse text-xs font-mono">
               <thead>
                 <tr className="bg-[#0B0C10] text-gray-400 uppercase tracking-wider border-b border-gray-800">
-                  <th className="p-3">Pos</th><th className="p-3">N°</th><th className="p-3 font-sans">Équipe</th><th className="p-3">INT</th>
+                  <th className="p-3">Pos</th><th className="p-3">N°</th><th className="p-3 font-sans">Équipe</th><th className="p-3">GAP</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800 text-sm">
@@ -825,7 +813,7 @@ export default function VoitureDetailPage() {
                       <td className="p-3 text-gray-400">P{c.position || c.pos}</td>
                       <td className="p-3 text-[#ffaa00]">#{c.car_number || c.num}</td>
                       <td className="p-3 font-sans text-white text-sm truncate max-w-[200px]">{c.team}</td>
-                      <td className="p-3 text-gray-300">{formatInt(c.ints)}</td>
+                      <td className="p-3 text-gray-300">{formatGap(c.gaps)}</td>
                     </tr>
                   );
                 })}
