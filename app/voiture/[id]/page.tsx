@@ -52,7 +52,7 @@ export default function VoitureDetailPage() {
   const params = useParams();
   const router = useRouter();
   const carId = params.id as string;
-  const { cars } = useLiveTiming('JSON'); // Live timing gère uniquement les voitures
+  const { cars } = useLiveTiming('JSON');
   
   // 🚀 AJOUT DE L'API GLOBALE POUR STATUS ET MESSAGES RC 🚀
   const [globalStatus, setGlobalStatus] = useState("WAITING");
@@ -76,7 +76,6 @@ export default function VoitureDetailPage() {
   const [pitMode, setPitMode] = useState<'DT' | 'REFUEL' | 'DRIVER' | 'FULL' | 'CUSTOM'>('FULL');
   const [customPitTime, setCustomPitTime] = useState<number>(65);
   
-  // 🚀 ETATS DU CHRONO PIT STOP & RACE CONTROL 🚀
   const [pitStopsHistory, setPitStopsHistory] = useState<PitStopRecord[]>([]);
   const [currentPitTimer, setCurrentPitTimer] = useState<number | null>(null);
   const [rcHistory, setRcHistory] = useState<RcMessage[]>([]);
@@ -92,7 +91,7 @@ export default function VoitureDetailPage() {
   const liveCarData = safeCars.find(c => String(c?.num) === String(carId));
   const carIndex = safeCars.findIndex(c => String(c?.num) === String(carId));
 
-  // 🚀 FETCH RACE CONTROL MESSAGES & GLOBAL STATUS (Ton API) 🚀
+  // 🚀 FETCH RACE CONTROL MESSAGES & GLOBAL STATUS 🚀
   useEffect(() => {
     const fetchRC = async () => {
       try {
@@ -103,7 +102,6 @@ export default function VoitureDetailPage() {
           
           if (data.message) {
             setRcHistory(prev => {
-              // Ajoute uniquement si c'est un nouveau message
               if (prev.length === 0 || prev[0].msg !== data.message) {
                 return [{ time: new Date().toLocaleTimeString(), msg: data.message }, ...prev].slice(0, 30);
               }
@@ -170,7 +168,6 @@ export default function VoitureDetailPage() {
     });
   }, [safeCars]);
 
-  // 🚀 BOUCLE PRINCIPALE (STINT & PIT CHRONO) 🚀
   useEffect(() => {
     const interval = setInterval(() => {
       const state = String(carStateRef.current || '');
@@ -187,17 +184,13 @@ export default function VoitureDetailPage() {
       }));
       if (isFuel) setCurrentFuel(prev => prev < config.capaMax ? config.capaMax : prev);
 
-      // --- LOGIQUE CHRONOMÈTRE DE STANDS ---
       if (isIn && !prevPitStateRef.current) {
         pitEntryTimeRef.current = Date.now();
         setCurrentPitTimer(0);
       } else if (!isIn && prevPitStateRef.current && pitEntryTimeRef.current) {
         const durationSec = Math.floor((Date.now() - pitEntryTimeRef.current) / 1000);
         setPitStopsHistory(prev => [{
-          id: Date.now(),
-          lap: lastLapRef.current || 0,
-          timeIn: new Date().toLocaleTimeString(),
-          durationSec
+          id: Date.now(), lap: lastLapRef.current || 0, timeIn: new Date().toLocaleTimeString(), durationSec
         }, ...prev].slice(0, 20)); 
         pitEntryTimeRef.current = null;
         setCurrentPitTimer(null);
@@ -240,7 +233,6 @@ export default function VoitureDetailPage() {
             lapConso = config.consoGreen - (ratio * (config.consoGreen - config.consoFcy));
           }
         } else {
-          // Utilisation du statut global
           const safeStatus = String(globalStatus || '').toUpperCase();
           lapConso = safeStatus.includes('FCY') || safeStatus.includes('YELLOW') ? config.consoFcy : config.consoGreen;
         }
@@ -541,8 +533,8 @@ export default function VoitureDetailPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-white font-mono">Chargement télémétrie...</div>;
 
   return (
-    // 🚀 PADDING SÉCURISÉ POUR L'OVERLAY (pl-[320px]) 🚀
-    <div className="min-h-screen bg-[#0B0C10] w-full pl-[320px] pt-[56px] relative overflow-x-hidden">
+    // 🚀 ROOT WRAPPER : padding gauche fixé à 100px ! 🚀
+    <div className="min-h-screen bg-[#0B0C10] w-full pl-[100px] pt-[56px] relative overflow-x-hidden">
       
       {/* 🚀 CSS D'ANIMATION AWS 🚀 */}
       <style>{`

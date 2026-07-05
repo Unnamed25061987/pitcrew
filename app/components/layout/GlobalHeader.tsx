@@ -49,9 +49,9 @@ const LeaderboardRow = ({ car, topPosition, isOurCar }: { car: any, topPosition:
 };
 
 export default function GlobalHeader() {
-  const { cars } = useLiveTiming('JSON'); // On utilise LiveTiming uniquement pour les voitures
+  const { cars } = useLiveTiming('JSON'); 
   
-  // 🚀 RETOUR DE TON API ORIGINALE POUR LA DIRECTION DE COURSE 🚀
+  // 🚀 TON API 🚀
   const [status, setStatus] = useState("WAITING");
   const [remain, setRemain] = useState("--:--:--");
   const [msg, setMsg] = useState("");
@@ -62,9 +62,10 @@ export default function GlobalHeader() {
         const res = await fetch('/api/messages');
         if (res.ok) {
           const data = await res.json();
-          setStatus(data.trackStatus || "WAITING");
-          setRemain(data.remain || "--:--:--");
-          setMsg(data.message || "");
+          // BINDING CORRECT DES VARIABLES
+          if (data.trackStatus) setStatus(data.trackStatus);
+          if (data.remain) setRemain(data.remain);
+          if (data.message) setMsg(data.message);
         }
       } catch (err) {
         console.error("Erreur lecture flux messages");
@@ -99,7 +100,7 @@ export default function GlobalHeader() {
   useEffect(() => {
     if (prevStatusRef.current !== null && prevStatusRef.current !== s && s !== "WAITING") {
       setShowStatusAnim(true);
-      const timer = setTimeout(() => setShowStatusAnim(false), 5000); // Animation géante de 5 secondes
+      const timer = setTimeout(() => setShowStatusAnim(false), 5000);
       return () => clearTimeout(timer);
     }
     prevStatusRef.current = s;
@@ -126,7 +127,7 @@ export default function GlobalHeader() {
         .anim-arrow-l { animation: slide-left 1.2s infinite; display: inline-block; }
       `}</style>
 
-      {/* 🏁 BANDEAU SUPÉRIEUR (GÉANT SI ANIMATION, NORMAL SINON) */}
+      {/* 🏁 BANDEAU SUPÉRIEUR */}
       <header 
         className={`fixed top-0 left-0 right-0 z-[70] border-b border-gray-800 flex flex-col justify-center transition-all duration-700 ease-in-out overflow-hidden shadow-2xl ${bgClass}`}
         style={{ height: showStatusAnim ? '160px' : '56px' }}
